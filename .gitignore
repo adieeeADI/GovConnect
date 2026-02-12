@@ -1,0 +1,7 @@
+# Server
+server/node_modules/
+server/.env
+
+# General
+node_modules/
+.env
