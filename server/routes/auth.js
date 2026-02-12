@@ -68,5 +68,6 @@ router.post("/signup", async (req, res) => {
     });
   }
 });
+console.log("Saving user:", user);
 
 module.exports = router;
