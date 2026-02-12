@@ -21,7 +21,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-console.log("Mongo URI from env:", process.env.MONGO_URI);
-mongoose.connection.once("open", () => {
-  console.log("✅ Connected to DB:", mongoose.connection.name);
-});
+
