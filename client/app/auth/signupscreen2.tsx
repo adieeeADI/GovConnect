@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 export default function SignUpScreen2() {
+  const params = useLocalSearchParams();
+
   const [education, setEducation] = useState('');
   const [skills, setSkills] = useState('');
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -18,6 +20,24 @@ export default function SignUpScreen2() {
     } else {
       setSelectedInterests([...selectedInterests, interest]);
     }
+  };
+
+  const handleNext = () => {
+    // Optional validation
+    if (!education) {
+      Alert.alert("Error", "Please enter your education.");
+      return;
+    }
+
+    router.push({
+      pathname: "/auth/signupscreen3",
+      params: {
+        ...params,
+        education,
+        skills,
+        selectedInterests: JSON.stringify(selectedInterests)
+      }
+    });
   };
 
   return (
@@ -56,12 +76,7 @@ export default function SignUpScreen2() {
           </View>
         </View>
 
-        {/* Section Title */}
-        <Text className="text-black text-xl font-bold mb-6">
-          Personal Information
-        </Text>
-
-        {/* Highest Education */}
+        {/* Education */}
         <Text className="text-black text-base font-bold mb-3">
           Highest Education
         </Text>
@@ -86,11 +101,11 @@ export default function SignUpScreen2() {
           multiline
         />
 
-        {/* Areas of Interest */}
+        {/* Interests */}
         <Text className="text-black text-base font-bold mb-4">
           Areas of Interest
         </Text>
-        
+
         {interests.map((interest) => (
           <TouchableOpacity
             key={interest}
@@ -113,12 +128,13 @@ export default function SignUpScreen2() {
         <TouchableOpacity 
           className="bg-blue-700 rounded-2xl py-4 items-center mt-6"
           activeOpacity={0.8}
-          onPress={() => router.push("/auth/signupscreen3")}
+          onPress={handleNext}
         >
           <Text className="text-white text-xl font-bold">
             NEXT
           </Text>
         </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
