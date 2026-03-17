@@ -221,15 +221,14 @@ export default function Browse() {
             </View>
           ) : displayData.length > 0 ? (
             displayData.map((item, index) => {
-              // Use array index as ID temporarily (data IDs are 1-10 in sequence)
-              const itemId = (index + 1).toString();
+              const itemId = item._id ? item._id.toString() : `temp-${index}`;
               return (
               <TouchableOpacity
                 key={itemId}
                 className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
                 activeOpacity={0.8}
                 onPress={() => {
-                  console.log('Navigating with ID:', itemId);
+                  console.log('Navigating with _id:', itemId);
                   router.push({
                     pathname: '/main/details/[id]',
                     params: { id: itemId }
