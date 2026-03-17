@@ -221,17 +221,17 @@ export default function Browse() {
             </View>
           ) : displayData.length > 0 ? (
             displayData.map((item, index) => {
-              const itemId = item.basicInfo?.title || `item-${index}`;
+              const itemId = item._id ? item._id.toString() : (item.basicInfo?.title || `item-${index}`);
               return (
               <TouchableOpacity
                 key={itemId}
                 className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
                 activeOpacity={0.8}
                 onPress={() => {
-                  console.log('Navigating with title:', itemId);
+                  console.log('Navigating with ID:', itemId);
                   router.push({
                     pathname: '/main/details/[id]',
-                    params: { id: encodeURIComponent(itemId) }
+                    params: { id: itemId }
                   });
                 }}
               >

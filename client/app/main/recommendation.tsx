@@ -131,13 +131,7 @@ export default function Recommendation() {
               router.push({
                 pathname: '/main/details/[id]' as any,
                 params: {
-                  id: item.id,
-                  category: item.category,
-                  title: item.title,
-                  organization: item.organization,
-                  location: item.location,
-                  duration: item.duration,
-                  stipend: item.stipend,
+                  id: item.id.toString(),
                 }
               });
             }}

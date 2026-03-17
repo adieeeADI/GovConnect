@@ -24,18 +24,16 @@ export default function Individual() {
     }
   }, [params?.id]);
 
-  const fetchDetailedData = async (title: string) => {
+  const fetchDetailedData = async (id: string) => {
     try {
       setLoading(true);
-      const decodedTitle = decodeURIComponent(title);
-      console.log('Fetching details for title:', decodedTitle);
       
-      // Try fetching from all endpoints to find the matching item by title
+      // Try fetching from detail endpoints using the ID directly
       const endpoints = [
-        'https://govconnect-ad4s.onrender.com/api/data/internships',
-        'https://govconnect-ad4s.onrender.com/api/data/scholarships',
-        'https://govconnect-ad4s.onrender.com/api/data/schemes',
-        'https://govconnect-ad4s.onrender.com/api/data/training',
+        `https://govconnect-ad4s.onrender.com/api/data/internships/${id}`,
+        `https://govconnect-ad4s.onrender.com/api/data/scholarships/${id}`,
+        `https://govconnect-ad4s.onrender.com/api/data/schemes/${id}`,
+        `https://govconnect-ad4s.onrender.com/api/data/training/${id}`,
       ];
 
       let response = null;
@@ -45,13 +43,8 @@ export default function Individual() {
           console.log(`Fetching from ${endpoint}: Status ${res.status}`);
           if (res.ok) {
             const data = await res.json();
-            // Find item by title
-            const item = Array.isArray(data) 
-              ? data.find(i => i.basicInfo?.title === decodedTitle) 
-              : data;
-            
-            if (item) {
-              response = item;
+            if (data && Object.keys(data).length > 0 && !data.error) {
+              response = data;
               console.log('Data found:', response);
               break;
             }
@@ -65,7 +58,7 @@ export default function Individual() {
       if (response) {
         setData(response);
       } else {
-        console.log('No data found for title:', decodedTitle);
+        console.log('No data found for ID:', id);
       }
       setLoading(false);
     } catch (err) {
