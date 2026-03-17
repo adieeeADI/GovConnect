@@ -12,6 +12,8 @@ app.use(express.json());
 
 app.use("/api/auth", require("./routes/auth"));
 
+app.use("/api/recommend", require("./routes/recommend"));
+
 app.get("/", (req, res) => {
   res.send("GovConnect API Running");
 });

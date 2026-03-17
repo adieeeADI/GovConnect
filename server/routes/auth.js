@@ -54,6 +54,8 @@ router.post("/signup", async (req, res) => {
       forgeryWarning
     });
 
+    console.log("Saving user:", user); // ✅ move inside route (optional)
+
     await user.save();
 
     res.status(201).json({
@@ -68,6 +70,5 @@ router.post("/signup", async (req, res) => {
     });
   }
 });
-console.log("Saving user:", user);
 
 module.exports = router;
