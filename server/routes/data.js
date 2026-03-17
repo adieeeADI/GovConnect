@@ -4,31 +4,6 @@ const Scholarship = require("../models/Scholarship");
 
 const router = express.Router();
 
-// DEBUG endpoint - show first internship with all fields
-router.get("/debug/internship", async (req, res) => {
-  try {
-    const data = await Internship.findOne().lean();
-    if (!data) {
-      return res.json({ error: "No data found", count: 0 });
-    }
-    
-    const count = await Internship.countDocuments();
-    res.json({
-      _idField: data._id,
-      hasId: !!data._id,
-      idType: data._id ? typeof data._id : null,
-      sampleData: {
-        title: data.basicInfo?.title,
-        id: data._id
-      },
-      totalDocuments: count,
-      allKeys: Object.keys(data)
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // GET all internships
 router.get("/internships", async (req, res) => {
   try {
