@@ -17,7 +17,15 @@ router.get("/internships", async (req, res) => {
 // GET single internship by ID
 router.get("/internships/:id", async (req, res) => {
   try {
-    const data = await Internship.findById(req.params.id);
+    let data;
+    // First try findById (for MongoDB ObjectIds)
+    try {
+      data = await Internship.findById(req.params.id);
+    } catch (idErr) {
+      // If findById fails, try querying by _id directly (for numeric IDs)
+      data = await Internship.findOne({ _id: req.params.id });
+    }
+    
     if (!data) {
       return res.status(404).json({ error: "Internship not found" });
     }
@@ -40,7 +48,15 @@ router.get("/scholarships", async (req, res) => {
 // GET single scholarship by ID
 router.get("/scholarships/:id", async (req, res) => {
   try {
-    const data = await Scholarship.findById(req.params.id);
+    let data;
+    // First try findById (for MongoDB ObjectIds)
+    try {
+      data = await Scholarship.findById(req.params.id);
+    } catch (idErr) {
+      // If findById fails, try querying by _id directly (for numeric IDs)
+      data = await Scholarship.findOne({ _id: req.params.id });
+    }
+    
     if (!data) {
       return res.status(404).json({ error: "Scholarship not found" });
     }
