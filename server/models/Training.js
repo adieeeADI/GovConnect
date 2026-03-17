@@ -58,6 +58,6 @@ const trainingSchema = new mongoose.Schema({
     lastScrapedAt: Date
   }
 
-}, { timestamps: true });
+}, { timestamps: true, collection: "training" });
 
 module.exports = mongoose.model("Training", trainingSchema);

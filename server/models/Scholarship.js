@@ -60,6 +60,6 @@ const scholarshipSchema = new mongoose.Schema({
     renewalPolicy: String
   }
 
-}, { timestamps: true });
+}, { timestamps: true, collection: "scholarship" });
 
 module.exports = mongoose.model("Scholarship", scholarshipSchema);
