@@ -18,43 +18,28 @@ export default function Individual() {
 
   useEffect(() => {
     const id = params?.id;
+    const category = params?.category || 'internships';
     
     if (id) {
       const idString = Array.isArray(id) ? id[0] : id;
-      fetchDetailedData(idString);
+      const categoryString = Array.isArray(category) ? category[0] : category;
+      fetchDetailedData(idString, categoryString);
     }
-  }, [params?.id]);
+  }, [params?.id, params?.category]);
 
-  const fetchDetailedData = async (id: string) => {
+  const fetchDetailedData = async (id: string, category: string) => {
     try {
       setLoading(true);
       
-      // Try fetching from detail endpoints using the ID directly
-      const endpoints = [
-        `https://govconnect-ad4s.onrender.com/api/data/internships/${id}`,
-        `https://govconnect-ad4s.onrender.com/api/data/scholarships/${id}`,
-        `https://govconnect-ad4s.onrender.com/api/data/schemes/${id}`,
-        `https://govconnect-ad4s.onrender.com/api/data/training/${id}`,
-      ];
-
-      let response = null;
-      for (const endpoint of endpoints) {
-        try {
-          const res = await fetch(endpoint);
-          if (res.ok) {
-            const data = await res.json();
-            if (data && Object.keys(data).length > 0 && !data.error) {
-              response = data;
-              break;
-            }
-          }
-        } catch (err) {
-          continue;
+      // Fetch from the specific category endpoint
+      const endpoint = `https://govconnect-ad4s.onrender.com/api/data/${category}/${id}`;
+      
+      const res = await fetch(endpoint);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Object.keys(data).length > 0 && !data.error) {
+          setData(data);
         }
-      }
-
-      if (response) {
-        setData(response);
       }
       setLoading(false);
     } catch (err) {
@@ -143,7 +128,7 @@ export default function Individual() {
 
           <View className="px-6 pb-6">
             {/* Type & Mode Section */}
-            {(data.type || data.internshipDetails?.mode) && (
+            {(data.type || data.internshipDetails?.mode || data.applicationDetails?.applicationMode) && (
               <View className="bg-gray-100 rounded-2xl p-4 mb-6">
                 <Text className="text-black text-lg font-bold mb-3">
                   Opportunity Details
@@ -158,6 +143,12 @@ export default function Individual() {
                   <View className="flex-row items-center mb-2">
                     <Text className="text-gray-700 font-semibold flex-1">Mode:</Text>
                     <Text className="text-gray-600">{data.internshipDetails.mode}</Text>
+                  </View>
+                )}
+                {data.applicationDetails?.applicationMode && (
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-gray-700 font-semibold flex-1">Application Mode:</Text>
+                    <Text className="text-gray-600">{data.applicationDetails.applicationMode}</Text>
                   </View>
                 )}
                 {data.internshipDetails?.numberOfSeats && (
@@ -177,6 +168,280 @@ export default function Individual() {
               {data.programDetails?.about || data.basicInfo?.shortDescription || 'No description available'}
             </Text>
 
+            {/* SCHEME-SPECIFIC SECTIONS */}
+            {data.type === 'Scheme' && (
+              <>
+                {/* Scheme Benefits */}
+                {data.schemeDetails?.benefits && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Scheme Benefits
+                    </Text>
+                    <View className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+                      {data.schemeDetails.financialDetails?.amount && (
+                        <View className="mb-4 pb-4 border-b border-green-200">
+                          <Text className="text-gray-700 font-semibold text-base">Amount:</Text>
+                          <Text className="text-green-700 text-lg font-bold">{data.schemeDetails.financialDetails.amount}</Text>
+                        </View>
+                      )}
+                      {data.schemeDetails.benefits.map((benefit: string, index: number) => (
+                        <View key={index} className="flex-row items-start mb-3">
+                          <Gift color="#10b981" size={18} strokeWidth={2} />
+                          <Text className="text-gray-700 text-base ml-2 flex-1">{benefit}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {/* Benefit Type */}
+                {data.schemeDetails?.benefitType && (
+                  <View className="bg-blue-50 rounded-2xl p-4 mb-6">
+                    <Text className="text-gray-700 font-semibold mb-2">Benefit Type:</Text>
+                    <Text className="text-gray-600 text-base">{data.schemeDetails.benefitType}</Text>
+                  </View>
+                )}
+
+                {/* Eligibility for Schemes */}
+                {data.eligibility && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Eligibility Requirements
+                    </Text>
+                    <View className="bg-purple-50 rounded-2xl p-4 mb-6">
+                      {data.eligibility.minimumEducation && (
+                        <View className="mb-3 pb-3 border-b border-purple-200">
+                          <Text className="text-gray-700 font-semibold">Minimum Education:</Text>
+                          <Text className="text-gray-600 text-base">{data.eligibility.minimumEducation}</Text>
+                        </View>
+                      )}
+
+                      {data.eligibility.incomeCriteria && (
+                        <View className="mb-3 pb-3 border-b border-purple-200">
+                          <Text className="text-gray-700 font-semibold mb-2">Income Criteria:</Text>
+                          {data.eligibility.incomeCriteria.minIncome !== null && (
+                            <Text className="text-gray-600 text-base">Min: ₹{data.eligibility.incomeCriteria.minIncome.toLocaleString()}</Text>
+                          )}
+                          {data.eligibility.incomeCriteria.maxIncome !== null && (
+                            <Text className="text-gray-600 text-base">Max: ₹{data.eligibility.incomeCriteria.maxIncome.toLocaleString()}</Text>
+                          )}
+                        </View>
+                      )}
+
+                      {data.eligibility.gender && (
+                        <View className="mb-3 pb-3 border-b border-purple-200">
+                          <Text className="text-gray-700 font-semibold">Gender:</Text>
+                          <Text className="text-gray-600 text-base">{data.eligibility.gender}</Text>
+                        </View>
+                      )}
+
+                      {data.eligibility.categoryEligible && data.eligibility.categoryEligible.length > 0 && (
+                        <View className="mb-3 pb-3 border-b border-purple-200">
+                          <Text className="text-gray-700 font-semibold mb-2">Categories:</Text>
+                          {data.eligibility.categoryEligible.map((cat: string, index: number) => (
+                            <View key={index} className="flex-row items-center mb-1">
+                              <Check color="#a855f7" size={16} strokeWidth={2} />
+                              <Text className="text-gray-600 text-base ml-2">{cat}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {data.eligibility.statesEligible && data.eligibility.statesEligible.length > 0 && (
+                        <View className="mb-3 pb-3 border-b border-purple-200">
+                          <Text className="text-gray-700 font-semibold mb-2">States Eligible:</Text>
+                          <Text className="text-gray-600 text-base">{data.eligibility.statesEligible.join(', ')}</Text>
+                        </View>
+                      )}
+
+                      {data.eligibility.occupation && data.eligibility.occupation.length > 0 && (
+                        <View className="mb-3 pb-3 border-b border-purple-200">
+                          <Text className="text-gray-700 font-semibold mb-2">Occupation:</Text>
+                          {data.eligibility.occupation.map((occ: string, index: number) => (
+                            <View key={index} className="flex-row items-center mb-1">
+                              <Check color="#a855f7" size={16} strokeWidth={2} />
+                              <Text className="text-gray-600 text-base ml-2">{occ}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {data.eligibility.ageLimit && (data.eligibility.ageLimit.min !== null || data.eligibility.ageLimit.max !== null) && (
+                        <View className="mb-3">
+                          <Text className="text-gray-700 font-semibold">Age Limit:</Text>
+                          <Text className="text-gray-600 text-base">
+                            {data.eligibility.ageLimit.min ? `${data.eligibility.ageLimit.min} - ` : ''}
+                            {data.eligibility.ageLimit.max || 'No limit'}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </>
+                )}
+
+                {/* Special Criteria */}
+                {data.eligibility?.specialCriteria && data.eligibility.specialCriteria.length > 0 && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Special Criteria
+                    </Text>
+                    <View className="mb-6">
+                      {data.eligibility.specialCriteria.map((criteria: string, index: number) => (
+                        <View key={index} className="flex-row items-start mb-2">
+                          <Check color="#f59e0b" size={20} strokeWidth={2} />
+                          <Text className="text-gray-700 text-base ml-3 flex-1">{criteria}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {/* Application Process */}
+                {data.applicationProcess?.steps && data.applicationProcess.steps.length > 0 && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Application Process
+                    </Text>
+                    <View className="bg-indigo-50 rounded-2xl p-4 mb-6">
+                      {data.applicationProcess.applicationMode && (
+                        <View className="mb-4 pb-4 border-b border-indigo-200">
+                          <Text className="text-gray-700 font-semibold">Mode:</Text>
+                          <Text className="text-gray-600 text-base">{data.applicationProcess.applicationMode}</Text>
+                        </View>
+                      )}
+                      <Text className="text-gray-700 font-semibold mb-3">Steps:</Text>
+                      {data.applicationProcess.steps.map((step: string, index: number) => (
+                        <View key={index} className="flex-row items-start mb-3">
+                          <View className="bg-indigo-600 rounded-full w-7 h-7 items-center justify-center mr-3 mt-1">
+                            <Text className="text-white font-bold text-sm">{index + 1}</Text>
+                          </View>
+                          <Text className="text-gray-700 text-base ml-2 flex-1">{step}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {/* Documents Required for Schemes */}
+                {data.documentsRequired && data.documentsRequired.length > 0 && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Documents Required
+                    </Text>
+                    <View className="mb-6">
+                      {data.documentsRequired.map((doc: string, index: number) => (
+                        <View key={index} className="flex-row items-start mb-2">
+                          <Check color="#10b981" size={20} strokeWidth={2} />
+                          <Text className="text-gray-700 text-base ml-3 flex-1">{doc}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {/* Important Dates */}
+                {data.importantDates && (data.importantDates.applicationStart || data.importantDates.applicationEnd) && (
+                  <View className="mb-6 bg-orange-50 rounded-2xl p-4">
+                    <Text className="text-black text-lg font-bold mb-3">Important Dates</Text>
+                    {data.importantDates.applicationStart && (
+                      <Text className="text-gray-700 text-sm mb-2 font-semibold">
+                        Application Start: {data.importantDates.applicationStart}
+                      </Text>
+                    )}
+                    {data.importantDates.applicationEnd && (
+                      <Text className="text-gray-700 text-sm font-semibold">
+                        Application End: {data.importantDates.applicationEnd}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {/* Exclusions */}
+                {data.additionalInfo?.exclusions && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Exclusions & Important Notes
+                    </Text>
+                    <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+                      <Text className="text-gray-700 text-base leading-6">{data.additionalInfo.exclusions}</Text>
+                    </View>
+                  </>
+                )}
+
+                {/* Ministry & Source */}
+                {(data.additionalInfo?.ministry || data.additionalInfo?.sourceUrl) && (
+                  <View className="bg-gray-100 rounded-2xl p-4 mb-6">
+                    {data.additionalInfo.ministry && (
+                      <View className="mb-3">
+                        <Text className="text-gray-700 font-semibold">Ministry/Department:</Text>
+                        <Text className="text-gray-600 text-base">{data.additionalInfo.ministry}</Text>
+                      </View>
+                    )}
+                    {data.additionalInfo.sourceUrl && (
+                      <View>
+                        <Text className="text-gray-700 font-semibold">Source:</Text>
+                        <Text className="text-blue-600 text-base">{data.additionalInfo.sourceUrl}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* FAQ Section for Schemes */}
+                {data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0 && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      Frequently Asked Questions
+                    </Text>
+                    <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
+                      {data.faq.questionsAndAnswers.map((item: any, index: number) => (
+                        <View 
+                          key={index} 
+                          className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
+                        >
+                          <View className="p-4">
+                            <Text className="text-gray-900 font-semibold text-base mb-2">
+                              Q: {item.question}
+                            </Text>
+                            <Text className="text-gray-600 text-base leading-6">
+                              A: {item.answer}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* SCHOLARSHIP-SPECIFIC SECTIONS */}
+            {data.type === 'Scholarship' && data.benefits && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Scholarship Benefits
+                </Text>
+                <View className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+                  {data.benefits.scholarshipAmount && (
+                    <View className="mb-3">
+                      <Text className="text-gray-700 font-semibold">Amount:</Text>
+                      <Text className="text-gray-600 text-base">{data.benefits.scholarshipAmount}</Text>
+                    </View>
+                  )}
+                  {data.benefits.covers && data.benefits.covers.length > 0 && (
+                    <View>
+                      <Text className="text-gray-700 font-semibold mb-2">Covers:</Text>
+                      {data.benefits.covers.map((cover: string, index: number) => (
+                        <View key={index} className="flex-row items-start mb-2">
+                          <Check color="#10b981" size={16} strokeWidth={2} />
+                          <Text className="text-gray-600 text-base ml-2 flex-1">{cover}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
+
             {/* Key Highlights */}
             {data.programDetails?.perks && (
               <>
@@ -190,7 +455,7 @@ export default function Individual() {
             )}
 
             {/* Eligibility */}
-            {(data.eligibility?.educationLevels || data.eligibility?.streamsAllowed || data.eligibility?.yearOfStudyAllowed || data.eligibility?.minimumCGPA || data.eligibility?.statesEligible || data.eligibility?.ageLimit) && (
+            {(data.eligibility?.educationLevels || data.eligibility?.streamsAllowed || data.eligibility?.yearOfStudyAllowed || data.eligibility?.minimumCGPA || data.eligibility?.minimumPercentage || data.eligibility?.categoryEligible || data.eligibility?.genderEligible || data.eligibility?.incomeLimit || data.eligibility?.statesEligible || data.eligibility?.ageLimit || data.eligibility?.isPwDEligible || data.eligibility?.isMinorityEligible) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
                   Eligibility Requirements
@@ -228,6 +493,38 @@ export default function Individual() {
                       </Text>
                     </View>
                   )}
+                  {data.eligibility?.minimumPercentage && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Minimum Percentage: {data.eligibility.minimumPercentage}%
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.categoryEligible && data.eligibility.categoryEligible.length > 0 && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Categories: {data.eligibility.categoryEligible.join(', ')}
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.genderEligible && data.eligibility.genderEligible.length > 0 && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Gender: {data.eligibility.genderEligible.join(', ')}
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.incomeLimit !== null && data.eligibility?.incomeLimit !== undefined && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Income Limit: ₹{data.eligibility.incomeLimit}
+                      </Text>
+                    </View>
+                  )}
                   {data.eligibility?.statesEligible?.length > 0 && (
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
@@ -237,10 +534,26 @@ export default function Individual() {
                     </View>
                   )}
                   {data.eligibility?.ageLimit && (data.eligibility.ageLimit.min !== null || data.eligibility.ageLimit.max !== null) && (
-                    <View className="flex-row items-start">
+                    <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
                         Age Limit: {data.eligibility.ageLimit.min ? `${data.eligibility.ageLimit.min} - ` : ''}{data.eligibility.ageLimit.max || 'No limit'}
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.isPwDEligible && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        PwD Eligible: Yes
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.isMinorityEligible && (
+                    <View className="flex-row items-start">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Minority Eligible: Yes
                       </Text>
                     </View>
                   )}
@@ -249,13 +562,42 @@ export default function Individual() {
             )}
 
             {/* Selection Process */}
-            {data.applicationDetails?.selectionProcess && (
+            {(data.applicationDetails?.selectionProcess || data.additionalInfo?.selectionProcess) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
                   Selection Process
                 </Text>
                 <Text className="text-gray-600 text-base leading-6 mb-6">
-                  {data.applicationDetails.selectionProcess}
+                  {data.applicationDetails?.selectionProcess || data.additionalInfo?.selectionProcess}
+                </Text>
+              </>
+            )}
+
+            {/* Application Documents */}
+            {data.applicationDetails?.documentsRequired && data.applicationDetails.documentsRequired.length > 0 && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Required Documents
+                </Text>
+                <View className="mb-6">
+                  {data.applicationDetails.documentsRequired.map((doc: string, index: number) => (
+                    <View key={index} className="flex-row items-start mb-2">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">{doc}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {/* Renewal Policy */}
+            {data.additionalInfo?.renewalPolicy && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Renewal Policy
+                </Text>
+                <Text className="text-gray-600 text-base leading-6 mb-6">
+                  {data.additionalInfo.renewalPolicy}
                 </Text>
               </>
             )}
@@ -284,17 +626,44 @@ export default function Individual() {
               </>
             )}
 
+            {/* FAQ Section */}
+            {data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0 && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Frequently Asked Questions
+                </Text>
+                <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
+                  {data.faq.questionsAndAnswers.map((item: any, index: number) => (
+                    <View 
+                      key={index} 
+                      className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
+                    >
+                      <View className="p-4">
+                        <Text className="text-gray-900 font-semibold text-base mb-2">
+                          Q: {item.question}
+                        </Text>
+                        <Text className="text-gray-600 text-base leading-6">
+                          A: {item.answer}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+
             {/* Application Info */}
             {(data.applicationDetails?.startDate || data.applicationDetails?.endDate) && (
-              <View className="mb-6">
+              <View className="mb-6 bg-orange-50 rounded-2xl p-4">
+                <Text className="text-black text-lg font-bold mb-3">Application Timeline</Text>
                 {data.applicationDetails?.startDate && (
-                  <Text className="text-gray-600 text-sm mb-1">
-                    Start Date: {new Date(data.applicationDetails.startDate).toLocaleDateString()}
+                  <Text className="text-gray-700 text-sm mb-2 font-semibold">
+                    Start Date: {new Date(data.applicationDetails.startDate).toLocaleDateString('en-IN')}
                   </Text>
                 )}
                 {data.applicationDetails?.endDate && (
-                  <Text className="text-gray-600 text-sm">
-                    End Date: {new Date(data.applicationDetails.endDate).toLocaleDateString()}
+                  <Text className="text-gray-700 text-sm font-semibold">
+                    End Date: {new Date(data.applicationDetails.endDate).toLocaleDateString('en-IN')}
                   </Text>
                 )}
               </View>

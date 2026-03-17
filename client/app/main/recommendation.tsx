@@ -132,6 +132,7 @@ export default function Recommendation() {
                 pathname: '/main/details/[id]' as any,
                 params: {
                   id: item.id.toString(),
+                  category: item.category
                 }
               });
             }}

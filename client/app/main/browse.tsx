@@ -229,7 +229,7 @@ export default function Browse() {
                 onPress={() => {
                   router.push({
                     pathname: '/main/details/[id]',
-                    params: { id: itemId }
+                    params: { id: itemId, category: activeCategory }
                   });
                 }}
               >

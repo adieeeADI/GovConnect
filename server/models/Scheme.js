@@ -7,59 +7,82 @@ const schemeSchema = new mongoose.Schema({
   basicInfo: {
     title: String,
     shortDescription: String,
-    department: String,
     providerName: String,
     officialWebsite: String,
-    applicationLink: String,
-    logo: String
+    applicationLink: String
   },
 
   schemeDetails: {
-    mode: String,
-    location: [String],
-    coverage: String,
-    benefits: String,
-    numberOfSeats: Number
+    benefitType: String,
+    benefits: [String],
+    financialDetails: {
+      amount: String,
+      currency: String
+    },
+    mode: String
   },
 
   eligibility: {
-    educationLevels: [String],
-    streamsAllowed: [String],
-    minimumPercentage: Number,
-    categoryEligible: [String],
-    genderEligible: [String],
-    incomeLimit: Number,
-    statesEligible: [String],
+    minimumEducation: String,
+    incomeCriteria: {
+      minIncome: Number,
+      maxIncome: Number
+    },
     ageLimit: {
       min: Number,
       max: Number
     },
-    isPwDEligible: Boolean,
-    isMinorityEligible: Boolean
+    gender: String,
+    categoryEligible: [String],
+    statesEligible: [String],
+    occupation: [String],
+    specialCriteria: [String]
   },
 
-  applicationDetails: {
+  applicationProcess: {
     applicationMode: String,
-    startDate: Date,
-    endDate: Date,
-    documentsRequired: [String]
+    steps: [String]
   },
 
-  programDetails: {
-    about: String,
-    benefits: String,
-    whoCanApply: String,
-    terms: String
+  faq: {
+    questionsAndAnswers: [
+      {
+        question: String,
+        answer: String
+      }
+    ]
+  },
+
+  documentsRequired: [String],
+
+  importantDates: {
+    applicationStart: String,
+    applicationEnd: String
   },
 
   status: String,
   isFeatured: Boolean,
 
+  aiMetadata: {
+    tags: [String],
+    targetAudience: [String],
+    priorityScore: Number
+  },
+
   metadata: {
     viewCount: Number,
     saveCount: Number,
-    source: String,
-    lastScrapedAt: Date
+    createdAt: Date,
+    updatedAt: Date
+  },
+
+  additionalInfo: {
+    ministry: String,
+    sourceUrl: String,
+    exclusions: String,
+    faq: String,
+    sources: String,
+    rawSections: mongoose.Schema.Types.Mixed
   }
 
 }, { timestamps: true });

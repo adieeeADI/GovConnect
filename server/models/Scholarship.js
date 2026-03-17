@@ -40,19 +40,23 @@ const scholarshipSchema = new mongoose.Schema({
     documentsRequired: [String]
   },
 
-  faq: [
-    {
-      question: String,
-      answer: String
-    }
-  ],
+  faq: {
+    questionsAndAnswers: [
+      {
+        question: String,
+        answer: String
+      }
+    ]
+  },
 
   status: String,
   isFeatured: Boolean,
 
   metadata: {
     viewCount: Number,
-    saveCount: Number
+    saveCount: Number,
+    createdAt: Date,
+    updatedAt: Date
   },
 
   additionalInfo: {
