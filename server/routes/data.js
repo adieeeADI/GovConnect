@@ -17,13 +17,16 @@ router.get("/internships", async (req, res) => {
 // GET single internship by ID
 router.get("/internships/:id", async (req, res) => {
   try {
+    const id = req.params.id;
     let data;
-    // First try findById (for MongoDB ObjectIds)
-    try {
-      data = await Internship.findById(req.params.id).lean();
-    } catch (idErr) {
-      // If findById fails, try querying by _id directly (for numeric IDs)
-      data = await Internship.findOne({ _id: req.params.id }).lean();
+    
+    // Check if ID is numeric
+    if (!isNaN(id)) {
+      // Numeric ID - query directly
+      data = await Internship.findOne({ _id: Number(id) }).lean();
+    } else {
+      // Try as ObjectId
+      data = await Internship.findById(id).lean();
     }
     
     if (!data) {
@@ -48,13 +51,16 @@ router.get("/scholarships", async (req, res) => {
 // GET single scholarship by ID
 router.get("/scholarships/:id", async (req, res) => {
   try {
+    const id = req.params.id;
     let data;
-    // First try findById (for MongoDB ObjectIds)
-    try {
-      data = await Scholarship.findById(req.params.id).lean();
-    } catch (idErr) {
-      // If findById fails, try querying by _id directly (for numeric IDs)
-      data = await Scholarship.findOne({ _id: req.params.id }).lean();
+    
+    // Check if ID is numeric
+    if (!isNaN(id)) {
+      // Numeric ID - query directly
+      data = await Scholarship.findOne({ _id: Number(id) }).lean();
+    } else {
+      // Try as ObjectId
+      data = await Scholarship.findById(id).lean();
     }
     
     if (!data) {
