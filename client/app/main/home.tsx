@@ -12,7 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://govconnect-api-xxx.onrender.com/api/data/internships")
+    fetch("https://govconnect-ad4s.onrender.com/api/data/internships")
       .then(res => res.json())
       .then(json => {
         setInternships(json);
