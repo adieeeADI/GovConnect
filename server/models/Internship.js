@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const internshipSchema = new mongoose.Schema({
+  _id: Number,
   type: String,
 
   basicInfo: {

@@ -17,17 +17,10 @@ router.get("/internships", async (req, res) => {
 // GET single internship by ID
 router.get("/internships/:id", async (req, res) => {
   try {
-    const id = req.params.id;
     let data;
+    const id = isNaN(req.params.id) ? req.params.id : Number(req.params.id);
     
-    // Check if ID is numeric
-    if (!isNaN(id)) {
-      // Numeric ID - query directly
-      data = await Internship.findOne({ _id: Number(id) }).lean();
-    } else {
-      // Try as ObjectId
-      data = await Internship.findById(id).lean();
-    }
+    data = await Internship.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Internship not found" });
@@ -51,17 +44,10 @@ router.get("/scholarships", async (req, res) => {
 // GET single scholarship by ID
 router.get("/scholarships/:id", async (req, res) => {
   try {
-    const id = req.params.id;
     let data;
+    const id = isNaN(req.params.id) ? req.params.id : Number(req.params.id);
     
-    // Check if ID is numeric
-    if (!isNaN(id)) {
-      // Numeric ID - query directly
-      data = await Scholarship.findOne({ _id: Number(id) }).lean();
-    } else {
-      // Try as ObjectId
-      data = await Scholarship.findById(id).lean();
-    }
+    data = await Scholarship.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Scholarship not found" });

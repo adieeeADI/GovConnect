@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const scholarshipSchema = new mongoose.Schema({
+  _id: Number,
   type: String,
 
   basicInfo: {
