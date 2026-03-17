@@ -62,6 +62,6 @@ const schemeSchema = new mongoose.Schema({
     lastScrapedAt: Date
   }
 
-}, { timestamps: true, collection: "scheme" });
+}, { timestamps: true });
 
 module.exports = mongoose.model("Scheme", schemeSchema);

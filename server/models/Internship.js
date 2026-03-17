@@ -57,6 +57,6 @@ const internshipSchema = new mongoose.Schema({
     lastScrapedAt: Date
   }
 
-}, { timestamps: true, collection: "internship" });
+}, { timestamps: true });
 
 module.exports = mongoose.model("Internship", internshipSchema);
