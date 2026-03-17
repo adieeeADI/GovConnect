@@ -71,4 +71,46 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+// LOGIN endpoint
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 🔹 Validation
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // 🔹 Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // 🔹 Compare password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // 🔹 Success - return user data (without password)
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
+});
+
 module.exports = router;

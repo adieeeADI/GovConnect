@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
@@ -8,6 +8,59 @@ import { router } from 'expo-router';
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSignIn = async () => {
+    setError('');
+
+    // Validation
+    if (!email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
+
+    if (!password.trim()) {
+      setError('Please enter your password');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    // Call login API
+    setLoading(true);
+    try {
+      const response = await fetch('https://govconnect-ad4s.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed');
+        setLoading(false);
+        return;
+      }
+
+      // Login successful
+      setLoading(false);
+      router.push('/main/home');
+    } catch (err) {
+      setError('Network error. Please try again.');
+      setLoading(false);
+      console.log(err);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
@@ -65,15 +118,29 @@ export default function SignIn() {
           </Text>
         </TouchableOpacity>
 
+        {/* Error Message */}
+        {error ? (
+          <View className="bg-red-100 border border-red-400 rounded-xl p-3 mb-6">
+            <Text className="text-red-700 text-sm font-semibold">
+              {error}
+            </Text>
+          </View>
+        ) : null}
+
         {/* Sign In Button */}
         <TouchableOpacity 
-          className="bg-blue-700 rounded-2xl py-4 items-center mb-6"
+          className={`rounded-2xl py-4 items-center mb-6 ${loading ? 'bg-blue-500' : 'bg-blue-700'}`}
           activeOpacity={0.8}
-          onPress={() => router.push("/main/home")}
+          onPress={handleSignIn}
+          disabled={loading}
         >
-          <Text className="text-white text-xl font-bold">
-            Sign In
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text className="text-white text-xl font-bold">
+              Sign In
+            </Text>
+          )}
         </TouchableOpacity>
 
         {/* OR Divider */}
