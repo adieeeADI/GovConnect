@@ -4,6 +4,21 @@ const Scholarship = require("../models/Scholarship");
 
 const router = express.Router();
 
+// DEBUG endpoint - show first internship with all fields
+router.get("/debug/internship", async (req, res) => {
+  try {
+    const data = await Internship.findOne();
+    res.json({
+      raw: data,
+      hasId: data ? !!data._id : null,
+      idValue: data ? data._id : null,
+      keys: data ? Object.keys(data) : []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET all internships
 router.get("/internships", async (req, res) => {
   try {
