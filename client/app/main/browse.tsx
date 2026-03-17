@@ -44,7 +44,6 @@ export default function Browse() {
       const json = await response.json();
       setData(json);
     } catch (err) {
-      console.log('Error fetching data:', err);
       setData([]);
     } finally {
       setLoading(false);
@@ -228,7 +227,6 @@ export default function Browse() {
                 className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
                 activeOpacity={0.8}
                 onPress={() => {
-                  console.log('Navigating with _id:', itemId);
                   router.push({
                     pathname: '/main/details/[id]',
                     params: { id: itemId }

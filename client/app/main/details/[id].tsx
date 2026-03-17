@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../../components/CustomStatusBar';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function Individual() {
@@ -11,15 +11,16 @@ export default function Individual() {
   
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1);
+
+  const screenWidth = Dimensions.get('window').width;
 
   useEffect(() => {
     const id = params?.id;
-    console.log('Params received:', params);
-    console.log('ID extracted:', id);
     
     if (id) {
       const idString = Array.isArray(id) ? id[0] : id;
-      console.log('Fetching with ID:', idString);
       fetchDetailedData(idString);
     }
   }, [params?.id]);
@@ -40,29 +41,23 @@ export default function Individual() {
       for (const endpoint of endpoints) {
         try {
           const res = await fetch(endpoint);
-          console.log(`Fetching from ${endpoint}: Status ${res.status}`);
           if (res.ok) {
             const data = await res.json();
             if (data && Object.keys(data).length > 0 && !data.error) {
               response = data;
-              console.log('Data found:', response);
               break;
             }
           }
         } catch (err) {
-          console.log(`Error fetching from ${endpoint}:`, err);
           continue;
         }
       }
 
       if (response) {
         setData(response);
-      } else {
-        console.log('No data found for ID:', id);
       }
       setLoading(false);
     } catch (err) {
-      console.log('Error fetching details:', err);
       setLoading(false);
     }
   };
@@ -108,9 +103,16 @@ export default function Individual() {
                 )}
               </View>
               {data.basicInfo?.logo && (
-                <View className="w-16 h-16 bg-white rounded-lg ml-2 overflow-hidden">
-                  {/* Logo display - you can update this to use Image component if needed */}
-                </View>
+                <TouchableOpacity 
+                  className="w-16 h-16 bg-white rounded-lg ml-2 overflow-hidden"
+                  onPress={() => setImageModalVisible(true)}
+                >
+                  <Image
+                    source={{ uri: data.basicInfo.logo }}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
               )}
             </View>
 
@@ -357,6 +359,60 @@ export default function Individual() {
           </View>
         </ScrollView>
       )}
+
+      {/* Image Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View className="flex-1 bg-black/90 justify-center items-center">
+          {/* Close Button */}
+          <TouchableOpacity 
+            className="absolute top-12 right-6 z-10"
+            onPress={() => {
+              setImageModalVisible(false);
+              setImageZoom(1);
+            }}
+          >
+            <X color="#ffffff" size={28} strokeWidth={2} />
+          </TouchableOpacity>
+
+          {/* Image Viewer */}
+          <View className="flex-1 justify-center items-center px-4">
+            {data?.basicInfo?.logo && (
+              <Image
+                source={{ uri: data.basicInfo.logo }}
+                style={{
+                  width: screenWidth - 32,
+                  height: screenWidth - 32,
+                  transform: [{ scale: imageZoom }],
+                }}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+
+          {/* Zoom Controls */}
+          <View className="flex-row justify-center gap-6 pb-12">
+            <TouchableOpacity 
+              className="bg-white/20 rounded-full p-4"
+              onPress={() => setImageZoom(Math.max(1, imageZoom - 0.2))}
+              disabled={imageZoom <= 1}
+            >
+              <ZoomOut color="#ffffff" size={24} strokeWidth={2} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="bg-white/20 rounded-full p-4"
+              onPress={() => setImageZoom(Math.min(3, imageZoom + 0.2))}
+              disabled={imageZoom >= 3}
+            >
+              <ZoomIn color="#ffffff" size={24} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
