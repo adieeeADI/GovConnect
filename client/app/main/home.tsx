@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { View, Text, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Home as HomeIcon, Search, Star, User, Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -27,11 +26,12 @@ export default function Home() {
     }
   };
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      <StatusBar style="light" />
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-      >
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+        >
         {/* Welcome Header */}
         <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
           <Text className="text-white text-lg mb-1">Welcome Back</Text>
@@ -60,7 +60,7 @@ export default function Home() {
         <View className="flex-row justify-between px-6 mb-6">
           <View className="flex-1 bg-blue-100 rounded-2xl p-4 mr-2 items-center">
             <Text className="text-blue-900 text-3xl font-bold">5</Text>
-            <Text className="text-blue-900 text-xs font-semibold text-center">Recommendation</Text>
+            <Text className="text-blue-900 text-xs font-semibold text-center">Recommended</Text>
           </View>
           <View className="flex-1 bg-purple-100 rounded-2xl p-4 mx-2 items-center">
             <Text className="text-purple-900 text-3xl font-bold">12</Text>
@@ -186,6 +186,7 @@ export default function Home() {
 
       {/* Bottom Navigation */}
       <BottomNav />
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 }

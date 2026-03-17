@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, X, FileText } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
@@ -77,7 +77,7 @@ export default function EditProfile() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <CustomStatusBar />
       
       {/* Header */}
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-6">

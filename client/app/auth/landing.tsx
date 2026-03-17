@@ -1,14 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomStatusBar from '../components/CustomStatusBar';
 import { Briefcase } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function Landing() {
   return (
     <SafeAreaView className="flex-1 bg-blue-900" edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <CustomStatusBar />
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
         showsVerticalScrollIndicator={false}

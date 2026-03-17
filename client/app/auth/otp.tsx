@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomStatusBar from '../components/CustomStatusBar';
 import Svg, { Rect, Circle, Path } from 'react-native-svg';
 
 const OTPVerification = () => {
@@ -60,6 +61,7 @@ const OTPVerification = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+      <CustomStatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 16 }}
         showsVerticalScrollIndicator={false}

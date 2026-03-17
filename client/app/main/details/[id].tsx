@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomStatusBar from '../../components/CustomStatusBar';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
@@ -33,17 +33,22 @@ export default function Individual() {
       for (const endpoint of endpoints) {
         try {
           const res = await fetch(endpoint);
+          console.log(`Fetching from ${endpoint}: Status ${res.status}`);
           if (res.ok) {
             response = await res.json();
+            console.log('Data received:', response);
             break;
           }
         } catch (err) {
+          console.log(`Error fetching from ${endpoint}:`, err);
           continue;
         }
       }
 
       if (response) {
         setData(response);
+      } else {
+        console.log('No data found for ID:', itemId);
       }
       setLoading(false);
     } catch (err) {
@@ -54,7 +59,7 @@ export default function Individual() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <CustomStatusBar />
       
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -86,7 +91,17 @@ export default function Individual() {
                 <Text className="text-white text-base opacity-90">
                   {data.basicInfo?.providerName || 'Provider'}
                 </Text>
+                {data.basicInfo?.department && (
+                  <Text className="text-white text-sm opacity-75 mt-1">
+                    Department: {data.basicInfo.department}
+                  </Text>
+                )}
               </View>
+              {data.basicInfo?.logo && (
+                <View className="w-16 h-16 bg-white rounded-lg ml-2 overflow-hidden">
+                  {/* Logo display - you can update this to use Image component if needed */}
+                </View>
+              )}
             </View>
 
             {/* Info Pills */}
@@ -115,6 +130,33 @@ export default function Individual() {
           </View>
 
           <View className="px-6 pb-6">
+            {/* Type & Mode Section */}
+            {(data.type || data.internshipDetails?.mode) && (
+              <View className="bg-gray-100 rounded-2xl p-4 mb-6">
+                <Text className="text-black text-lg font-bold mb-3">
+                  Opportunity Details
+                </Text>
+                {data.type && (
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-gray-700 font-semibold flex-1">Type:</Text>
+                    <Text className="text-gray-600">{data.type}</Text>
+                  </View>
+                )}
+                {data.internshipDetails?.mode && (
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-gray-700 font-semibold flex-1">Mode:</Text>
+                    <Text className="text-gray-600">{data.internshipDetails.mode}</Text>
+                  </View>
+                )}
+                {data.internshipDetails?.numberOfSeats && (
+                  <View className="flex-row items-center">
+                    <Text className="text-gray-700 font-semibold flex-1">Available Seats:</Text>
+                    <Text className="text-gray-600">{data.internshipDetails.numberOfSeats}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* About This Opportunity */}
             <Text className="text-black text-xl font-bold mb-3">
               About This Opportunity
@@ -136,17 +178,33 @@ export default function Individual() {
             )}
 
             {/* Eligibility */}
-            {(data.eligibility?.educationLevels || data.eligibility?.minimumCGPA) && (
+            {(data.eligibility?.educationLevels || data.eligibility?.streamsAllowed || data.eligibility?.yearOfStudyAllowed || data.eligibility?.minimumCGPA || data.eligibility?.statesEligible || data.eligibility?.ageLimit) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
                   Eligibility Requirements
                 </Text>
                 <View className="mb-6">
-                  {data.eligibility?.educationLevels && (
+                  {data.eligibility?.educationLevels?.length > 0 && (
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
                         Education: {data.eligibility.educationLevels.join(', ')}
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.streamsAllowed?.length > 0 && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Streams: {data.eligibility.streamsAllowed.join(', ')}
+                      </Text>
+                    </View>
+                  )}
+                  {data.eligibility?.yearOfStudyAllowed?.length > 0 && (
+                    <View className="flex-row items-start mb-3">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Year of Study: {data.eligibility.yearOfStudyAllowed.join(', ')}
                       </Text>
                     </View>
                   )}
@@ -158,7 +216,7 @@ export default function Individual() {
                       </Text>
                     </View>
                   )}
-                  {data.eligibility?.statesEligible && (
+                  {data.eligibility?.statesEligible?.length > 0 && (
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
@@ -166,7 +224,51 @@ export default function Individual() {
                       </Text>
                     </View>
                   )}
+                  {data.eligibility?.ageLimit && (data.eligibility.ageLimit.min !== null || data.eligibility.ageLimit.max !== null) && (
+                    <View className="flex-row items-start">
+                      <Check color="#10b981" size={20} strokeWidth={2} />
+                      <Text className="text-gray-700 text-base ml-3 flex-1">
+                        Age Limit: {data.eligibility.ageLimit.min ? `${data.eligibility.ageLimit.min} - ` : ''}{data.eligibility.ageLimit.max || 'No limit'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
+              </>
+            )}
+
+            {/* Selection Process */}
+            {data.applicationDetails?.selectionProcess && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Selection Process
+                </Text>
+                <Text className="text-gray-600 text-base leading-6 mb-6">
+                  {data.applicationDetails.selectionProcess}
+                </Text>
+              </>
+            )}
+
+            {/* Who Can Apply */}
+            {data.programDetails?.whoCanApply && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Who Can Apply
+                </Text>
+                <Text className="text-gray-600 text-base leading-6 mb-6">
+                  {data.programDetails.whoCanApply}
+                </Text>
+              </>
+            )}
+
+            {/* Terms & Conditions */}
+            {data.programDetails?.terms && (
+              <>
+                <Text className="text-black text-xl font-bold mb-3">
+                  Terms & Conditions
+                </Text>
+                <Text className="text-gray-600 text-base leading-6 mb-6">
+                  {data.programDetails.terms}
+                </Text>
               </>
             )}
 
@@ -183,6 +285,42 @@ export default function Individual() {
                     End Date: {new Date(data.applicationDetails.endDate).toLocaleDateString()}
                   </Text>
                 )}
+              </View>
+            )}
+
+            {/* Metadata Info */}
+            {(data.metadata?.source || data.metadata?.viewCount !== undefined || data.metadata?.saveCount !== undefined) && (
+              <View className="bg-gray-100 rounded-2xl p-4 mb-6">
+                {data.metadata?.source && (
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-gray-700 font-semibold flex-1">Source:</Text>
+                    <Text className="text-gray-600">{data.metadata.source}</Text>
+                  </View>
+                )}
+                {data.metadata?.viewCount !== undefined && (
+                  <View className="flex-row items-center mb-2">
+                    <Text className="text-gray-700 font-semibold flex-1">Views:</Text>
+                    <Text className="text-gray-600">{data.metadata.viewCount}</Text>
+                  </View>
+                )}
+                {data.metadata?.saveCount !== undefined && (
+                  <View className="flex-row items-center">
+                    <Text className="text-gray-700 font-semibold flex-1">Saves:</Text>
+                    <Text className="text-gray-600">{data.metadata.saveCount}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Status Badge */}
+            {data.status && (
+              <View className="mb-6 flex-row items-center">
+                <Text className="text-gray-700 font-semibold mr-3">Status:</Text>
+                <View className={`px-3 py-1 rounded-full ${data.status === 'Active' ? 'bg-green-100' : 'bg-gray-200'}`}>
+                  <Text className={`font-semibold ${data.status === 'Active' ? 'text-green-700' : 'text-gray-700'}`}>
+                    {data.status}
+                  </Text>
+                </View>
               </View>
             )}
 

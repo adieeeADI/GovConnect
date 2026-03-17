@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, MapPin, Lightbulb, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import BottomNav from './bottom';
@@ -82,7 +82,7 @@ export default function Recommendation() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <CustomStatusBar />
       
       {/* Header */}
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
