@@ -7,7 +7,7 @@ const router = express.Router();
 // GET all internships
 router.get("/internships", async (req, res) => {
   try {
-    const data = await Internship.find().select('+_id');
+    const data = await Internship.find();
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -38,7 +38,7 @@ router.get("/internships/:id", async (req, res) => {
 // GET all scholarships
 router.get("/scholarships", async (req, res) => {
   try {
-    const data = await Scholarship.find().select('+_id');
+    const data = await Scholarship.find();
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
