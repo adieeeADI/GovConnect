@@ -220,13 +220,19 @@ export default function Browse() {
               <ActivityIndicator size="large" color="#1e3a8a" />
             </View>
           ) : displayData.length > 0 ? (
-            displayData.map((item) => (
+            displayData.map((item, index) => {
+              const itemId = item.basicInfo?.title || `item-${index}`;
+              return (
               <TouchableOpacity
-                key={item._id}
+                key={itemId}
                 className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
                 activeOpacity={0.8}
                 onPress={() => {
-                  router.push(`/main/details/${item._id}`);
+                  console.log('Navigating with title:', itemId);
+                  router.push({
+                    pathname: '/main/details/[id]',
+                    params: { id: encodeURIComponent(itemId) }
+                  });
                 }}
               >
                 <View className="flex-row items-start justify-between mb-2">
@@ -258,7 +264,8 @@ export default function Browse() {
                   </Text>
                 </View>
               </TouchableOpacity>
-            ))
+            );
+            })
           ) : (
             <View className="items-center py-12">
               <Text className="text-gray-500 text-base">No opportunities found</Text>

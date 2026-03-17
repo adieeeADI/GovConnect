@@ -8,25 +8,34 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 export default function Individual() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { id } = params;
 
   useEffect(() => {
+    const id = params?.id;
+    console.log('Params received:', params);
+    console.log('ID extracted:', id);
+    
     if (id) {
-      fetchDetailedData(id as string);
+      const idString = Array.isArray(id) ? id[0] : id;
+      console.log('Fetching with ID:', idString);
+      fetchDetailedData(idString);
     }
-  }, [id]);
+  }, [params?.id]);
 
-  const fetchDetailedData = async (itemId: string) => {
+  const fetchDetailedData = async (title: string) => {
     try {
       setLoading(true);
-      // Try fetching from internships first, then scholarships
+      const decodedTitle = decodeURIComponent(title);
+      console.log('Fetching details for title:', decodedTitle);
+      
+      // Try fetching from all endpoints to find the matching item by title
       const endpoints = [
-        `https://govconnect-ad4s.onrender.com/api/data/internships/${itemId}`,
-        `https://govconnect-ad4s.onrender.com/api/data/scholarships/${itemId}`,
-        `https://govconnect-ad4s.onrender.com/api/data/schemes/${itemId}`,
-        `https://govconnect-ad4s.onrender.com/api/data/training/${itemId}`,
+        'https://govconnect-ad4s.onrender.com/api/data/internships',
+        'https://govconnect-ad4s.onrender.com/api/data/scholarships',
+        'https://govconnect-ad4s.onrender.com/api/data/schemes',
+        'https://govconnect-ad4s.onrender.com/api/data/training',
       ];
 
       let response = null;
@@ -35,9 +44,17 @@ export default function Individual() {
           const res = await fetch(endpoint);
           console.log(`Fetching from ${endpoint}: Status ${res.status}`);
           if (res.ok) {
-            response = await res.json();
-            console.log('Data received:', response);
-            break;
+            const data = await res.json();
+            // Find item by title
+            const item = Array.isArray(data) 
+              ? data.find(i => i.basicInfo?.title === decodedTitle) 
+              : data;
+            
+            if (item) {
+              response = item;
+              console.log('Data found:', response);
+              break;
+            }
           }
         } catch (err) {
           console.log(`Error fetching from ${endpoint}:`, err);
@@ -48,7 +65,7 @@ export default function Individual() {
       if (response) {
         setData(response);
       } else {
-        console.log('No data found for ID:', itemId);
+        console.log('No data found for title:', decodedTitle);
       }
       setLoading(false);
     } catch (err) {
