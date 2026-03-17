@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, FlatList, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Home as HomeIcon, Search, Star, User, Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award } from 'lucide-react-native';
@@ -8,21 +8,6 @@ import BottomNav from './bottom';
 
 export default function Home() {
   const router = useRouter();
-  const [internships, setInternships] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("https://govconnect-ad4s.onrender.com/api/data/internships")
-      .then(res => res.json())
-      .then(json => {
-        setInternships(json);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.log("Error fetching internships:", err);
-        setLoading(false);
-      });
-  }, []);
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
       <StatusBar style="light" />
@@ -176,46 +161,6 @@ export default function Home() {
             2 new internships matching your profile match. Check recommendations.
           </Text>
         </View>
-
-        {/* Latest Opportunities Section */}
-        <Text className="text-black text-xl font-bold px-6 mb-4">
-          Latest Opportunities
-        </Text>
-
-        {loading ? (
-          <View className="items-center py-8">
-            <ActivityIndicator size="large" color="#1e3a8a" />
-          </View>
-        ) : internships.length > 0 ? (
-          <View className="px-6 mb-6">
-            {internships.slice(0, 5).map((item) => (
-              <TouchableOpacity 
-                key={item._id} 
-                className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
-                onPress={() => router.push(`/main/details/${item._id}`)}
-              >
-                <Text className="text-base font-bold text-black mb-1">
-                  {item.basicInfo?.title || 'Internship'}
-                </Text>
-                <Text className="text-sm text-gray-600 mb-2">
-                  {item.basicInfo?.providerName || 'Company Name'}
-                </Text>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-xs text-gray-500">
-                    {item.internshipDetails?.location?.[0] || 'Location'}
-                  </Text>
-                  <Text className="text-sm font-semibold text-blue-900">
-                    {item.internshipDetails?.stipend || '₹0'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ) : (
-          <View className="px-6 py-4">
-            <Text className="text-gray-500 text-center">No internships available</Text>
-          </View>
-        )}
 
         {/* Bottom padding for navigation bar */}
         <View className="h-20" />

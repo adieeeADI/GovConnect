@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, MapPin, Clock, ArrowRight, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
@@ -8,91 +8,18 @@ import BottomNav from './bottom';
 
 type Category = 'internships' | 'scholarships' | 'schemes' | 'training';
 
-const categoryData = {
-  internships: {
-    title: 'Government Internships',
-    items: [
-      {
-        id: 1,
-        title: 'AI Research Internship',
-        organization: 'Ministry of Science and Technology',
-        location: 'Delhi',
-        duration: '6 Months',
-        stipend: '₹10,000/month',
-      },
-      {
-        id: 2,
-        title: 'Digital India Internship',
-        organization: 'Ministry of IT',
-        location: 'Bangalore',
-        duration: '3 Months',
-        stipend: '₹12,000/month',
-      },
-    ],
-  },
-  scholarships: {
-    title: 'Government Scholarships',
-    items: [
-      {
-        id: 1,
-        title: 'Merit Scholarships',
-        organization: 'Ministry of Education',
-        location: 'All India',
-        duration: '6 Months',
-        stipend: '₹50,000/year',
-      },
-      {
-        id: 2,
-        title: 'SC/ST Scholarship',
-        organization: 'Ministry of Social Justice',
-        location: 'All India',
-        duration: '3 Months',
-        stipend: '₹75,000/year',
-      },
-    ],
-  },
-  schemes: {
-    title: 'Government Schemes',
-    items: [
-      {
-        id: 1,
-        title: 'Startup India Scheme',
-        organization: 'Ministry of Commerce',
-        location: 'All India',
-        duration: '12 Months',
-        stipend: 'Funding Available',
-      },
-      {
-        id: 2,
-        title: 'Skill Development Scheme',
-        organization: 'Ministry of Skill Development',
-        location: 'All India',
-        duration: '6 Months',
-        stipend: 'Free Training',
-      },
-    ],
-  },
-  training: {
-    title: 'Training & Certification',
-    items: [
-      {
-        id: 1,
-        title: 'Digital Marketing Certification',
-        organization: 'NIELIT',
-        location: 'Online',
-        duration: '3 Months',
-        stipend: 'Free',
-      },
-      {
-        id: 2,
-        title: 'Data Science Training',
-        organization: 'NPTEL',
-        location: 'Online',
-        duration: '4 Months',
-        stipend: 'Free',
-      },
-    ],
-  },
+const categoryTitles = {
+  internships: 'Government Internships',
+  scholarships: 'Government Scholarships',
+  schemes: 'Government Schemes',
+  training: 'Training & Certification',
+};
+
+const categoryEndpoints = {
+  internships: 'https://govconnect-ad4s.onrender.com/api/data/internships',
+  scholarships: 'https://govconnect-ad4s.onrender.com/api/data/scholarships',
+  schemes: 'https://govconnect-ad4s.onrender.com/api/data/schemes',
+  training: 'https://govconnect-ad4s.onrender.com/api/data/training',
 };
 
 export default function Browse() {
@@ -103,8 +30,43 @@ export default function Browse() {
   );
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const currentData = categoryData[activeCategory];
+  useEffect(() => {
+    fetchCategoryData(activeCategory);
+  }, [activeCategory]);
+
+  const fetchCategoryData = async (category: Category) => {
+    setLoading(true);
+    try {
+      const response = await fetch(categoryEndpoints[category]);
+      const json = await response.json();
+      setData(json);
+    } catch (err) {
+      console.log('Error fetching data:', err);
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterAndSearchData = () => {
+    let filtered = [...data];
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(item =>
+        item.basicInfo?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.basicInfo?.providerName?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const displayData = filterAndSearchData();
+  const currentTitle = categoryTitles[activeCategory];
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
@@ -120,7 +82,7 @@ export default function Browse() {
           <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
         </TouchableOpacity>
         <Text className="text-white text-base mb-1">Browse Opportunities</Text>
-        <Text className="text-white text-2xl font-bold">{currentData.title}</Text>
+        <Text className="text-white text-2xl font-bold">{currentTitle}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -253,56 +215,55 @@ export default function Browse() {
 
         {/* Opportunity Cards */}
         <View className="px-6 mb-20">
-          {currentData.items.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
-              activeOpacity={0.8}
-              // onPress={() => {
-              //   router.push({
-              //     pathname: '/main/details/[id]' as any,
-              //     params: {
-              //       id: item.id,
-              //       category: activeCategory,
-              //       title: item.title,
-              //       organization: item.organization,
-              //       location: item.location,
-              //       duration: item.duration,
-              //       stipend: item.stipend,
-              //     }
-              //   });
-              // }}
-            >
-              <View className="flex-row items-start justify-between mb-2">
-                <Text className="text-black text-lg font-bold flex-1">
-                  {item.title}
+          {loading ? (
+            <View className="items-center py-12">
+              <ActivityIndicator size="large" color="#1e3a8a" />
+            </View>
+          ) : displayData.length > 0 ? (
+            displayData.map((item) => (
+              <TouchableOpacity
+                key={item._id}
+                className="bg-white rounded-2xl p-4 mb-4 border border-gray-200"
+                activeOpacity={0.8}
+                onPress={() => {
+                  router.push(`/main/details/${item._id}`);
+                }}
+              >
+                <View className="flex-row items-start justify-between mb-2">
+                  <Text className="text-black text-lg font-bold flex-1">
+                    {item.basicInfo?.title || 'Opportunity'}
+                  </Text>
+                  <ArrowRight color="#000000" size={24} strokeWidth={2} />
+                </View>
+
+                <Text className="text-gray-600 text-sm mb-3">
+                  {item.basicInfo?.providerName || 'Provider'}
                 </Text>
-                <ArrowRight color="#000000" size={24} strokeWidth={2} />
-              </View>
 
-              <Text className="text-gray-600 text-sm mb-3">
-                {item.organization}
-              </Text>
+                <View className="flex-row items-center mb-2">
+                  <MapPin color="#6b7280" size={16} strokeWidth={2} />
+                  <Text className="text-gray-600 text-sm ml-1">
+                    {item.internshipDetails?.location?.[0] || item.benefits?.covers?.[0] || 'Location'}
+                  </Text>
+                  <View className="mx-3 w-1 h-1 bg-gray-400 rounded-full" />
+                  <Clock color="#6b7280" size={16} strokeWidth={2} />
+                  <Text className="text-gray-600 text-sm ml-1">
+                    {item.internshipDetails?.duration || item.applicationDetails?.endDate || 'Duration'}
+                  </Text>
+                </View>
 
-              <View className="flex-row items-center mb-2">
-                <MapPin color="#6b7280" size={16} strokeWidth={2} />
-                <Text className="text-gray-600 text-sm ml-1">{item.location}</Text>
-                <View className="mx-3 w-1 h-1 bg-gray-400 rounded-full" />
-                <Clock color="#6b7280" size={16} strokeWidth={2} />
-                <Text className="text-gray-600 text-sm ml-1">{item.duration}</Text>
-              </View>
-
-              <View className={`self-start px-3 py-1 rounded-full ${
-                activeCategory === 'scholarships' ? 'bg-blue-100' : 'bg-green-100'
-              }`}>
-                <Text className={`text-sm font-semibold ${
-                  activeCategory === 'scholarships' ? 'text-blue-700' : 'text-green-700'
-                }`}>
-                  {item.stipend}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View className={`self-start px-3 py-1 rounded-full bg-green-100`}>
+                  <Text className="text-sm font-semibold text-green-700">
+                    {item.internshipDetails?.stipend || item.benefits?.scholarshipAmount || 'Amount'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View className="items-center py-12">
+              <Text className="text-gray-500 text-base">No opportunities found</Text>
+            </View>
+          )}
         </View>
 
         {/* Bottom padding for navigation bar */}
