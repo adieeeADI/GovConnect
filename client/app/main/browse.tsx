@@ -221,7 +221,8 @@ export default function Browse() {
             </View>
           ) : displayData.length > 0 ? (
             displayData.map((item, index) => {
-              const itemId = item._id ? item._id.toString() : (item.basicInfo?.title || `item-${index}`);
+              // Use array index as ID temporarily (data IDs are 1-10 in sequence)
+              const itemId = (index + 1).toString();
               return (
               <TouchableOpacity
                 key={itemId}
