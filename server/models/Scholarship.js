@@ -59,13 +59,6 @@ const scholarshipSchema = new mongoose.Schema({
     renewalPolicy: String
   }
 
-}, { timestamps: true, _id: true });
-
-scholarshipSchema.set('toJSON', { 
-  transform: (doc, ret) => {
-    ret._id = doc._id;
-    return ret;
-  }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Scholarship", scholarshipSchema);

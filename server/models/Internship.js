@@ -56,13 +56,6 @@ const internshipSchema = new mongoose.Schema({
     lastScrapedAt: Date
   }
 
-}, { timestamps: true, _id: true });
-
-internshipSchema.set('toJSON', { 
-  transform: (doc, ret) => {
-    ret._id = doc._id;
-    return ret;
-  }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Internship", internshipSchema);
