@@ -9,7 +9,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
-
+app.use("/api/data", require("./routes/data"));
 app.use("/api/auth", require("./routes/auth"));
 
 app.get("/", (req, res) => {
