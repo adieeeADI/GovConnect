@@ -1,13 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Home as HomeIcon, Search, Star, User, Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from './bottom';
 
 export default function Home() {
   const router = useRouter();
+  const [userName, setUserName] = useState('Guest');
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const user = JSON.parse(userData);
+        setUserName(user.fullName || user.email || 'Guest');
+      }
+    } catch (err) {
+      console.log('Error loading user data:', err);
+    }
+  };
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
       <StatusBar style="light" />
@@ -17,7 +35,7 @@ export default function Home() {
         {/* Welcome Header */}
         <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
           <Text className="text-white text-lg mb-1">Welcome Back</Text>
-          <Text className="text-white text-3xl font-bold mb-2">Soham Shelar</Text>
+          <Text className="text-white text-3xl font-bold mb-2">{userName}</Text>
           <Text className="text-white text-sm">Ready to find out your next opportunity?</Text>
         </View>
 
@@ -163,7 +181,7 @@ export default function Home() {
         </View>
 
         {/* Bottom padding for navigation bar */}
-        <View className="h-20" />
+        <View className="h-32" />
       </ScrollView>
 
       {/* Bottom Navigation */}

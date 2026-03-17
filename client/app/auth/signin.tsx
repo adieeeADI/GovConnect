@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -52,7 +53,8 @@ export default function SignIn() {
         return;
       }
 
-      // Login successful
+      // Login successful - save user data
+      await AsyncStorage.setItem('userData', JSON.stringify(data.user));
       setLoading(false);
       router.push('/main/home');
     } catch (err) {
