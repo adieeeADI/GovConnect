@@ -87,4 +87,4 @@ const schemeSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model("Scheme", schemeSchema);
+module.exports = mongoose.model("Scheme", schemeSchema, "schemes");

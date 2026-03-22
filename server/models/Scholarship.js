@@ -66,4 +66,4 @@ const scholarshipSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model("Scholarship", scholarshipSchema);
+module.exports = mongoose.model("Scholarship", scholarshipSchema, "scholarships");
