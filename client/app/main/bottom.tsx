@@ -15,6 +15,14 @@ export default function BottomNav() {
     return pathname.startsWith(path);
   };
 
+  const handleNavigation = (path: string) => {
+    // Don't navigate if already on that page
+    if (isActive(path)) {
+      return;
+    }
+    router.replace(path);
+  };
+
   return (
     <SafeAreaView 
       edges={['bottom']} 
@@ -26,7 +34,7 @@ export default function BottomNav() {
         <TouchableOpacity 
           className="items-center"
           activeOpacity={0.7}
-          onPress={() => router.push('/main/home')}
+          onPress={() => handleNavigation('/main/home')}
         >
           <Home 
             color={isActive('/main/home') ? '#ef4444' : '#9ca3af'} 
@@ -43,7 +51,7 @@ export default function BottomNav() {
         <TouchableOpacity 
           className="items-center"
           activeOpacity={0.7}
-          onPress={() => router.push('/main/browse?category=internships')}
+          onPress={() => handleNavigation('/main/browse')}
         >
           <Search 
             color={isActive('/main/browse') ? '#ef4444' : '#9ca3af'} 
@@ -60,7 +68,7 @@ export default function BottomNav() {
         <TouchableOpacity 
           className="items-center" 
           activeOpacity={0.7}
-          onPress={() => router.push('/main/recommendation')}
+          onPress={() => handleNavigation('/main/recommendation')}
         >
           <Star 
             color={isActive('/main/recommendation') ? '#ef4444' : '#9ca3af'} 
@@ -77,14 +85,14 @@ export default function BottomNav() {
         <TouchableOpacity 
           className="items-center" 
           activeOpacity={0.7}
-          onPress={() => router.push('/profile/profile')}
+          onPress={() => handleNavigation('/profile/profile')}
         >
           <User 
-            color={isActive('/main/profile') ? '#ef4444' : '#9ca3af'} 
+            color={isActive('/profile') ? '#ef4444' : '#9ca3af'} 
             size={24}
           />
           <Text className={`text-xs mt-1 font-semibold ${
-            isActive('/main/profile') ? 'text-red-600' : 'text-gray-400'
+            isActive('/profile') ? 'text-red-600' : 'text-gray-400'
           }`}>
             Profile
           </Text>

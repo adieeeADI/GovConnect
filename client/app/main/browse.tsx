@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomStatusBar from '../components/CustomStatusBar';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
 import { ArrowLeft, MapPin, Clock, ArrowRight, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import BottomNav from './bottom';
 
 type Category = 'internships' | 'scholarships' | 'schemes' | 'training';
@@ -37,6 +35,20 @@ export default function Browse() {
     fetchCategoryData(activeCategory);
   }, [activeCategory]);
 
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/main/home');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
+
   const fetchCategoryData = async (category: Category) => {
     setLoading(true);
     try {
@@ -68,23 +80,20 @@ export default function Browse() {
   const currentTitle = categoryTitles[activeCategory];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      <CustomStatusBar />
-      
-      {/* Header */}
-      <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
-        <TouchableOpacity 
-          className="mb-4"
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
-        </TouchableOpacity>
-        <Text className="text-white text-base mb-1">Browse Opportunities</Text>
-        <Text className="text-white text-2xl font-bold">{currentTitle}</Text>
-      </View>
-
+    <View className="flex-1 bg-white">
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-4">
+          <TouchableOpacity 
+            className="mb-4"
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
+          </TouchableOpacity>
+          <Text className="text-white text-base mb-1">Browse Opportunities</Text>
+          <Text className="text-white text-2xl font-bold">{currentTitle}</Text>
+        </View>
         {/* Category Tabs */}
         <View className="mb-4">
           <ScrollView 
@@ -277,6 +286,6 @@ export default function Browse() {
 
       {/* Bottom Navigation */}
       <BottomNav />
-    </SafeAreaView>
+    </View>
   );
 }

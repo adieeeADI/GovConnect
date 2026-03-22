@@ -1,74 +1,9 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomStatusBar from '../components/CustomStatusBar';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, BackHandler, ActivityIndicator } from 'react-native';
 import { ArrowLeft, MapPin, Lightbulb, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from './bottom';
-
-const recommendations = [
-  {
-    id: 1,
-    title: 'AI Research Internship',
-    organization: 'Ministry of Science & Technology',
-    location: 'Delhi',
-    duration: '6 Months',
-    stipend: '₹10,000/month',
-    match: 95,
-    reason: 'Matches your Python skills and AI interests',
-    tags: ['AI', 'Research', 'Delhi'],
-    category: 'internships',
-  },
-  {
-    id: 2,
-    title: 'Digital India Development Program',
-    organization: 'Ministry of Electronics & IT',
-    location: 'Bangalore',
-    duration: '3 Months',
-    stipend: '₹12,000/month',
-    match: 88,
-    reason: 'Aligns with your tech background',
-    tags: ['Tech', 'Development', 'Bangalore'],
-    category: 'internships',
-  },
-  {
-    id: 1,
-    title: 'Data Science Scholarship',
-    organization: 'Ministry of Education',
-    location: 'Online',
-    duration: '6 Months',
-    stipend: '₹50,000/year',
-    match: 85,
-    reason: 'Perfect for your analytical skills',
-    tags: ['Data Science', 'Scholarship', 'Online'],
-    category: 'scholarships',
-  },
-  {
-    id: 4,
-    title: 'Skill India Certification - ML',
-    organization: 'Skill India (NSDC)',
-    location: 'Online',
-    duration: '3 Months',
-    stipend: 'Free',
-    match: 82,
-    reason: 'Enhances career prospects',
-    tags: ['ML', 'Certification', 'Free'],
-    highlighted: true,
-    category: 'training',
-  },
-  {
-    id: 5,
-    title: 'Government Tech Trainee',
-    organization: 'NIC - Digital Initiative',
-    location: 'Delhi',
-    duration: '6 Months',
-    stipend: '₹8,000/month',
-    match: 78,
-    reason: 'Requires your core skills',
-    tags: ['Training', 'Government', 'Delhi'],
-    category: 'training',
-  },
-];
 
 const getMatchColor = (match: number) => {
   if (match >= 90) return 'text-green-500';
@@ -79,33 +14,104 @@ const getMatchColor = (match: number) => {
 
 export default function Recommendation() {
   const router = useRouter();
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, []);
+
+  const fetchRecommendations = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Get user data from AsyncStorage
+      const userData = await AsyncStorage.getItem('userData');
+      if (!userData) {
+        setError('User data not found. Please login again.');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId = user.id || user._id;  // Try both field names
+
+      if (!userId) {
+        setError('User ID not found. Please login again.');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch recommendations from Gemini service
+      const response = await fetch(
+        `https://govconnect-ad4s.onrender.com/api/recommend/${userId}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch recommendations');
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setRecommendations(data);
+      } else if (data.recommendations && Array.isArray(data.recommendations)) {
+        setRecommendations(data.recommendations);
+      } else {
+        console.log('Unexpected API response format:', data);
+        setRecommendations([]);
+      }
+    } catch (err) {
+      console.log('Error fetching recommendations:', err);
+      setError('Could not load recommendations. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/main/home');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
-      <CustomStatusBar />
-      
-      {/* Header */}
-      <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
-        <TouchableOpacity 
-          className="mb-4"
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
-        </TouchableOpacity>
-        
-        <Text className="text-white text-3xl font-bold mb-2">
-          Recommended For You
-        </Text>
-        <Text className="text-blue-200 text-base">
-          Based on your profile and interests
-        </Text>
-      </View>
-
+    <View className="flex-1 bg-white">
       <ScrollView 
         showsVerticalScrollIndicator={false}
-        className="flex-1 px-6"
+        className="flex-1"
       >
+        {/* Header */}
+        <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-4">
+          <TouchableOpacity 
+            className="mb-4"
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
+          </TouchableOpacity>
+          
+          <Text className="text-white text-3xl font-bold mb-2">
+            Recommended For You
+          </Text>
+          <Text className="text-blue-200 text-base">
+            Based on your profile and interests
+          </Text>
+        </View>
+
+        <View className="px-6">
         {/* Tip Box */}
         <View className="bg-orange-50 border-l-4 border-orange-400 rounded-lg p-4 mb-5">
           <View className="flex-row items-start">
@@ -119,8 +125,30 @@ export default function Recommendation() {
           </View>
         </View>
 
+        {/* Loading State */}
+        {loading && (
+          <View className="flex-1 items-center justify-center py-20">
+            <ActivityIndicator size="large" color="#1e3a8a" />
+            <Text className="text-gray-600 mt-4">Finding your perfect matches...</Text>
+          </View>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <View className="bg-red-50 border border-red-200 rounded-lg p-4 mb-5">
+            <Text className="text-red-900 font-semibold">Error</Text>
+            <Text className="text-red-700 text-sm mt-1">{error}</Text>
+            <TouchableOpacity 
+              className="mt-3 bg-red-600 rounded-lg px-4 py-2"
+              onPress={fetchRecommendations}
+            >
+              <Text className="text-white font-semibold text-center">Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Recommendations List */}
-        {recommendations.map((item, index) => (
+        {!loading && recommendations.length > 0 && recommendations.map((item, index) => (
           <TouchableOpacity
             key={`${item.category}-${item.id}-${index}`}
             className={`bg-white rounded-xl p-4 mb-4 ${
@@ -128,10 +156,12 @@ export default function Recommendation() {
             }`}
             activeOpacity={0.8}
             onPress={() => {
+              // Extract numeric ID from prefixed ID (e.g., "internships_2" -> "2")
+              const numericId = item.id.split('_')[1] || item.id;
               router.push({
                 pathname: '/main/details/[id]' as any,
                 params: {
-                  id: item.id.toString(),
+                  id: numericId,
                   category: item.category
                 }
               });
@@ -183,6 +213,18 @@ export default function Recommendation() {
           </TouchableOpacity>
         ))}
 
+        {/* Empty State */}
+        {!loading && recommendations.length === 0 && !error && (
+          <View className="py-12 items-center">
+            <Text className="text-gray-600 text-center text-base">
+              No recommendations available at the moment.
+            </Text>
+            <Text className="text-gray-500 text-center text-sm mt-2">
+              Complete your profile to get personalized recommendations.
+            </Text>
+          </View>
+        )}
+
         {/* Action Buttons */}
         <View className="mb-6">
           <TouchableOpacity 
@@ -195,10 +237,11 @@ export default function Recommendation() {
             </Text>
           </TouchableOpacity>
         </View>
+        </View>
       </ScrollView>
 
       {/* Bottom Navigation */}
       <BottomNav />
-    </SafeAreaView>
+    </View>
   );
 }

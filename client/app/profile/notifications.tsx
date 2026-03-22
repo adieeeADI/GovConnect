@@ -1,10 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 
 const NotificationSettings = () => {
   const router = useRouter();
+
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/profile/profile');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
+
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: true,

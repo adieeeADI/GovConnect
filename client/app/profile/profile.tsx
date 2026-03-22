@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomStatusBar from '../components/CustomStatusBar';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, BackHandler } from 'react-native';
 import { ArrowLeft, Mail, Phone, MapPin, Bell, Lock, Globe, Home as HomeIcon, Search, Star, User as UserIcon } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import BottomNav from 'app/main/bottom';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -15,6 +13,20 @@ export default function Profile() {
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/main/home');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
 
   const fetchUserData = async () => {
     try {
@@ -31,12 +43,39 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          onPress: async () => {
+            try {
+              // Clear AsyncStorage
+              await AsyncStorage.removeItem('userData');
+              await AsyncStorage.removeItem('userId');
+              // Navigate to landing page
+              router.replace('/auth/landing');
+            } catch (error) {
+              console.log('Error logging out:', error);
+            }
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      <CustomStatusBar />
-      
+    <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
+      <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-6 mb-4">
         <TouchableOpacity 
           className="mb-4"
           onPress={() => router.back()}
@@ -236,6 +275,7 @@ export default function Profile() {
           <TouchableOpacity 
             className="bg-white rounded-2xl p-4 border-2 border-red-500"
             activeOpacity={0.7}
+            onPress={handleLogout}
           >
             <Text className="text-red-600 text-center text-base font-bold">
               Logout
@@ -251,6 +291,6 @@ export default function Profile() {
 
       {/* Bottom Navigation */}
       <BottomNav />
-    </SafeAreaView>
+    </View>
   );
-}
+};

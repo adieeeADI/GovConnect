@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomStatusBar from '../../components/CustomStatusBar';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler } from 'react-native';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 
 export default function Individual() {
   const router = useRouter();
@@ -27,6 +25,20 @@ export default function Individual() {
     }
   }, [params?.id, params?.category]);
 
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/main/browse');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
+
   const fetchDetailedData = async (id: string, category: string) => {
     try {
       setLoading(true);
@@ -48,9 +60,7 @@ export default function Individual() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <CustomStatusBar />
-      
+    <View className="flex-1 bg-white">
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1e3a8a" />
@@ -64,7 +74,7 @@ export default function Individual() {
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Header */}
-          <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-6">
+          <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-6">
             <TouchableOpacity 
               className="mb-4"
               onPress={() => router.back()}
@@ -782,6 +792,6 @@ export default function Individual() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

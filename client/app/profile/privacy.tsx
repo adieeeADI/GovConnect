@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import Delete from './delete';
 import { ArrowLeft } from 'lucide-react-native';
 
 const PrivacySecurity = () => {
   const router = useRouter();
+
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/profile/profile');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
   
   const [settings, setSettings] = useState({
     profileVisibility: 'public',

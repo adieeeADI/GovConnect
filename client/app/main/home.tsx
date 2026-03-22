@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
 import { Home as HomeIcon, Search, Star, User, Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from './bottom';
 
@@ -13,6 +12,18 @@ export default function Home() {
   useEffect(() => {
     loadUserData();
   }, []);
+
+  // Prevent back navigation on home screen
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => true // Return true to prevent default back behavior
+      );
+
+      return () => backHandler.remove();
+    }, [])
+  );
 
   const loadUserData = async () => {
     try {
@@ -26,14 +37,12 @@ export default function Home() {
     }
   };
   return (
-    <>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-        >
+    <View className="flex-1 bg-white">
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Welcome Header */}
-        <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
+        <View className="bg-blue-900 px-6 pt-12 pb-8 rounded-b-3xl mb-4">
           <Text className="text-white text-lg mb-1">Welcome Back</Text>
           <Text className="text-white text-3xl font-bold mb-2">{userName}</Text>
           <Text className="text-white text-sm">Ready to find out your next opportunity?</Text>
@@ -186,7 +195,6 @@ export default function Home() {
 
       {/* Bottom Navigation */}
       <BottomNav />
-      </SafeAreaView>
-    </>
+    </View>
   );
 }

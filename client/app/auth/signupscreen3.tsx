@@ -76,8 +76,8 @@ export default function SignUpScreen3() {
         return;
       }
 
-      Alert.alert("Success", "Account created successfully");
-      router.replace("/main/home");
+      Alert.alert("Success", "Account created successfully! Please log in.");
+      router.replace("/auth/signin");
 
     } catch (error) {
       Alert.alert("Error", "Network error. Please try again.");

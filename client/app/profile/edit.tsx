@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomStatusBar from '../components/CustomStatusBar';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { ArrowLeft, X, FileText } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 
 export default function EditProfile() {
   const router = useRouter();
+
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/profile/profile');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
 
   // Personal Information
   const [fullName, setFullName] = useState('Rajesh Kumar');
@@ -76,11 +88,9 @@ export default function EditProfile() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <CustomStatusBar />
-      
+    <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-6">
+      <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-6 mb-6">
         <TouchableOpacity 
           className="mb-4"
           onPress={() => router.back()}
@@ -279,6 +289,6 @@ export default function EditProfile() {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

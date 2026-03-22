@@ -1,10 +1,25 @@
 import { ArrowLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 const ChangePassword = () => {
   const router = useRouter();
+
+  // Prevent back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          router.replace('/profile/profile');
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [])
+  );
+
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
