@@ -2,6 +2,13 @@
   "name": "govconnect-scraper",
   "version": "1.0.0",
   "main": "scraper.js",
+  "scripts": {
+    "scrape:schemes": "node Scheme-scraper.js",
+    "scrape:scholarships": "node Scholarship-scraper.js",
+    "scrape:internships": "node Internship-scraper-puppeteer.js",
+    "scrape:training": "node Training-certification-scraper-puppeteer.js",
+    "scrape:all": "npm run scrape:schemes && npm run scrape:scholarships && npm run scrape:internships && npm run scrape:training"
+  },
   "type": "commonjs",
   "dependencies": {
     "axios": "^1.13.5",

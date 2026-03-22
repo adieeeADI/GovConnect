@@ -5,3 +5,6 @@ server/.env
 # General
 node_modules/
 .env
+
+# Scraper output data
+server/scraper/**/data.json
