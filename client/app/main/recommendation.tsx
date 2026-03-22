@@ -87,6 +87,93 @@ export default function Recommendation() {
     }, [])
   );
 
+  // Ensure recommendations is always an array
+  const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+  
+  console.log('Render state:', { loading, error, recCount: safeRecommendations.length, recExists: !!safeRecommendations });
+
+  const renderRecommendationsList = () => {
+    if (loading) return null;
+    if (error) return null;
+    
+    if (!safeRecommendations || safeRecommendations.length === 0) {
+      return (
+        <View className="py-12 items-center">
+          <Text className="text-gray-600 text-center text-base">
+            No recommendations available at the moment.
+          </Text>
+          <Text className="text-gray-500 text-center text-sm mt-2">
+            Complete your profile to get personalized recommendations.
+          </Text>
+        </View>
+      );
+    }
+
+    return safeRecommendations.map((item, index) => (
+      <TouchableOpacity
+        key={`${item.category}-${item.id}-${index}`}
+        className={`bg-white rounded-xl p-4 mb-4 ${
+          item.highlighted ? 'border-2 border-blue-500' : 'border border-gray-200'
+        }`}
+        activeOpacity={0.8}
+        onPress={() => {
+          const numericId = item.id.split('_')[1] || item.id;
+          router.push({
+            pathname: '/main/details/[id]' as any,
+            params: {
+              id: numericId,
+              category: item.category
+            }
+          });
+        }}
+      >
+        {/* Header */}
+        <View className="flex-row items-start justify-between mb-3">
+          <View className="flex-row items-start flex-1">
+            <View className="bg-blue-900 rounded-full w-10 h-10 items-center justify-center mr-3">
+              <Text className="text-white font-bold text-base">{index + 1}</Text>
+            </View>
+            <View className="flex-1">
+              <Text className="text-gray-900 text-lg font-bold mb-1">
+                {item.title}
+              </Text>
+              <Text className="text-gray-500 text-sm">{item.organization}</Text>
+            </View>
+          </View>
+          <View className="items-end ml-2">
+            <Text className={`text-2xl font-bold ${getMatchColor(item.match)}`}>
+              {item.match}%
+            </Text>
+            <Text className="text-gray-400 text-xs">Match</Text>
+          </View>
+        </View>
+
+        {/* Location */}
+        <View className="flex-row items-center mb-3">
+          <MapPin color="#ef4444" size={16} strokeWidth={2} />
+          <Text className="text-gray-700 text-sm ml-1">{item.location}</Text>
+        </View>
+
+        {/* Reason */}
+        <View className="bg-blue-50 rounded-lg p-3 mb-3">
+          <Text className="text-blue-900 text-sm">{item.reason}</Text>
+        </View>
+
+        {/* Tags */}
+        <View className="flex-row flex-wrap">
+          {item.tags && Array.isArray(item.tags) && item.tags.map((tag, tagIndex) => (
+            <View
+              key={tagIndex}
+              className="bg-gray-100 rounded-full px-3 py-1.5 mr-2 mb-2"
+            >
+              <Text className="text-gray-700 text-xs font-medium">{tag}</Text>
+            </View>
+          ))}
+        </View>
+      </TouchableOpacity>
+    ));
+  };
+
   return (
     <View className="flex-1 bg-white">
       <ScrollView 
@@ -148,82 +235,7 @@ export default function Recommendation() {
         )}
 
         {/* Recommendations List */}
-        {!loading && recommendations.length > 0 && recommendations.map((item, index) => (
-          <TouchableOpacity
-            key={`${item.category}-${item.id}-${index}`}
-            className={`bg-white rounded-xl p-4 mb-4 ${
-              item.highlighted ? 'border-2 border-blue-500' : 'border border-gray-200'
-            }`}
-            activeOpacity={0.8}
-            onPress={() => {
-              // Extract numeric ID from prefixed ID (e.g., "internships_2" -> "2")
-              const numericId = item.id.split('_')[1] || item.id;
-              router.push({
-                pathname: '/main/details/[id]' as any,
-                params: {
-                  id: numericId,
-                  category: item.category
-                }
-              });
-            }}
-          >
-            {/* Header */}
-            <View className="flex-row items-start justify-between mb-3">
-              <View className="flex-row items-start flex-1">
-                <View className="bg-blue-900 rounded-full w-10 h-10 items-center justify-center mr-3">
-                  <Text className="text-white font-bold text-base">{index + 1}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-gray-900 text-lg font-bold mb-1">
-                    {item.title}
-                  </Text>
-                  <Text className="text-gray-500 text-sm">{item.organization}</Text>
-                </View>
-              </View>
-              <View className="items-end ml-2">
-                <Text className={`text-2xl font-bold ${getMatchColor(item.match)}`}>
-                  {item.match}%
-                </Text>
-                <Text className="text-gray-400 text-xs">Match</Text>
-              </View>
-            </View>
-
-            {/* Location */}
-            <View className="flex-row items-center mb-3">
-              <MapPin color="#ef4444" size={16} strokeWidth={2} />
-              <Text className="text-gray-700 text-sm ml-1">{item.location}</Text>
-            </View>
-
-            {/* Reason */}
-            <View className="bg-blue-50 rounded-lg p-3 mb-3">
-              <Text className="text-blue-900 text-sm">{item.reason}</Text>
-            </View>
-
-            {/* Tags */}
-            <View className="flex-row flex-wrap">
-              {item.tags.map((tag, tagIndex) => (
-                <View
-                  key={tagIndex}
-                  className="bg-gray-100 rounded-full px-3 py-1.5 mr-2 mb-2"
-                >
-                  <Text className="text-gray-700 text-xs font-medium">{tag}</Text>
-                </View>
-              ))}
-            </View>
-          </TouchableOpacity>
-        ))}
-
-        {/* Empty State */}
-        {!loading && recommendations.length === 0 && !error && (
-          <View className="py-12 items-center">
-            <Text className="text-gray-600 text-center text-base">
-              No recommendations available at the moment.
-            </Text>
-            <Text className="text-gray-500 text-center text-sm mt-2">
-              Complete your profile to get personalized recommendations.
-            </Text>
-          </View>
-        )}
+        {renderRecommendationsList()}
 
         {/* Action Buttons */}
         <View className="mb-6">
