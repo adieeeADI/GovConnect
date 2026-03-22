@@ -57,7 +57,11 @@ export default function BottomNav() {
         </TouchableOpacity>
 
         {/* For You */}
-        <TouchableOpacity className="items-center" activeOpacity={0.7}>
+        <TouchableOpacity 
+          className="items-center" 
+          activeOpacity={0.7}
+          onPress={() => router.push('/main/recommendation')}
+        >
           <Star 
             color={isActive('/main/recommendation') ? '#ef4444' : '#9ca3af'} 
             size={24}
@@ -70,7 +74,11 @@ export default function BottomNav() {
         </TouchableOpacity>
 
         {/* Profile */}
-        <TouchableOpacity className="items-center" activeOpacity={0.7}>
+        <TouchableOpacity 
+          className="items-center" 
+          activeOpacity={0.7}
+          onPress={() => router.push('/profile/profile')}
+        >
           <User 
             color={isActive('/main/profile') ? '#ef4444' : '#9ca3af'} 
             size={24}

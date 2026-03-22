@@ -100,7 +100,11 @@ router.post("/login", async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        location: user.location,
+        education: user.education,
+        skills: user.skills,
+        interests: user.interests
       }
     });
 
@@ -108,6 +112,37 @@ router.post("/login", async (req, res) => {
     console.error(err);
     res.status(500).json({
       message: "Server error",
+      error: err.message
+    });
+  }
+});
+
+// GET USER PROFILE endpoint
+router.get("/user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 🔹 Find user by ID
+    const user = await User.findById(id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔹 Return user data
+    res.status(200).json({
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+      location: user.location,
+      education: user.education,
+      skills: user.skills,
+      interests: user.interests
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      Message: "Server error",
       error: err.message
     });
   }

@@ -1,13 +1,35 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Mail, Phone, MapPin, Bell, Lock, Globe, Home as HomeIcon, Search, Star, User as UserIcon } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import BottomNav from 'app/main/bottom';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Profile() {
   const router = useRouter();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      // Get user data directly from AsyncStorage (saved during login)
+      const userData = await AsyncStorage.getItem('userData');
+      if (userData) {
+        const user = JSON.parse(userData);
+        setUserData(user);
+      }
+    } catch (error) {
+      console.log('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
@@ -34,10 +56,10 @@ export default function Profile() {
             {/* Name and Location */}
             <View className="flex-1">
               <Text className="text-white text-2xl font-bold mb-1">
-                Soham Shelar
+                {userData?.fullName || 'User Name'}
               </Text>
               <Text className="text-blue-200 text-sm">
-                Mumbai, Maharashtra
+                {userData?.location || 'Location not added'}
               </Text>
             </View>
           </View>
@@ -57,6 +79,12 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
         className="flex-1"
       >
+        {loading ? (
+          <View className="flex-1 items-center justify-center py-20">
+            <ActivityIndicator size="large" color="#1e3a8a" />
+          </View>
+        ) : (
+          <>
         {/* Stats Cards */}
         <View className="flex-row justify-between px-6 mb-6">
           <View className="flex-1 bg-blue-100 rounded-2xl p-4 mr-2 items-center">
@@ -87,7 +115,7 @@ export default function Profile() {
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1">Email</Text>
               <Text className="text-black text-sm font-semibold">
-                rajesh.kumar@email.com
+                {userData?.email || 'Email not added'}
               </Text>
             </View>
           </View>
@@ -100,7 +128,7 @@ export default function Profile() {
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1">Phone</Text>
               <Text className="text-black text-sm font-semibold">
-                +91 98765 43210
+                {userData?.phone || 'Phone not added'}
               </Text>
             </View>
           </View>
@@ -113,7 +141,7 @@ export default function Profile() {
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1">Location</Text>
               <Text className="text-black text-sm font-semibold">
-                Mumbai, Maharashtra
+                {userData?.location || 'Location not added'}
               </Text>
             </View>
           </View>
@@ -136,32 +164,29 @@ export default function Profile() {
           {/* Skills */}
           <Text className="text-gray-700 text-sm font-semibold mb-3">Skills</Text>
           <View className="flex-row flex-wrap mb-4">
-            <View className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
-              <Text className="text-blue-900 text-sm font-semibold">Python</Text>
-            </View>
-            <View className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
-              <Text className="text-blue-900 text-sm font-semibold">Data Analysis</Text>
-            </View>
-            <View className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
-              <Text className="text-blue-900 text-sm font-semibold">Machine Learning</Text>
-            </View>
-            <View className="bg-blue-100 rounded-full px-4 py-2 mb-2">
-              <Text className="text-blue-900 text-sm font-semibold">Communication</Text>
-            </View>
+            {userData?.skills && userData.skills.length > 0 ? (
+              userData.skills.map((skill, index) => (
+                <View key={index} className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
+                  <Text className="text-blue-900 text-sm font-semibold">{skill}</Text>
+                </View>
+              ))
+            ) : (
+              <Text className="text-gray-500 text-sm">No skills added</Text>
+            )}
           </View>
 
           {/* Interests */}
           <Text className="text-gray-700 text-sm font-semibold mb-3">Interests</Text>
           <View className="flex-row flex-wrap">
-            <View className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
-              <Text className="text-orange-700 text-sm font-semibold">Technology</Text>
-            </View>
-            <View className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
-              <Text className="text-orange-700 text-sm font-semibold">AI/ML</Text>
-            </View>
-            <View className="bg-orange-100 rounded-full px-4 py-2 mb-2">
-              <Text className="text-orange-700 text-sm font-semibold">Finance</Text>
-            </View>
+            {userData?.interests && userData.interests.length > 0 ? (
+              userData.interests.map((interest, index) => (
+                <View key={index} className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
+                  <Text className="text-orange-700 text-sm font-semibold">{interest}</Text>
+                </View>
+              ))
+            ) : (
+              <Text className="text-gray-500 text-sm">No interests added</Text>
+            )}
           </View>
         </View>
 
@@ -218,8 +243,10 @@ export default function Profile() {
           </TouchableOpacity>
         </View>
 
-        {/* Bottom padding for navigation bar */}
-        <View className="h-20" />
+        {/* Bottom padding for navigation bar and scrolling space */}
+        <View className="h-32" />
+          </>
+        )}
       </ScrollView>
 
       {/* Bottom Navigation */}

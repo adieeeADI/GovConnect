@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   location: String,
   password: String,
   education: String,
-  skills: String,
+  skills: [String],
   interests: [String],
   agreedToTerms: Boolean,
   notifyOpportunities: Boolean,
