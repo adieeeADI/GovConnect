@@ -44,7 +44,8 @@ export default function Individual() {
       setLoading(true);
       
       // Fetch from the specific category endpoint
-      const endpoint = `https://govconnect-ad4s.onrender.com/api/data/${category}/${id}`;
+      const { getDataDetailsEndpoint } = require('../../../config/api.config');
+      const endpoint = getDataDetailsEndpoint(category, id);
       
       const res = await fetch(endpoint);
       if (res.ok) {

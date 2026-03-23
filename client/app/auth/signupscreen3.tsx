@@ -5,6 +5,7 @@ import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Upload } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { router, useLocalSearchParams } from 'expo-router';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function SignUpScreen3() {
   const params = useLocalSearchParams();
@@ -44,7 +45,7 @@ export default function SignUpScreen3() {
 
     try {
       const response = await fetch(
-        "https://govconnect-ad4s.onrender.com/api/auth/signup",
+        API_ENDPOINTS.SIGNUP,
         {
           method: "POST",
           headers: {

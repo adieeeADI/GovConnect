@@ -34,7 +34,8 @@ export default function SignIn() {
     // Call login API
     setLoading(true);
     try {
-      const response = await fetch('https://govconnect-ad4s.onrender.com/api/auth/login', {
+      const { API_ENDPOINTS } = require('../../../config/api.config');
+      const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, BackHandler, ActivityIndicato
 import { ArrowLeft, MapPin, Lightbulb, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_ENDPOINTS, logApiConfig } from '../../config/api.config';
 import BottomNav from './bottom';
 
 const getMatchColor = (match: number) => {
@@ -19,6 +20,7 @@ export default function Recommendation() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    logApiConfig();
     fetchRecommendations();
   }, []);
 
@@ -46,7 +48,7 @@ export default function Recommendation() {
 
       // Fetch recommendations from Gemini service
       const response = await fetch(
-        `https://govconnect-ad4s.onrender.com/api/recommend/${userId}`
+        `${API_ENDPOINTS.RECOMMEND}/${userId}`
       );
 
       if (!response.ok) {

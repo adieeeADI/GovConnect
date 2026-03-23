@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
 import { ArrowLeft, MapPin, Clock, ArrowRight, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { API_ENDPOINTS } from '../../config/api.config';
 import BottomNav from './bottom';
 
 type Category = 'internships' | 'scholarships' | 'schemes' | 'training';
@@ -14,10 +15,10 @@ const categoryTitles = {
 };
 
 const categoryEndpoints = {
-  internships: 'https://govconnect-ad4s.onrender.com/api/data/internships',
-  scholarships: 'https://govconnect-ad4s.onrender.com/api/data/scholarships',
-  schemes: 'https://govconnect-ad4s.onrender.com/api/data/schemes',
-  training: 'https://govconnect-ad4s.onrender.com/api/data/training',
+  internships: API_ENDPOINTS.INTERNSHIPS,
+  scholarships: API_ENDPOINTS.SCHOLARSHIPS,
+  schemes: API_ENDPOINTS.SCHEMES,
+  training: API_ENDPOINTS.TRAINING,
 };
 
 export default function Browse() {
