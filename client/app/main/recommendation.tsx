@@ -46,10 +46,15 @@ export default function Recommendation() {
         return;
       }
 
+      // Debug log
+      console.log('User object from storage:', user);
+      console.log('Extracted userId:', userId);
+      console.log('userId type:', typeof userId);
+
       // Fetch recommendations from Gemini service
-      const response = await fetch(
-        `${API_ENDPOINTS.RECOMMEND}/${userId}`
-      );
+      const apiUrl = `${API_ENDPOINTS.RECOMMEND}/${userId}`;
+      console.log('Fetching from URL:', apiUrl);
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error('Failed to fetch recommendations');

@@ -11,9 +11,24 @@ const { rankOpportunities } = require("../services/geminiService");
 
 router.get("/:userId", async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId);
+    const userId = req.params.userId;
+    console.log("🔍 RECOMMEND REQUEST - userId:", userId);
+    console.log("🔍 userId type:", typeof userId);
+    
+    const user = await User.findById(userId);
+    
+    console.log("🔍 Found user:", user ? "YES" : "NO");
+    if (user) {
+      console.log("🔍 User details:", {
+        name: user.name,
+        skills: user.skills,
+        interests: user.interests,
+        education: user.education
+      });
+    }
 
     if (!user) {
+      console.log("❌ User not found for ID:", userId);
       return res.status(404).json({ message: "User not found" });
     }
 

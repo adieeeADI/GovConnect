@@ -34,7 +34,7 @@ export default function SignIn() {
     // Call login API
     setLoading(true);
     try {
-      const { API_ENDPOINTS } = require('../../../config/api.config');
+      const { API_ENDPOINTS } = require('../../config/api.config');
       const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {

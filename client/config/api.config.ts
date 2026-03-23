@@ -12,7 +12,8 @@
 export const USE_LOCAL_SERVER = false; // Set to true for local development
 
 // API Base URLs
-const LOCAL_API_URL = 'http://localhost:5000';
+// Replace 192.168.x.x with YOUR computer's actual IP address from "ipconfig"
+const LOCAL_API_URL = 'http://192.168.x.x:5000'; // ← CHANGE THIS to your IP
 const PRODUCTION_API_URL = 'https://govconnect-ad4s.onrender.com';
 
 // Get the appropriate API URL based on environment
