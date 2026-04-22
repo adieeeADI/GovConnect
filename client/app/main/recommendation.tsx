@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, MapPin, Lightbulb } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_ENDPOINTS, logApiConfig } from '../../config/api.config';
 import BottomNav from './bottom';
 
 const getMatchColor = (match: number) => {
@@ -17,16 +19,42 @@ export default function Recommendation() {
   const router = useRouter();
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        const res = await fetch("http://192.168.1.100:5000/api/recommend/YOUR_USER_ID");
+        logApiConfig(); // Log which API environment is being used
+        
+        // Get userId from AsyncStorage
+        const userId = await AsyncStorage.getItem('userId');
+        
+        if (!userId) {
+          setError('User not authenticated. Please sign in again.');
+          setLoading(false);
+          return;
+        }
+
+        console.log('📍 Fetching recommendations for userId:', userId);
+        
+        const endpoint = `${API_ENDPOINTS.RECOMMEND}/${userId}`;
+        console.log('🔗 API Endpoint:', endpoint);
+        
+        const res = await fetch(endpoint);
+        
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+        
         const data = await res.json();
+        console.log('✅ Recommendations fetched:', data.length);
 
         setRecommendations(data);
-      } catch (err) {
-        console.log(err);
+        setError(null);
+      } catch (err: any) {
+        console.error('❌ Error fetching recommendations:', err);
+        setError(err.message || 'Failed to load recommendations');
+        setRecommendations([]);
       } finally {
         setLoading(false);
       }
@@ -50,7 +78,24 @@ export default function Recommendation() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" />
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#1e40af" />
+          <Text className="mt-4 text-gray-600">Loading recommendations...</Text>
+        </View>
+      ) : error ? (
+        <View className="flex-1 justify-center items-center px-6">
+          <View className="bg-red-50 border-l-4 border-red-400 p-4 mb-5">
+            <Text className="text-red-900 font-semibold">Error</Text>
+            <Text className="text-red-800">{error}</Text>
+          </View>
+        </View>
+      ) : recommendations.length === 0 ? (
+        <View className="flex-1 justify-center items-center px-6">
+          <View className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-5">
+            <Text className="text-blue-900 font-semibold">No Recommendations</Text>
+            <Text className="text-blue-800">Complete your profile to get personalized recommendations.</Text>
+          </View>
+        </View>
       ) : (
         <ScrollView className="px-6">
 

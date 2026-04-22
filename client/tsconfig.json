@@ -1,23 +1,29 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "types": [
       "nativewind/types"
     ],
     "baseUrl": ".",
     "paths": {
       "@env": [
-        "env.d.ts"
+        "expo-env.d.ts"
+      ],
+      "@config/*": [
+        "config/*"
+      ],
+      "@components/*": [
+        "components/*"
       ]
     }
   },
   "include": [
-    "env.d.ts",
+    "expo-env.d.ts",
     "app",
     "components",
-    "lib",
+    "config",
     "nativewind-env.d.ts",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    ".expo/types/**/*.ts"
   ]
 }
