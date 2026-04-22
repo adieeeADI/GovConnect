@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft } from 'lucide-react-native';
@@ -31,10 +31,11 @@ export default function SignIn() {
       return;
     }
 
-    // Call login API
     setLoading(true);
+
     try {
       const { API_ENDPOINTS } = require('../../config/api.config');
+
       const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {
@@ -54,10 +55,17 @@ export default function SignIn() {
         return;
       }
 
-      // Login successful - save user data
+      // ✅ 🔥 FIX: STORE USER ID (IMPORTANT)
+      await AsyncStorage.setItem('userId', data.user.id);
+
+      // Optional: store full user data
       await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+
       setLoading(false);
-      router.push('/main/home');
+
+      // ✅ Better navigation
+      router.replace('/main/home');
+
     } catch (err) {
       setError('Network error. Please try again.');
       setLoading(false);
@@ -68,15 +76,16 @@ export default function SignIn() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
       <CustomStatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 16 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Back Button */}
         <TouchableOpacity
-        className="flex-row items-center mb-8 border border-gray-300 rounded-xl px-4 py-3 self-start"
-        activeOpacity={0.7}
-        onPress={() => router.back()}
+          className="flex-row items-center mb-8 border border-gray-300 rounded-xl px-4 py-3 self-start"
+          activeOpacity={0.7}
+          onPress={() => router.back()}
         >
           <ArrowLeft color="#000000" size={20} strokeWidth={2} />
           <Text className="text-black text-base font-semibold ml-2">Back</Text>
@@ -87,7 +96,7 @@ export default function SignIn() {
           Opportunity Finder
         </Text>
 
-        {/* Email or Phone Number */}
+        {/* Email */}
         <Text className="text-black text-base font-bold mb-3">
           Email or Phone Number
         </Text>
@@ -164,7 +173,7 @@ export default function SignIn() {
           </Text>
         </TouchableOpacity>
 
-        {/* Terms of Service */}
+        {/* Terms */}
         <Text className="text-black text-sm text-center leading-5">
           By continuing, you agree to our{' '}
           <Text className="font-bold">Terms of Service</Text>

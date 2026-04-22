@@ -1,294 +1,336 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
-import { ArrowLeft, X, FileText } from 'lucide-react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import * as DocumentPicker from 'expo-document-picker';
+import React, { useState, useEffect } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  ScrollView, Alert, Platform
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, X, Plus, Calendar, IndianRupee } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+const INCOME_RANGES = [
+  { label: 'Below ₹1L', value: 50000 },
+  { label: '₹1L–3L', value: 200000 },
+  { label: '₹3L–6L', value: 450000 },
+  { label: '₹6L–10L', value: 800000 },
+  { label: 'Above ₹10L', value: 1200000 },
+];
+
+const GENDERS = ['Male', 'Female', 'Other'];
+const CATEGORIES = ['Student', 'Job Seeker', 'Farmer'];
+
+// Reusable styled input
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View className="mb-5">
+      <Text className="text-gray-500 text-xs font-semibold mb-1 uppercase tracking-wide">{label}</Text>
+      {children}
+    </View>
+  );
+}
+
+function StyledInput(props: React.ComponentProps<typeof TextInput>) {
+  return (
+    <TextInput
+      className="bg-gray-100 rounded-xl px-4 py-3 text-black text-sm"
+      placeholderTextColor="#9ca3af"
+      {...props}
+    />
+  );
+}
+
+// Chip selector
+function ChipSelector({
+  options, value, onChange, color = 'blue'
+}: { options: string[]; value: string; onChange: (v: string) => void; color?: string }) {
+  const active = color === 'blue'
+    ? 'bg-blue-700' : color === 'green' ? 'bg-green-600' : 'bg-purple-600';
+  return (
+    <View className="flex-row flex-wrap">
+      {options.map(opt => (
+        <TouchableOpacity
+          key={opt}
+          className={`px-4 py-2 rounded-full mr-2 mb-2 ${value === opt ? active : 'bg-gray-200'}`}
+          onPress={() => onChange(opt)}
+          activeOpacity={0.7}
+        >
+          <Text className={`text-sm font-semibold ${value === opt ? 'text-white' : 'text-gray-700'}`}>
+            {opt}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// Tag input (skills / interests)
+function TagInput({ tags, onChange, placeholder, color = 'blue' }: {
+  tags: string[]; onChange: (t: string[]) => void;
+  placeholder: string; color?: string;
+}) {
+  const [text, setText] = useState('');
+  const add = () => {
+    const v = text.trim();
+    if (v && !tags.includes(v)) onChange([...tags, v]);
+    setText('');
+  };
+  const remove = (t: string) => onChange(tags.filter(x => x !== t));
+  const bg = color === 'blue' ? 'bg-blue-100' : 'bg-orange-100';
+  const textColor = color === 'blue' ? 'text-blue-900' : 'text-orange-700';
+
+  return (
+    <View>
+      <View className="flex-row flex-wrap mb-2">
+        {tags.map(t => (
+          <View key={t} className={`${bg} flex-row items-center rounded-full px-3 py-1 mr-2 mb-2`}>
+            <Text className={`${textColor} text-sm font-semibold mr-1`}>{t}</Text>
+            <TouchableOpacity onPress={() => remove(t)}>
+              <X size={12} color={color === 'blue' ? '#1e3a8a' : '#c2410c'} />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+      <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-2">
+        <TextInput
+          className="flex-1 text-sm text-black"
+          placeholder={placeholder}
+          placeholderTextColor="#9ca3af"
+          value={text}
+          onChangeText={setText}
+          onSubmitEditing={add}
+          returnKeyType="done"
+        />
+        <TouchableOpacity onPress={add}>
+          <Plus size={18} color="#1e3a8a" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
 
 export default function EditProfile() {
   const router = useRouter();
 
-  // Prevent back navigation
-  useFocusEffect(
-    React.useCallback(() => {
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        () => {
-          router.replace('/profile/profile');
-          return true;
-        }
-      );
-      return () => backHandler.remove();
-    }, [])
-  );
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
+  const [education, setEducation] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
 
-  // Personal Information
-  const [fullName, setFullName] = useState('Rajesh Kumar');
-  const [email, setEmail] = useState('rajesh.kumar@email.com');
-  const [phone, setPhone] = useState('+91 98765 43210');
-  const [location, setLocation] = useState('Mumbai, Maharashtra');
-  const [education, setEducation] = useState('Bachelor\'s in Computer Science');
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [gender, setGender] = useState('');
+  const [state, setState] = useState('');
+  const [caste, setCaste] = useState('');
+  const [religion, setReligion] = useState('');
+  const [familyIncome, setFamilyIncome] = useState(0);
+  const [category, setCategory] = useState('');
 
-  // Skills
-  const [skillInput, setSkillInput] = useState('');
-  const [skills, setSkills] = useState(['Python', 'Data Analysis', 'Machine Learning', 'Communication']);
+  const [saving, setSaving] = useState(false);
 
-  // Interests
-  const [interestInput, setInterestInput] = useState('');
-  const [interests, setInterests] = useState(['Technology', 'AI/ML', 'Finance']);
+  useEffect(() => {
+    const loadUser = async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      const res = await fetch(`https://govconnect-ad4s.onrender.com/api/auth/user/${userId}`);
+      const data = await res.json();
 
-  // Resume
-  const [resumeFile, setResumeFile] = useState<any>({
-    name: 'resume_rajesh_kumar.pdf',
-    size: '2.3 MB',
-  });
+      setFullName(data.fullName || '');
+      setEmail(data.email || '');
+      setPhone(data.phone || '');
+      setLocation(data.location || '');
+      setEducation(data.education || '');
+      setSkills(data.skills || []);
+      setInterests(data.interests || []);
+      setGender(data.gender || '');
+      setState(data.state || '');
+      setCaste(data.caste || '');
+      setReligion(data.religion || '');
+      setFamilyIncome(data.familyIncome || 0);
+      setCategory(data.category || '');
+      if (data.dateOfBirth) setDateOfBirth(new Date(data.dateOfBirth));
+    };
+    loadUser();
+  }, []);
 
-  const addSkill = () => {
-    if (skillInput.trim()) {
-      setSkills([...skills, skillInput.trim()]);
-      setSkillInput('');
-    }
-  };
-
-  const removeSkill = (index: number) => {
-    setSkills(skills.filter((_, i) => i !== index));
-  };
-
-  const addInterest = () => {
-    if (interestInput.trim()) {
-      setInterests([...interests, interestInput.trim()]);
-      setInterestInput('');
-    }
-  };
-
-  const removeInterest = (index: number) => {
-    setInterests(interests.filter((_, i) => i !== index));
-  };
-
-  const pickResume = async () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-        copyToCacheDirectory: true,
+      const userId = await AsyncStorage.getItem('userId');
+      const res = await fetch('https://govconnect-ad4s.onrender.com/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          fullName,
+          phone,
+          location,
+          education,
+          skills,
+          interests,
+          gender,
+          state,
+          caste,
+          religion,
+          familyIncome,
+          category,
+          dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : undefined,
+        }),
       });
-
-      if (!result.canceled && result.assets[0]) {
-        setResumeFile({
-          name: result.assets[0].name,
-          size: `${(result.assets[0].size! / (1024 * 1024)).toFixed(1)} MB`,
-        });
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick document');
+      if (!res.ok) throw new Error('Failed');
+      Alert.alert('Saved', 'Profile updated successfully');
+      router.back();
+    } catch {
+      Alert.alert('Error', 'Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSave = () => {
-    Alert.alert('Success', 'Profile updated successfully!');
-    router.back();
-  };
+  const formattedDOB = dateOfBirth
+    ? dateOfBirth.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    : 'Select date';
+
+  const selectedIncomeLabel = INCOME_RANGES.find(r => r.value === familyIncome)?.label || 'Not set';
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Header */}
-      <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-6 mb-6">
-        <TouchableOpacity 
-          className="mb-4"
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
-        </TouchableOpacity>
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
 
-        <Text className="text-white text-3xl font-bold mb-2">
-          Edit Profile
-        </Text>
-        <Text className="text-white text-base opacity-90">
-          Update your personal information
-        </Text>
+      {/* Header */}
+      <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+          <ArrowLeft color="#fff" size={24} strokeWidth={2} />
+        </TouchableOpacity>
+        <Text className="text-white text-2xl font-bold mt-4">Edit Profile</Text>
+        <Text className="text-blue-200 text-sm mt-1">Fill any fields you want to update</Text>
       </View>
 
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
-      >
-        {/* Personal Information */}
-        <Text className="text-black text-xl font-bold mb-4">
-          Personal Information
-        </Text>
+      <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
 
-        <Text className="text-black text-sm font-semibold mb-2">Full Name</Text>
-        <TextInput
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mb-4"
-          value={fullName}
-          onChangeText={setFullName}
-        />
+        {/* ── Basic Info ── */}
+        <Text className="text-black text-lg font-bold mb-4">Basic Info</Text>
 
-        <Text className="text-black text-sm font-semibold mb-2">Email</Text>
-        <TextInput
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mb-4"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+        <Field label="Full Name">
+          <StyledInput value={fullName} onChangeText={setFullName} placeholder="Your full name" />
+        </Field>
 
-        <Text className="text-black text-sm font-semibold mb-2">Phone</Text>
-        <TextInput
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mb-4"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
+        <Field label="Email">
+          <StyledInput value={email} editable={false}
+            className="bg-gray-200 rounded-xl px-4 py-3 text-gray-400 text-sm" />
+        </Field>
 
-        <Text className="text-black text-sm font-semibold mb-2">Location</Text>
-        <TextInput
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mb-4"
-          value={location}
-          onChangeText={setLocation}
-        />
+        <Field label="Phone">
+          <StyledInput value={phone} onChangeText={setPhone}
+            placeholder="+91 XXXXX XXXXX" keyboardType="phone-pad" />
+        </Field>
 
-        <Text className="text-black text-sm font-semibold mb-2">Education</Text>
-        <TextInput
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mb-6"
-          value={education}
-          onChangeText={setEducation}
-        />
+        <Field label="Location">
+          <StyledInput value={location} onChangeText={setLocation} placeholder="City, State" />
+        </Field>
 
-        {/* Skills */}
-        <Text className="text-black text-xl font-bold mb-4">
-          Skills
-        </Text>
+        <Field label="Education">
+          <StyledInput value={education} onChangeText={setEducation}
+            placeholder="e.g. B.Tech Computer Science" />
+        </Field>
 
-        <View className="flex-row mb-4">
-          <TextInput
-            className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mr-2"
-            placeholder="Add a skill"
-            placeholderTextColor="#9ca3af"
-            value={skillInput}
-            onChangeText={setSkillInput}
-          />
+        <Field label="Skills">
+          <TagInput tags={skills} onChange={setSkills}
+            placeholder="Type a skill and press enter" color="blue" />
+        </Field>
+
+        <Field label="Interests">
+          <TagInput tags={interests} onChange={setInterests}
+            placeholder="Type an interest and press enter" color="orange" />
+        </Field>
+
+        {/* ── Govt / Eligibility ── */}
+        <Text className="text-black text-lg font-bold mb-4 mt-2">Eligibility Info</Text>
+
+        {/* Date of Birth — Calendar */}
+        <Field label="Date of Birth">
           <TouchableOpacity
-            className="bg-blue-900 rounded-xl px-6 py-3 justify-center"
-            onPress={addSkill}
-            activeOpacity={0.8}
+            className="bg-gray-100 rounded-xl px-4 py-3 flex-row items-center justify-between"
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.7}
           >
-            <Text className="text-white text-base font-bold">Add</Text>
+            <Text className={dateOfBirth ? 'text-black text-sm' : 'text-gray-400 text-sm'}>
+              {formattedDOB}
+            </Text>
+            <Calendar size={18} color="#6b7280" />
           </TouchableOpacity>
-        </View>
+        </Field>
 
-        <View className="flex-row flex-wrap mb-6">
-          {skills.map((skill, index) => (
-            <View
-              key={index}
-              className="bg-blue-100 rounded-full px-4 py-2 flex-row items-center mr-2 mb-2"
-            >
-              <Text className="text-blue-900 text-sm font-semibold mr-2">
-                {skill}
-              </Text>
-              <TouchableOpacity onPress={() => removeSkill(index)}>
-                <X color="#1e3a8a" size={16} strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-
-        {/* Interests */}
-        <Text className="text-black text-xl font-bold mb-4">
-          Interests
-        </Text>
-
-        <View className="flex-row mb-4">
-          <TextInput
-            className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-3 text-base mr-2"
-            placeholder="Add an interest"
-            placeholderTextColor="#9ca3af"
-            value={interestInput}
-            onChangeText={setInterestInput}
+        {showDatePicker && (
+          <DateTimePicker
+            value={dateOfBirth || new Date(2000, 0, 1)}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            maximumDate={new Date()}
+            onChange={(_, date) => {
+              setShowDatePicker(Platform.OS === 'ios');
+              if (date) setDateOfBirth(date);
+            }}
           />
-          <TouchableOpacity
-            className="bg-red-600 rounded-xl px-6 py-3 justify-center"
-            onPress={addInterest}
-            activeOpacity={0.8}
-          >
-            <Text className="text-white text-base font-bold">Add</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row flex-wrap mb-6">
-          {interests.map((interest, index) => (
-            <View
-              key={index}
-              className="bg-red-100 rounded-full px-4 py-2 flex-row items-center mr-2 mb-2"
-            >
-              <Text className="text-red-700 text-sm font-semibold mr-2">
-                {interest}
-              </Text>
-              <TouchableOpacity onPress={() => removeInterest(index)}>
-                <X color="#b91c1c" size={16} strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-
-        {/* Resume */}
-        <Text className="text-black text-xl font-bold mb-4">
-          Resume
-        </Text>
-
-        <TouchableOpacity
-          className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl py-8 items-center mb-4"
-          onPress={pickResume}
-          activeOpacity={0.8}
-        >
-          <FileText color="#6b7280" size={40} strokeWidth={1.5} />
-          <Text className="text-black text-lg font-bold mt-3">
-            Upload Resume
-          </Text>
-          <Text className="text-gray-500 text-sm mt-1">
-            Supported formats: PDF, DOC, DOCX (Max 5MB)
-          </Text>
-        </TouchableOpacity>
-
-        {resumeFile && (
-          <View className="bg-gray-100 rounded-2xl p-4 flex-row items-center justify-between mb-6">
-            <View className="flex-row items-center flex-1">
-              <View className="bg-red-600 rounded px-2 py-1 mr-3">
-                <Text className="text-white text-xs font-bold">PDF</Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-black text-sm font-semibold">
-                  {resumeFile.name}
-                </Text>
-                <Text className="text-gray-500 text-xs">{resumeFile.size}</Text>
-              </View>
-            </View>
-            <TouchableOpacity onPress={() => setResumeFile(null)}>
-              <X color="#ef4444" size={20} strokeWidth={2} />
-            </TouchableOpacity>
-          </View>
         )}
 
-        {/* Action Buttons */}
-        <TouchableOpacity 
-          className="bg-blue-900 rounded-2xl py-4 items-center mb-3"
-          activeOpacity={0.8}
+        <Field label="Gender">
+          <ChipSelector options={GENDERS} value={gender} onChange={setGender} color="blue" />
+        </Field>
+
+        <Field label="State">
+          <StyledInput value={state} onChangeText={setState} placeholder="e.g. Maharashtra" />
+        </Field>
+
+        <Field label="Caste">
+          <StyledInput value={caste} onChangeText={setCaste} placeholder="e.g. OBC" />
+        </Field>
+
+        <Field label="Religion">
+          <StyledInput value={religion} onChangeText={setReligion} placeholder="e.g. Hindu" />
+        </Field>
+
+        {/* Family Income — Range Chips */}
+        <Field label="Annual Family Income">
+          <View className="flex-row flex-wrap">
+            {INCOME_RANGES.map(range => (
+              <TouchableOpacity
+                key={range.value}
+                className={`px-4 py-2 rounded-full mr-2 mb-2 flex-row items-center
+                  ${familyIncome === range.value ? 'bg-green-600' : 'bg-gray-200'}`}
+                onPress={() => setFamilyIncome(range.value)}
+                activeOpacity={0.7}
+              >
+                <Text className={`text-sm font-semibold
+                  ${familyIncome === range.value ? 'text-white' : 'text-gray-700'}`}>
+                  {range.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {familyIncome > 0 && (
+            <Text className="text-green-700 text-xs mt-1">Selected: {selectedIncomeLabel}</Text>
+          )}
+        </Field>
+
+        <Field label="Category">
+          <ChipSelector options={CATEGORIES} value={category} onChange={setCategory} color="green" />
+        </Field>
+
+        {/* Save */}
+        <TouchableOpacity
+          className={`rounded-2xl p-4 mt-4 mb-10 ${saving ? 'bg-blue-400' : 'bg-blue-700'}`}
           onPress={handleSave}
+          disabled={saving}
+          activeOpacity={0.8}
         >
-          <Text className="text-white text-lg font-bold">
-            Save Changes
+          <Text className="text-white text-center font-bold text-base">
+            {saving ? 'Saving...' : 'Save Changes'}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          className="bg-white border-2 border-gray-300 rounded-2xl py-4 items-center mb-6"
-          activeOpacity={0.8}
-          onPress={() => router.back()}
-        >
-          <Text className="text-gray-700 text-lg font-semibold">
-            Cancel
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
