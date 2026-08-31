@@ -95,14 +95,14 @@ export default function Delete({ visible, onClose, onConfirm }: DeleteProps) {
             <View className="bg-gray-100 rounded-lg p-4 mb-6">
               <Text className="text-gray-700 text-sm">
                 <Text className="font-bold">Account Recovery: </Text>
-                You won't be able to recover your account once deleted.
+                {"You won't be able to recover your account once deleted."}
               </Text>
             </View>
 
             {/* Confirmation Input */}
             <View className="mb-6">
               <Text className="text-black text-sm mb-2">
-                Type <Text className="text-red-600 font-bold">"DELETE MY ACCOUNT"</Text> to confirm
+                Type <Text className="text-red-600 font-bold">{"DELETE MY ACCOUNT"}</Text> to confirm
               </Text>
               <TextInput
                 className="bg-white border-2 border-gray-300 rounded-xl px-4 py-3 text-base"

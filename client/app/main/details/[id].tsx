@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler } from 'react-native';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { getDataDetailsEndpoint } from '../../../config/api.config';
 
 export default function Individual() {
   const router = useRouter();
@@ -17,17 +18,38 @@ export default function Individual() {
   useEffect(() => {
     const id = params?.id;
     const category = params?.category || 'internships';
-    
-    if (id) {
-      const idString = Array.isArray(id) ? id[0] : id;
-      const categoryString = Array.isArray(category) ? category[0] : category;
-      fetchDetailedData(idString, categoryString);
-    }
+
+    if (!id) return;
+
+    let isMounted = true;
+
+    const idString = Array.isArray(id) ? id[0] : id;
+    const categoryString = Array.isArray(category) ? category[0] : category;
+    const cleanId = idString.replace(/^(internships|scholarships|schemes|training)_/, "");
+    const endpoint = getDataDetailsEndpoint(categoryString, cleanId);
+
+    fetch(endpoint)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((resData) => {
+        if (isMounted) {
+          if (resData && Object.keys(resData).length > 0 && !resData.error) {
+            setData(resData);
+          }
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [params?.id, params?.category]);
 
   // Prevent back navigation
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -36,29 +58,8 @@ export default function Individual() {
         }
       );
       return () => backHandler.remove();
-    }, [])
+    }, [router])
   );
-
-  const fetchDetailedData = async (id: string, category: string) => {
-    try {
-      setLoading(true);
-      
-      // Fetch from the specific category endpoint
-      const { getDataDetailsEndpoint } = require('../../../config/api.config');
-      const endpoint = getDataDetailsEndpoint(category, id);
-      
-      const res = await fetch(endpoint);
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Object.keys(data).length > 0 && !data.error) {
-          setData(data);
-        }
-      }
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
-  };
 
   return (
     <View className="flex-1 bg-white">
@@ -69,7 +70,7 @@ export default function Individual() {
       ) : !data ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-gray-600 text-center text-base">
-            Sorry, we couldn't load the details for this opportunity.
+            {"Sorry, we couldn't load the details for this opportunity."}
           </Text>
         </View>
       ) : (

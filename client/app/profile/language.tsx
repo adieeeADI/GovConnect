@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -9,7 +9,7 @@ const LanguagePreferences = () => {
 
   // Prevent back navigation
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -18,7 +18,7 @@ const LanguagePreferences = () => {
         }
       );
       return () => backHandler.remove();
-    }, [])
+    }, [router])
   );
 
   const [selectedLanguage, setSelectedLanguage] = useState('GB');

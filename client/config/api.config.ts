@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
   // Auth endpoints
   LOGIN: `${API_BASE_URL}/api/auth/login`,
   SIGNUP: `${API_BASE_URL}/api/auth/signup`,
+  COMPLETE_PROFILE: `${API_BASE_URL}/api/user/complete-profile`,
 
   // Data endpoints
   INTERNSHIPS: `${API_BASE_URL}/api/data/internships`,
@@ -34,6 +35,12 @@ export const API_ENDPOINTS = {
   // Recommendation endpoint (userId will be appended)
   RECOMMEND: `${API_BASE_URL}/api/recommend`,
 };
+
+// Helper function to get user endpoint
+export const getUserEndpoint = (userId: string) => {
+  return `${API_BASE_URL}/api/user/${userId}`;
+};
+
 
 // Helper function to get data details endpoint
 export const getDataDetailsEndpoint = (category: string, id: string) => {

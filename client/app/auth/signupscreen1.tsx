@@ -143,13 +143,25 @@ export default function SignUpScreen1() {
         <Text className="text-black text-base font-bold mb-3">
           Confirm Password
         </Text>
-        <TextInput
-          className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-8"
-          placeholder="Re-enter your password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry={!showConfirmPassword}
-        />
+        <View className="relative mb-8">
+          <TextInput
+            className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base pr-12"
+            placeholder="Re-enter your password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+          />
+          <TouchableOpacity
+            className="absolute right-4 top-4"
+            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? (
+              <EyeOff color="#6b7280" size={24} />
+            ) : (
+              <Eye color="#6b7280" size={24} />
+            )}
+          </TouchableOpacity>
+        </View>
 
         {/* Next Button */}
         <TouchableOpacity

@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Mail, Phone, MapPin, Bell, Lock, Globe, User as UserIcon } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BottomNav from 'app/main/bottom';
+import BottomNav from '../main/bottom';
 import ProfileCompleteBanner from './ProfileCompleteBanner';
+import { getUserEndpoint } from '../../config/api.config';
 
 // All fields that count toward completion
 function getCompletionPercentage(data: Record<string, any>): number {
@@ -23,7 +24,7 @@ function getCompletionPercentage(data: Record<string, any>): number {
     !!data.state,
     !!data.caste,
     !!data.religion,
-    !!data.familyIncome,
+    data.familyIncome !== undefined && data.familyIncome !== null,
     !!data.category,
   ];
   const filled = checks.filter(Boolean).length;
@@ -38,11 +39,13 @@ export default function Profile() {
   const loadUser = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await fetch(`https://govconnect-ad4s.onrender.com/api/auth/user/${userId}`);
+      if (!userId) return;
+      const res = await fetch(getUserEndpoint(userId));
       const data = await res.json();
       setUser(data);
     } catch (e) {
       console.error(e);
+
     } finally {
       setLoading(false);
     }

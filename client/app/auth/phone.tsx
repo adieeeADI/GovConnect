@@ -56,7 +56,7 @@ export default function PhoneInput() {
           Enter Your Phone Number
         </Text>
         <Text className="text-gray-500 text-center mb-8 px-4">
-          We'll send you a verification code to confirm your identity
+          {"We'll send you a verification code to confirm your identity"}
         </Text>
 
         {/* Phone Number Input */}
@@ -81,7 +81,7 @@ export default function PhoneInput() {
         <View className="bg-blue-50 rounded-2xl p-4 mb-8">
           <Text className="text-blue-800 text-sm leading-5">
             <Text className="font-bold">Note: </Text>
-            You'll receive a 6-digit OTP on this number. Make sure the number is active and can receive SMS.
+            {"You'll receive a 6-digit OTP on this number. Make sure the number is active and can receive SMS."}
           </Text>
         </View>
 

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
-import { Home as HomeIcon, Search, Star, User, Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award } from 'lucide-react-native';
+import { Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from './bottom';
@@ -10,12 +10,26 @@ export default function Home() {
   const [userName, setUserName] = useState('Guest');
 
   useEffect(() => {
-    loadUserData();
+    let isMounted = true;
+    AsyncStorage.getItem('userData')
+      .then((userData) => {
+        if (isMounted && userData) {
+          const user = JSON.parse(userData);
+          setUserName(user.fullName || user.email || 'Guest');
+        }
+      })
+      .catch((err) => {
+        console.log('Error loading user data:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Prevent back navigation on home screen
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => true // Return true to prevent default back behavior
@@ -24,18 +38,6 @@ export default function Home() {
       return () => backHandler.remove();
     }, [])
   );
-
-  const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('userData');
-      if (userData) {
-        const user = JSON.parse(userData);
-        setUserName(user.fullName || user.email || 'Guest');
-      }
-    } catch (err) {
-      console.log('Error loading user data:', err);
-    }
-  };
   return (
     <View className="flex-1 bg-white">
       <ScrollView 
@@ -90,7 +92,7 @@ export default function Home() {
         <TouchableOpacity 
           className="bg-blue-900 rounded-2xl p-5 mx-6 mb-4 flex-row items-center justify-between"
           activeOpacity={0.8}
-          // onPress={() => router.push('/main/recommendation')}
+          onPress={() => router.push('/main/recommendation')}
         >
           <View className="flex-1">
             <Text className="text-white text-xl font-bold mb-1">

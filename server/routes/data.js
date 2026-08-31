@@ -19,10 +19,10 @@ router.get("/internships", async (req, res) => {
 // GET single internship by ID
 router.get("/internships/:id", async (req, res) => {
   try {
-    let data;
-    const id = isNaN(req.params.id) ? req.params.id : Number(req.params.id);
+    const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
+    const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    data = await Internship.findById(id).lean();
+    const data = await Internship.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Internship not found" });
@@ -46,10 +46,10 @@ router.get("/scholarships", async (req, res) => {
 // GET single scholarship by ID
 router.get("/scholarships/:id", async (req, res) => {
   try {
-    let data;
-    const id = isNaN(req.params.id) ? req.params.id : Number(req.params.id);
+    const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
+    const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    data = await Scholarship.findById(id).lean();
+    const data = await Scholarship.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Scholarship not found" });
@@ -73,10 +73,10 @@ router.get("/schemes", async (req, res) => {
 // GET single scheme by ID
 router.get("/schemes/:id", async (req, res) => {
   try {
-    let data;
-    const id = isNaN(req.params.id) ? req.params.id : Number(req.params.id);
+    const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
+    const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    data = await Scheme.findById(id).lean();
+    const data = await Scheme.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Scheme not found" });
@@ -100,10 +100,10 @@ router.get("/training", async (req, res) => {
 // GET single training by ID
 router.get("/training/:id", async (req, res) => {
   try {
-    let data;
-    const id = isNaN(req.params.id) ? req.params.id : Number(req.params.id);
+    const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
+    const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    data = await Training.findById(id).lean();
+    const data = await Training.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Training not found" });

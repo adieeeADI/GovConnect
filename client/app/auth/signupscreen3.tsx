@@ -30,7 +30,7 @@ export default function SignUpScreen3() {
       if (!result.canceled && result.assets[0]) {
         setUploadedFile(result.assets[0].name);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to pick document');
     }
   };
@@ -80,7 +80,7 @@ export default function SignUpScreen3() {
       Alert.alert("Success", "Account created successfully! Please log in.");
       router.replace("/auth/signin");
 
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Network error. Please try again.");
     }
 

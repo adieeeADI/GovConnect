@@ -9,7 +9,7 @@ const OTPVerification = () => {
   const router = useRouter();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
-  const inputRefs = useRef([]);
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     if (inputRefs.current[0]) {
@@ -17,7 +17,7 @@ const OTPVerification = () => {
     }
   }, []);
 
-  const handleChange = (index, value) => {
+  const handleChange = (index: number, value: string) => {
     if (value.length > 1) return;
     if (value && !/^\d$/.test(value)) return;
 
@@ -30,7 +30,7 @@ const OTPVerification = () => {
     }
   };
 
-  const handleKeyPress = (index, key) => {
+  const handleKeyPress = (index: number, key: string) => {
     if (key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -134,7 +134,7 @@ const OTPVerification = () => {
 
         {/* Resend OTP */}
         <View className="items-center mt-6">
-          <Text className="text-gray-500 text-sm mb-2">Didn't receive the code?</Text>
+          <Text className="text-gray-500 text-sm mb-2">{"Didn't receive the code?"}</Text>
           <TouchableOpacity onPress={handleResend}>
             <Text className="text-blue-900 font-semibold text-base">Resend OTP</Text>
           </TouchableOpacity>

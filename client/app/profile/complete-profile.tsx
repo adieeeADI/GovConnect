@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -61,9 +62,10 @@ export default function CompleteProfile() {
     setSubmitting(true);
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await fetch('https://govconnect-ad4s.onrender.com/api/auth/complete-profile', {
+      const res = await fetch(API_ENDPOINTS.COMPLETE_PROFILE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+
         body: JSON.stringify({
           userId,
           dateOfBirth: dob ? dob.toISOString() : undefined,

@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 
@@ -8,7 +8,7 @@ const ChangePassword = () => {
 
   // Prevent back navigation
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -17,7 +17,7 @@ const ChangePassword = () => {
         }
       );
       return () => backHandler.remove();
-    }, [])
+    }, [router])
   );
 
   const [formData, setFormData] = useState({
@@ -39,7 +39,10 @@ const ChangePassword = () => {
     special: false,
   });
 
-  const handleInputChange = (field, value) => {
+  type FormField = keyof typeof formData;
+  type PasswordField = keyof typeof showPassword;
+
+  const handleInputChange = (field: FormField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
 
     // Validate new password
@@ -53,7 +56,7 @@ const ChangePassword = () => {
     }
   };
 
-  const toggleShowPassword = (field) => {
+  const toggleShowPassword = (field: PasswordField) => {
     setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
@@ -97,10 +100,6 @@ const ChangePassword = () => {
     console.log('Updating password...');
     Alert.alert('Success', 'Password updated successfully!');
     handleCancel();
-  };
-
-  const handleBack = () => {
-    console.log('Going back');
   };
 
   return (

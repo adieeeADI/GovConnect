@@ -4,10 +4,11 @@ import {
   ScrollView, Alert, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, X, Plus, Calendar, IndianRupee } from 'lucide-react-native';
+import { ArrowLeft, X, Plus, Calendar } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { API_ENDPOINTS, getUserEndpoint } from '../../config/api.config';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -134,7 +135,8 @@ export default function EditProfile() {
   useEffect(() => {
     const loadUser = async () => {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await fetch(`https://govconnect-ad4s.onrender.com/api/auth/user/${userId}`);
+      if (!userId) return;
+      const res = await fetch(getUserEndpoint(userId));
       const data = await res.json();
 
       setFullName(data.fullName || '');
@@ -159,9 +161,10 @@ export default function EditProfile() {
     setSaving(true);
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await fetch('https://govconnect-ad4s.onrender.com/api/auth/complete-profile', {
+      const res = await fetch(API_ENDPOINTS.COMPLETE_PROFILE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+
         body: JSON.stringify({
           userId,
           fullName,

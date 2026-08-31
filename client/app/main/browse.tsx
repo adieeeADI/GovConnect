@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
-import { ArrowLeft, MapPin, Clock, ArrowRight, Home as HomeIcon, Search, Star, User } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Clock, ArrowRight } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { API_ENDPOINTS } from '../../config/api.config';
 import BottomNav from './bottom';
@@ -33,12 +33,29 @@ export default function Browse() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCategoryData(activeCategory);
+    let isMounted = true;
+    fetch(categoryEndpoints[activeCategory])
+      .then((res) => res.json())
+      .then((json) => {
+        if (isMounted) {
+          setData(json);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setData([]);
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [activeCategory]);
 
   // Prevent back navigation
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -47,21 +64,8 @@ export default function Browse() {
         }
       );
       return () => backHandler.remove();
-    }, [])
+    }, [router])
   );
-
-  const fetchCategoryData = async (category: Category) => {
-    setLoading(true);
-    try {
-      const response = await fetch(categoryEndpoints[category]);
-      const json = await response.json();
-      setData(json);
-    } catch (err) {
-      setData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterAndSearchData = () => {
     let filtered = [...data];
@@ -79,6 +83,13 @@ export default function Browse() {
 
   const displayData = filterAndSearchData();
   const currentTitle = categoryTitles[activeCategory];
+
+  const handleCategoryChange = (cat: Category) => {
+    if (activeCategory !== cat) {
+      setLoading(true);
+      setActiveCategory(cat);
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -106,7 +117,7 @@ export default function Browse() {
               className={`px-4 py-2 rounded-full mr-2 ${
                 activeCategory === 'internships' ? 'bg-blue-900' : 'bg-gray-300'
               }`}
-              onPress={() => setActiveCategory('internships')}
+              onPress={() => handleCategoryChange('internships')}
               activeOpacity={0.7}
             >
               <Text className={`text-sm font-semibold ${
@@ -120,7 +131,7 @@ export default function Browse() {
               className={`px-4 py-2 rounded-full mr-2 ${
                 activeCategory === 'scholarships' ? 'bg-blue-900' : 'bg-gray-300'
               }`}
-              onPress={() => setActiveCategory('scholarships')}
+              onPress={() => handleCategoryChange('scholarships')}
               activeOpacity={0.7}
             >
               <Text className={`text-sm font-semibold ${
@@ -134,7 +145,7 @@ export default function Browse() {
               className={`px-4 py-2 rounded-full mr-2 ${
                 activeCategory === 'schemes' ? 'bg-blue-900' : 'bg-gray-300'
               }`}
-              onPress={() => setActiveCategory('schemes')}
+              onPress={() => handleCategoryChange('schemes')}
               activeOpacity={0.7}
             >
               <Text className={`text-sm font-semibold ${
@@ -148,7 +159,7 @@ export default function Browse() {
               className={`px-4 py-2 rounded-full ${
                 activeCategory === 'training' ? 'bg-blue-900' : 'bg-gray-300'
               }`}
-              onPress={() => setActiveCategory('training')}
+              onPress={() => handleCategoryChange('training')}
               activeOpacity={0.7}
             >
               <Text className={`text-sm font-semibold ${

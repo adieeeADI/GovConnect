@@ -5,6 +5,7 @@ import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -34,8 +35,6 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const { API_ENDPOINTS } = require('../../config/api.config');
-
       const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {

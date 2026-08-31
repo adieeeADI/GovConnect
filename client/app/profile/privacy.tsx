@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Delete from './delete';
 import { ArrowLeft } from 'lucide-react-native';
 
+const Toggle = ({ checked }: { checked: boolean }) => (
+  <View className={`w-12 h-7 rounded-full justify-center ${checked ? 'bg-blue-900' : 'bg-gray-300'}`}>
+    <View className={`w-5 h-5 rounded-full bg-white shadow-sm ${checked ? 'ml-6' : 'ml-1'}`} />
+  </View>
+);
+
 const PrivacySecurity = () => {
   const router = useRouter();
 
   // Prevent back navigation
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -19,7 +25,7 @@ const PrivacySecurity = () => {
         }
       );
       return () => backHandler.remove();
-    }, [])
+    }, [router])
   );
   
   const [settings, setSettings] = useState({
@@ -34,19 +40,15 @@ const PrivacySecurity = () => {
   // Add this state for the modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const toggleSetting = (key) => {
+  type SettingsKey = keyof typeof settings;
+
+  const toggleSetting = (key: SettingsKey) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const updateSetting = (key, value) => {
+  const updateSetting = (key: SettingsKey, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
-
-  const Toggle = ({ checked }) => (
-    <View className={`w-12 h-7 rounded-full justify-center ${checked ? 'bg-blue-900' : 'bg-gray-300'}`}>
-      <View className={`w-5 h-5 rounded-full bg-white shadow-sm ${checked ? 'ml-6' : 'ml-1'}`} />
-    </View>
-  );
 
   const handleSave = () => {
     Alert.alert('Success', 'Settings saved successfully!');
