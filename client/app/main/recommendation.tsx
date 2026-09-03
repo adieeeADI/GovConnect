@@ -5,7 +5,7 @@ import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_ENDPOINTS, logApiConfig } from '../../config/api.config';
+import { API_ENDPOINTS, logApiConfig, safeFetchJson } from '../../config/api.config';
 import BottomNav from './bottom';
 
 const getMatchColor = (match: number) => {
@@ -22,45 +22,53 @@ export default function Recommendation() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchRecommendations = async () => {
       try {
-        logApiConfig(); // Log which API environment is being used
-        
-        // Get userId from AsyncStorage
+        logApiConfig();
         const userId = await AsyncStorage.getItem('userId');
         
         if (!userId) {
-          setError('User not authenticated. Please sign in again.');
-          setLoading(false);
+          if (isMounted) {
+            setError('User not authenticated. Please sign in again.');
+            setLoading(false);
+          }
           return;
         }
 
         console.log('📍 Fetching recommendations for userId:', userId);
-        
         const endpoint = `${API_ENDPOINTS.RECOMMEND}/${userId}`;
         console.log('🔗 API Endpoint:', endpoint);
-        
-        const res = await fetch(endpoint);
-        
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        console.log('✅ Recommendations fetched:', data.length);
 
-        setRecommendations(data);
-        setError(null);
+        const data = await safeFetchJson(endpoint);
+        console.log('✅ Recommendations fetched:', Array.isArray(data) ? data.length : 0);
+
+        if (isMounted) {
+          if (Array.isArray(data)) {
+            setRecommendations(data);
+            setError(null);
+          } else {
+            setRecommendations([]);
+            setError(data?.message || null);
+          }
+        }
       } catch (err: any) {
         console.error('❌ Error fetching recommendations:', err);
-        setError(err.message || 'Failed to load recommendations');
-        setRecommendations([]);
+        if (isMounted) {
+          setError(err.message || 'Failed to load recommendations');
+          setRecommendations([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchRecommendations();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

@@ -5,7 +5,7 @@ import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_ENDPOINTS } from '../../config/api.config';
+import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -35,7 +35,7 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const response = await fetch(API_ENDPOINTS.LOGIN, {
+      const data = await safeFetchJson(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,29 +46,18 @@ export default function SignIn() {
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Login failed');
-        setLoading(false);
-        return;
+      if (data && data.user) {
+        await AsyncStorage.setItem('userId', data.user.id);
+        await AsyncStorage.setItem('userData', JSON.stringify(data.user));
       }
 
-      // ✅ 🔥 FIX: STORE USER ID (IMPORTANT)
-      await AsyncStorage.setItem('userId', data.user.id);
-
-      // Optional: store full user data
-      await AsyncStorage.setItem('userData', JSON.stringify(data.user));
-
       setLoading(false);
-
-      // ✅ Better navigation
       router.replace('/main/home');
 
-    } catch (err) {
-      setError('Network error. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
       setLoading(false);
-      console.log(err);
+      console.log('Login error:', err);
     }
   };
 

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft } from 'lucide-react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 
 export default function SignUpScreen2() {
   const params = useLocalSearchParams();
@@ -13,6 +13,27 @@ export default function SignUpScreen2() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   const interests = ['Technology', 'Finance', 'Healthcare', 'Agriculture', 'Education'];
+
+  const handleBackConfirm = () => {
+    Alert.alert(
+      'Go Back?',
+      'Are you sure you want to go back to the previous step?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Go Back', style: 'destructive', onPress: () => router.back() }
+      ]
+    );
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBackConfirm();
+        return true;
+      });
+      return () => backHandler.remove();
+    }, [])
+  );
 
   const toggleInterest = (interest: string) => {
     if (selectedInterests.includes(interest)) {
@@ -52,7 +73,7 @@ export default function SignUpScreen2() {
           <TouchableOpacity 
             className="border border-gray-300 rounded-xl px-4 py-3"
             activeOpacity={0.7}
-            onPress={() => router.back()}
+            onPress={handleBackConfirm}
           >
             <View className="flex-row items-center">
               <ArrowLeft color="#000000" size={20} strokeWidth={2} />

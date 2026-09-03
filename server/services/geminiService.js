@@ -2,9 +2,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const model = genAI.getGenerativeModel({
-  model: "gemini-3-flash-preview"
-});
+const MODELS = [
+  process.env.GEMINI_MODEL,
+  "gemini-3.6-flash",
+  "gemini-2.5-flash"
+].filter((m, i, self) => m && self.indexOf(m) === i);
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -17,6 +19,16 @@ async function rankOpportunities(user, opportunities) {
   };
 
   const validIds = opportunities.map(o => o.id);
+
+  const langNameMap = {
+    hi: "Hindi (हिंदी)",
+    mr: "Marathi (मराठी)",
+    ta: "Tamil (தமிழ்)",
+    te: "Telugu (తెలుగు)",
+    bn: "Bengali (বাংলা)",
+    en: "English"
+  };
+  const targetLang = langNameMap[user.language] || "English";
 
   // IDs are now prefixed (e.g. "internships_2", "schemes_5") so Gemini can't confuse categories
   const prompt = `
@@ -46,7 +58,7 @@ STRICT RULES:
 - Use ONLY the exact id values shown above, including the prefix (e.g. "internships_2", "schemes_5")
 - Return exactly 2 internships + 2 scholarships + 2 training + 2 schemes = 8 total
 - matchScore: 0-100
-- reason: one sentence max
+- reason: one sentence max, written in ${targetLang} language for the user
 
 Return ONLY valid JSON, no markdown:
 {
@@ -64,21 +76,36 @@ Return ONLY valid JSON, no markdown:
 `;
 
   const tryGemini = async () => {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const cleanText = text.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(cleanText);
+    let lastError = null;
+    for (const modelName of MODELS) {
+      try {
+        console.log(`🤖 Requesting recommendations from model: ${modelName}...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const cleanText = text.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(cleanText);
 
-    const validRecs = parsed.recommendations
-      .filter(rec => {
-        const isValid = validIds.includes(String(rec.id));
-        if (!isValid) console.log(`❌ Invalid id from Gemini: "${rec.id}"`);
-        return isValid;
-      })
-      .map(rec => ({ ...rec, id: String(rec.id) }));
+        if (!parsed || !Array.isArray(parsed.recommendations)) {
+          throw new Error("Invalid response format from Gemini");
+        }
 
-    console.log(`✅ Gemini returned ${validRecs.length} valid recommendations`);
-    return validRecs;
+        const validRecs = parsed.recommendations
+          .filter(rec => {
+            const isValid = validIds.includes(String(rec.id));
+            if (!isValid) console.log(`❌ Invalid id from Gemini: "${rec.id}"`);
+            return isValid;
+          })
+          .map(rec => ({ ...rec, id: String(rec.id) }));
+
+        console.log(`✅ Gemini (${modelName}) returned ${validRecs.length} valid recommendations`);
+        return validRecs;
+      } catch (err) {
+        console.log(`⚠️ Model ${modelName} failed: ${err.message}`);
+        lastError = err;
+      }
+    }
+    throw lastError || new Error("All Gemini models failed");
   };
 
   try {

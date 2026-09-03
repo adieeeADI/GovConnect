@@ -16,6 +16,7 @@ router.post("/signup", async (req, res) => {
       education,
       skills,
       interests,
+      category,
       agreedToTerms,
       notifyOpportunities,
       forgeryWarning
@@ -36,6 +37,22 @@ router.post("/signup", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Parse skills if passed as string or array
+    let parsedSkills = [];
+    if (Array.isArray(skills)) {
+      parsedSkills = skills;
+    } else if (typeof skills === 'string' && skills.trim()) {
+      parsedSkills = skills.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    // Parse interests if passed as string or array
+    let parsedInterests = [];
+    if (Array.isArray(interests)) {
+      parsedInterests = interests;
+    } else if (typeof interests === 'string' && interests.trim()) {
+      parsedInterests = interests.split(',').map(i => i.trim()).filter(Boolean);
+    }
+
     const user = new User({
       fullName,
       email,
@@ -43,17 +60,50 @@ router.post("/signup", async (req, res) => {
       location,
       password: hashedPassword,
       education,
-      skills,
-      interests,
+      skills: parsedSkills,
+      interests: parsedInterests,
+      category: category || "Job Seeker",
       agreedToTerms,
       notifyOpportunities,
       forgeryWarning
     });
 
+    const checks = [
+      !!user.fullName,
+      !!user.email,
+      !!user.phone,
+      !!user.location,
+      !!user.education,
+      Array.isArray(user.skills) && user.skills.length > 0,
+      Array.isArray(user.interests) && user.interests.length > 0,
+      !!user.dateOfBirth,
+      !!user.gender,
+      !!user.state,
+      !!user.caste,
+      !!user.religion,
+      user.familyIncome !== undefined && user.familyIncome !== null,
+      !!user.category,
+    ];
+    user.profileCompletePercentage = Math.round(
+      (checks.filter(Boolean).length / checks.length) * 100
+    );
+
     await user.save();
 
     res.status(201).json({
-      message: "User registered successfully"
+      message: "User registered successfully",
+      user: {
+        id: user._id.toString(),
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        location: user.location,
+        education: user.education,
+        skills: user.skills,
+        interests: user.interests,
+        category: user.category,
+        profileCompletePercentage: user.profileCompletePercentage
+      }
     });
 
   } catch (err) {
@@ -96,119 +146,6 @@ router.post("/login", async (req, res) => {
         skills: user.skills,
         interests: user.interests
       }
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      message: "Server error",
-      error: err.message
-    });
-  }
-});
-
-/* ===================== GET USER ===================== */
-router.get("/user/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.json({
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      location: user.location,
-      education: user.education,
-      skills: user.skills,
-      interests: user.interests,
-      dateOfBirth: user.dateOfBirth,
-      gender: user.gender,
-      state: user.state,
-      caste: user.caste,
-      religion: user.religion,
-      familyIncome: user.familyIncome,
-      category: user.category,
-      profileCompletePercentage: user.profileCompletePercentage,
-    });
-
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-/* ===================== COMPLETE PROFILE ===================== */
-router.post("/complete-profile", async (req, res) => {
-  try {
-    const {
-      userId,
-      fullName,
-      phone,
-      location,
-      education,
-      skills,
-      interests,
-      gender,
-      state,
-      caste,
-      religion,
-      familyIncome,
-      category,
-      dateOfBirth
-    } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ message: "User ID required" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // ✅ Safe updates (allow empty values)
-    if (fullName !== undefined) user.fullName = fullName;
-    if (phone !== undefined) user.phone = phone;
-    if (location !== undefined) user.location = location;
-    if (education !== undefined) user.education = education;
-
-    if (skills !== undefined) user.skills = skills;
-    if (interests !== undefined) user.interests = interests;
-
-    user.gender = gender ?? user.gender;
-    user.state = state ?? user.state;
-    user.caste = caste ?? user.caste;
-    user.religion = religion ?? user.religion;
-    user.familyIncome = familyIncome ?? user.familyIncome;
-    user.category = category ?? user.category;
-    user.dateOfBirth = dateOfBirth ?? user.dateOfBirth;
-
-    // ✅ Completion calculation (fixed income bug)
-    const checks = [
-      !!user.fullName,
-      !!user.email,
-      !!user.phone,
-      !!user.location,
-      !!user.education,
-      Array.isArray(user.skills) && user.skills.length > 0,
-      Array.isArray(user.interests) && user.interests.length > 0,
-      !!user.dateOfBirth,
-      !!user.gender,
-      !!user.state,
-      !!user.caste,
-      !!user.religion,
-      user.familyIncome !== undefined && user.familyIncome !== null,
-      !!user.category,
-    ];
-
-    user.profileCompletePercentage = Math.round(
-      (checks.filter(Boolean).length / checks.length) * 100
-    );
-
-    await user.save();
-
-    res.json({
-      message: "Profile updated successfully",
-      profileCompletePercentage: user.profileCompletePercentage
     });
 
   } catch (err) {

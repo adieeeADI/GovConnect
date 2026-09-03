@@ -13,8 +13,8 @@ export default function ProfileCompleteBanner({
 
   const router = useRouter();
 
-  // 🔥 Hide if mostly complete
-  if (completionPercentage >= 80) return null;
+  // 🔥 Hide if 100% complete
+  if (completionPercentage >= 100) return null;
 
   return (
     <TouchableOpacity 

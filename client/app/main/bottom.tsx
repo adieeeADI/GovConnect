@@ -3,10 +3,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Home, Search, Star, User } from 'lucide-react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from '../../utils/i18n';
 
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const isActive = (path: string) => {
     if (path === '/main/home') {
@@ -16,11 +18,10 @@ export default function BottomNav() {
   };
 
   const handleNavigation = (path: string) => {
-    // Don't navigate if already on that page
     if (isActive(path)) {
       return;
     }
-    router.replace(path);
+    router.replace(path as any);
   };
 
   return (
@@ -43,11 +44,11 @@ export default function BottomNav() {
           <Text className={`text-xs mt-1 font-semibold ${
             isActive('/main/home') ? 'text-red-600' : 'text-gray-400'
           }`}>
-            Home
+            {t('nav_home')}
           </Text>
         </TouchableOpacity>
 
-        {/* Search */}
+        {/* Search / Browse */}
         <TouchableOpacity 
           className="items-center"
           activeOpacity={0.7}
@@ -60,7 +61,7 @@ export default function BottomNav() {
           <Text className={`text-xs mt-1 font-semibold ${
             isActive('/main/browse') ? 'text-red-600' : 'text-gray-400'
           }`}>
-            Search
+            {t('nav_browse')}
           </Text>
         </TouchableOpacity>
 
@@ -77,7 +78,7 @@ export default function BottomNav() {
           <Text className={`text-xs mt-1 font-semibold ${
             isActive('/main/recommendation') ? 'text-red-600' : 'text-gray-400'
           }`}>
-            For You
+            {t('nav_for_you')}
           </Text>
         </TouchableOpacity>
 
@@ -94,7 +95,7 @@ export default function BottomNav() {
           <Text className={`text-xs mt-1 font-semibold ${
             isActive('/profile') ? 'text-red-600' : 'text-gray-400'
           }`}>
-            Profile
+            {t('nav_profile')}
           </Text>
         </TouchableOpacity>
 

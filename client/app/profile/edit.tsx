@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  ScrollView, Alert, Platform
+  ScrollView, Alert, Platform, BackHandler
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, X, Plus, Calendar } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { API_ENDPOINTS, getUserEndpoint } from '../../config/api.config';
+import { API_ENDPOINTS, getUserEndpoint, safeFetchJson } from '../../config/api.config';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -133,38 +133,50 @@ export default function EditProfile() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const loadUser = async () => {
-      const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
-      const res = await fetch(getUserEndpoint(userId));
-      const data = await res.json();
-
-      setFullName(data.fullName || '');
-      setEmail(data.email || '');
-      setPhone(data.phone || '');
-      setLocation(data.location || '');
-      setEducation(data.education || '');
-      setSkills(data.skills || []);
-      setInterests(data.interests || []);
-      setGender(data.gender || '');
-      setState(data.state || '');
-      setCaste(data.caste || '');
-      setReligion(data.religion || '');
-      setFamilyIncome(data.familyIncome || 0);
-      setCategory(data.category || '');
-      if (data.dateOfBirth) setDateOfBirth(new Date(data.dateOfBirth));
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+        const data = await safeFetchJson(getUserEndpoint(userId));
+        if (isMounted && data) {
+          setFullName(data.fullName || '');
+          setEmail(data.email || '');
+          setPhone(data.phone || '');
+          setLocation(data.location || '');
+          setEducation(data.education || '');
+          setSkills(data.skills || []);
+          setInterests(data.interests || []);
+          setGender(data.gender || '');
+          setState(data.state || '');
+          setCaste(data.caste || '');
+          setReligion(data.religion || '');
+          setFamilyIncome(data.familyIncome || 0);
+          setCategory(data.category || '');
+          if (data.dateOfBirth) setDateOfBirth(new Date(data.dateOfBirth));
+        }
+      } catch (err) {
+        console.log('Error loading user profile in edit:', err);
+      }
     };
     loadUser();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const userId = await AsyncStorage.getItem('userId');
-      const res = await fetch(API_ENDPOINTS.COMPLETE_PROFILE, {
+      if (!userId) {
+        Alert.alert('Error', 'User session not found. Please log in again.');
+        setSaving(false);
+        return;
+      }
+      const data = await safeFetchJson(API_ENDPOINTS.COMPLETE_PROFILE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-
         body: JSON.stringify({
           userId,
           fullName,
@@ -182,15 +194,41 @@ export default function EditProfile() {
           dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : undefined,
         }),
       });
-      if (!res.ok) throw new Error('Failed');
+
+      if (data && data.user) {
+        await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+      }
+
       Alert.alert('Saved', 'Profile updated successfully');
       router.back();
-    } catch {
-      Alert.alert('Error', 'Failed to save. Please try again.');
+    } catch (err: any) {
+      console.error('Save error:', err);
+      Alert.alert('Error', err.message || 'Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }
   };
+
+  const handleBackConfirm = () => {
+    Alert.alert(
+      'Discard Changes?',
+      'Are you sure you want to go back? Unsaved changes will be lost.',
+      [
+        { text: 'Keep Editing', style: 'cancel' },
+        { text: 'Discard', style: 'destructive', onPress: () => router.back() }
+      ]
+    );
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBackConfirm();
+        return true;
+      });
+      return () => backHandler.remove();
+    }, [])
+  );
 
   const formattedDOB = dateOfBirth
     ? dateOfBirth.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -203,7 +241,7 @@ export default function EditProfile() {
 
       {/* Header */}
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity onPress={handleBackConfirm} activeOpacity={0.7}>
           <ArrowLeft color="#fff" size={24} strokeWidth={2} />
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold mt-4">Edit Profile</Text>

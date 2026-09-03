@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 
 export default function SignUpScreen1() {
   const [fullName, setFullName] = useState('');
@@ -14,6 +14,27 @@ export default function SignUpScreen1() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleBackConfirm = () => {
+    Alert.alert(
+      'Cancel Sign Up?',
+      'Are you sure you want to go back? Entered details will not be saved.',
+      [
+        { text: 'Continue Registration', style: 'cancel' },
+        { text: 'Go Back', style: 'destructive', onPress: () => router.back() }
+      ]
+    );
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBackConfirm();
+        return true;
+      });
+      return () => backHandler.remove();
+    }, [])
+  );
 
   const validateAndProceed = () => {
     if (!fullName || !email || !phone || !location || !password || !confirmPassword) {
@@ -55,7 +76,7 @@ export default function SignUpScreen1() {
           <TouchableOpacity
             className="border border-gray-300 rounded-xl px-4 py-3"
             activeOpacity={0.7}
-            onPress={() => router.back()}
+            onPress={handleBackConfirm}
           >
             <View className="flex-row items-center">
               <ArrowLeft color="#000000" size={20} strokeWidth={2} />

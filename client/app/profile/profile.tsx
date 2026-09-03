@@ -1,15 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft, Mail, Phone, MapPin, Bell, Lock, Globe, User as UserIcon } from 'lucide-react-native';
+import { ArrowLeft, Mail, Phone, MapPin, Edit3, Globe, User as UserIcon, Bell, ShieldCheck } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../main/bottom';
 import ProfileCompleteBanner from './ProfileCompleteBanner';
-import { getUserEndpoint } from '../../config/api.config';
+import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
+import { useTranslation, LANGUAGES } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
-// All fields that count toward completion
 function getCompletionPercentage(data: Record<string, any>): number {
   const checks = [
     !!data.fullName,
@@ -33,26 +34,79 @@ function getCompletionPercentage(data: Record<string, any>): number {
 
 export default function Profile() {
   const router = useRouter();
+  const { t, language } = useTranslation();
   const [user, setUser] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [langModalVisible, setLangModalVisible] = useState(false);
+
+  const currentLangObj = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
 
   const loadUser = async () => {
     try {
+      const cached = await AsyncStorage.getItem('userData');
+      if (cached) {
+        setUser(JSON.parse(cached));
+        setLoading(false);
+      }
       const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
-      const res = await fetch(getUserEndpoint(userId));
-      const data = await res.json();
-      setUser(data);
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+      const data = await safeFetchJson(getUserEndpoint(userId));
+      if (data) {
+        setUser(data);
+        await AsyncStorage.setItem('userData', JSON.stringify(data));
+      }
     } catch (e) {
       console.error(e);
-
     } finally {
       setLoading(false);
     }
   };
 
-  // Re-fetch every time screen comes into focus (after EditProfile saves)
-  useFocusEffect(useCallback(() => { loadUser(); }, []));
+  const handleBackConfirm = () => {
+    Alert.alert(
+      t('leave_page'),
+      '',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Yes', onPress: () => router.back() }
+      ]
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      t('logout'),
+      t('confirm_logout'),
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: t('logout'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('userId');
+              await AsyncStorage.removeItem('userData');
+              router.replace('/auth/landing');
+            } catch (err) {
+              console.error('Logout error:', err);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  useFocusEffect(useCallback(() => {
+    loadUser();
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBackConfirm();
+      return true;
+    });
+    return () => backHandler.remove();
+  }, []));
 
   const completionPercentage = getCompletionPercentage(user);
 
@@ -70,18 +124,28 @@ export default function Profile() {
 
       {/* Header */}
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
-        <TouchableOpacity className="mb-4" onPress={() => router.back()} activeOpacity={0.7}>
-          <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
-        </TouchableOpacity>
+        <View className="flex-row items-center justify-between mb-4">
+          <TouchableOpacity onPress={handleBackConfirm} activeOpacity={0.7}>
+            <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-row items-center bg-white/20 px-3 py-1.5 rounded-full"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Text className="text-sm mr-1.5">{currentLangObj.flag}</Text>
+            <Text className="text-white text-xs font-bold">{currentLangObj.nativeName}</Text>
+          </TouchableOpacity>
+        </View>
 
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
-            <View className="w-20 h-20 rounded-full bg-gray-400 items-center justify-center mr-4">
+            <View className="w-20 h-20 rounded-full bg-blue-700 border-2 border-white/40 items-center justify-center mr-4">
               <UserIcon color="#ffffff" size={40} strokeWidth={2} />
             </View>
             <View className="flex-1">
               <Text className="text-white text-2xl font-bold mb-1">
-                {user.fullName || 'Your Name'}
+                {user.fullName || t('guest')}
               </Text>
               <Text className="text-blue-200 text-sm">
                 {user.location || 'Location not set'}
@@ -89,34 +153,19 @@ export default function Profile() {
             </View>
           </View>
           <TouchableOpacity
-            className="bg-white/20 rounded-full px-5 py-2"
+            className="bg-white/20 rounded-full px-5 py-2 flex-row items-center"
             activeOpacity={0.7}
             onPress={() => router.push('/profile/edit')}
           >
-            <Text className="text-white font-semibold text-sm">Edit</Text>
+            <Edit3 color="#ffffff" size={16} />
+            <Text className="text-white font-semibold text-sm ml-1.5">{t('edit_profile')}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
 
-        {/* Stats Cards */}
-        <View className="flex-row justify-between px-6 mb-6">
-          <View className="flex-1 bg-blue-100 rounded-2xl p-4 mr-2 items-center">
-            <Text className="text-blue-900 text-3xl font-bold">3</Text>
-            <Text className="text-blue-900 text-xs font-semibold text-center">Applied</Text>
-          </View>
-          <View className="flex-1 bg-purple-100 rounded-2xl p-4 mx-2 items-center">
-            <Text className="text-purple-900 text-3xl font-bold">8</Text>
-            <Text className="text-purple-900 text-xs font-semibold text-center">Saved</Text>
-          </View>
-          <View className="flex-1 bg-green-100 rounded-2xl p-4 ml-2 items-center">
-            <Text className="text-green-900 text-3xl font-bold">5</Text>
-            <Text className="text-green-900 text-xs font-semibold text-center">For You</Text>
-          </View>
-        </View>
-
-        {/* ✅ Real completion % from API data */}
+        {/* Real completion % from API data */}
         <ProfileCompleteBanner completionPercentage={completionPercentage} />
 
         {/* Contact Information */}
@@ -125,7 +174,7 @@ export default function Profile() {
 
           <View className="bg-gray-100 rounded-2xl p-4 mb-3 flex-row items-center">
             <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
-              <Mail color="#1e3a8a" size={20} strokeWidth={2} />
+              <Mail color="#2563eb" size={20} strokeWidth={2} />
             </View>
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1">Email</Text>
@@ -155,85 +204,102 @@ export default function Profile() {
         </View>
 
         {/* Education & Skills */}
-        <View className="px-6 mb-6">
-          <Text className="text-black text-xl font-bold mb-4">Education & Skills</Text>
+        {(() => {
+          const userSkills: string[] = Array.isArray(user.skills)
+            ? user.skills
+            : typeof user.skills === 'string'
+            ? (user.skills as string).split(',').map(s => s.trim()).filter(Boolean)
+            : [];
 
-          <View className="bg-gray-100 rounded-2xl p-4 mb-4">
-            <Text className="text-gray-500 text-xs mb-2">Education</Text>
-            <Text className="text-black text-base font-semibold">{user.education || '—'}</Text>
-          </View>
+          const userInterests: string[] = Array.isArray(user.interests)
+            ? user.interests
+            : typeof user.interests === 'string'
+            ? (user.interests as string).split(',').map(i => i.trim()).filter(Boolean)
+            : [];
 
-          {user.skills?.length > 0 && (
-            <>
+          return (
+            <View className="px-6 mb-6">
+              <Text className="text-black text-xl font-bold mb-4">Education & Skills</Text>
+
+              <View className="bg-gray-100 rounded-2xl p-4 mb-4">
+                <Text className="text-gray-500 text-xs mb-2">Education</Text>
+                <Text className="text-black text-base font-semibold">{user.education || '—'}</Text>
+              </View>
+
               <Text className="text-gray-700 text-sm font-semibold mb-3">Skills</Text>
-              <View className="flex-row flex-wrap mb-4">
-                {user.skills.map((skill: string) => (
-                  <View key={skill} className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
-                    <Text className="text-blue-900 text-sm font-semibold">{skill}</Text>
+              {userSkills.length > 0 ? (
+                <View className="flex-row flex-wrap mb-4">
+                  {userSkills.map((skill: string, idx: number) => (
+                    <View key={`${skill}-${idx}`} className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
+                      <Text className="text-blue-900 text-sm font-semibold">{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 flex-row items-center justify-between">
+                  <View className="flex-1 mr-2">
+                    <Text className="text-blue-900 text-sm font-bold">No skills added yet</Text>
+                    <Text className="text-blue-700 text-xs mt-0.5">Add skills to get targeted scheme & job recommendations.</Text>
                   </View>
-                ))}
-              </View>
-            </>
-          )}
+                  <TouchableOpacity
+                    className="bg-blue-700 px-3 py-1.5 rounded-xl"
+                    onPress={() => router.push('/profile/edit')}
+                  >
+                    <Text className="text-white text-xs font-bold">+ Add Skills</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
-          {user.interests?.length > 0 && (
-            <>
-              <Text className="text-gray-700 text-sm font-semibold mb-3">Interests</Text>
-              <View className="flex-row flex-wrap">
-                {user.interests.map((interest: string) => (
-                  <View key={interest} className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
-                    <Text className="text-orange-700 text-sm font-semibold">{interest}</Text>
+              {userInterests.length > 0 && (
+                <>
+                  <Text className="text-gray-700 text-sm font-semibold mb-3">Interests</Text>
+                  <View className="flex-row flex-wrap">
+                    {userInterests.map((interest: string, idx: number) => (
+                      <View key={`${interest}-${idx}`} className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
+                        <Text className="text-orange-700 text-sm font-semibold">{interest}</Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
-            </>
-          )}
-        </View>
+                </>
+              )}
+            </View>
+          );
+        })()}
 
         {/* Settings */}
         <View className="px-6 mb-6">
           <Text className="text-black text-xl font-bold mb-4">Settings</Text>
 
           <TouchableOpacity
-            className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between border border-gray-200"
+            className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between border border-blue-200 bg-blue-50/50"
             activeOpacity={0.7}
-            onPress={() => router.push('/profile/notifications')}
+            onPress={() => setLangModalVisible(true)}
           >
-            <Text className="text-black text-base font-semibold">Notifications</Text>
-            <View className="w-10 h-10 bg-orange-100 rounded-full items-center justify-center">
-              <Bell color="#f97316" size={20} strokeWidth={2} />
+            <View className="flex-row items-center">
+              <Text className="text-2xl mr-3">{currentLangObj.flag}</Text>
+              <View>
+                <Text className="text-black text-base font-semibold">{t('language')}</Text>
+                <Text className="text-blue-700 text-xs font-bold">{currentLangObj.nativeName} ({currentLangObj.label})</Text>
+              </View>
             </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between border border-gray-200"
-            activeOpacity={0.7}
-            onPress={() => router.push('/profile/privacy')}
-          >
-            <Text className="text-black text-base font-semibold">Privacy & Security</Text>
-            <View className="w-10 h-10 bg-orange-100 rounded-full items-center justify-center">
-              <Lock color="#f97316" size={20} strokeWidth={2} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="bg-white rounded-2xl p-4 mb-4 flex-row items-center justify-between border border-gray-200"
-            activeOpacity={0.7}
-            onPress={() => router.push('/profile/language')}
-          >
-            <Text className="text-black text-base font-semibold">Language Preferences</Text>
             <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-              <Globe color="#3b82f6" size={20} strokeWidth={2} />
+              <Globe color="#2563eb" size={20} strokeWidth={2} />
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity className="bg-white rounded-2xl p-4 border-2 border-red-500" activeOpacity={0.7}>
-            <Text className="text-red-600 text-center text-base font-bold">Logout</Text>
+          <TouchableOpacity className="bg-white rounded-2xl p-4 border-2 border-red-500" activeOpacity={0.7} onPress={handleLogout}>
+            <Text className="text-red-600 text-center text-base font-bold">{t('logout')}</Text>
           </TouchableOpacity>
         </View>
 
         <View className="h-20" />
       </ScrollView>
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
 
       <BottomNav />
     </SafeAreaView>
