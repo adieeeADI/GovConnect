@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, BackHandler } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Mail, Phone, MapPin, Edit3, Globe, User as UserIcon, Bell, ShieldCheck } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import ProfileCompleteBanner from './ProfileCompleteBanner';
 import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation, LANGUAGES } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import { goBackWithinApp } from '../../utils/navigation';
 
 function getCompletionPercentage(data: Record<string, any>): number {
   const checks = [
@@ -65,17 +66,6 @@ export default function Profile() {
     }
   };
 
-  const handleBackConfirm = () => {
-    Alert.alert(
-      t('leave_page'),
-      '',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Yes', onPress: () => router.back() }
-      ]
-    );
-  };
-
   const handleLogout = () => {
     Alert.alert(
       t('logout'),
@@ -101,11 +91,7 @@ export default function Profile() {
 
   useFocusEffect(useCallback(() => {
     loadUser();
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleBackConfirm();
-      return true;
-    });
-    return () => backHandler.remove();
+    return undefined;
   }, []));
 
   const completionPercentage = getCompletionPercentage(user);
@@ -125,7 +111,7 @@ export default function Profile() {
       {/* Header */}
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
         <View className="flex-row items-center justify-between mb-4">
-          <TouchableOpacity onPress={handleBackConfirm} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => goBackWithinApp(router)} activeOpacity={0.7}>
             <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
           </TouchableOpacity>
           <TouchableOpacity

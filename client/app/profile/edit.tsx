@@ -10,6 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_ENDPOINTS, getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
+import { clearRecommendationsCache } from '../../utils/recommendations';
+import { goBackWithinApp } from '../../utils/navigation';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -199,6 +201,7 @@ export default function EditProfile() {
 
       if (data && data.user) {
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+        await clearRecommendationsCache(userId);
       }
 
       Alert.alert('Saved', 'Profile updated successfully');
@@ -211,25 +214,14 @@ export default function EditProfile() {
     }
   };
 
-  const handleBackConfirm = () => {
-    Alert.alert(
-      t('leave_page'),
-      'Are you sure you want to go back? Unsaved changes will be lost.',
-      [
-        { text: t('cancel'), style: 'cancel' },
-        { text: t('back'), style: 'destructive', onPress: () => router.back() }
-      ]
-    );
-  };
-
   useFocusEffect(
     useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        handleBackConfirm();
+        goBackWithinApp(router);
         return true;
       });
       return () => backHandler.remove();
-    }, [])
+    }, [router])
   );
 
   const formattedDOB = dateOfBirth
@@ -243,7 +235,7 @@ export default function EditProfile() {
 
       {/* Header */}
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
-        <TouchableOpacity onPress={handleBackConfirm} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => goBackWithinApp(router)} activeOpacity={0.7}>
           <ArrowLeft color="#fff" size={24} strokeWidth={2} />
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold mt-4">{t('edit_profile')}</Text>

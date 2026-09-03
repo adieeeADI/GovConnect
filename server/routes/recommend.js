@@ -20,6 +20,8 @@ router.get("/:userId", async (req, res) => {
     console.log("🔍 Found user:", user ? "YES" : "NO");
     if (user) {
       console.log("🔍 User details:", {
+        id: user._id.toString(),
+        email: user.email,
         name: user.name,
         skills: user.skills,
         interests: user.interests,
@@ -90,6 +92,7 @@ router.get("/:userId", async (req, res) => {
     };
     console.log("🌐 Requesting AI recommendations in language:", requestedLang);
     const aiResult = await rankOpportunities(userWithLang, opportunities);
+    console.log("🤖 Recommendation source:", aiResult.source || "unknown");
     console.log("AI raw recommendations:", JSON.stringify(aiResult.recommendations, null, 2));
 
     let recommendations = aiResult.recommendations

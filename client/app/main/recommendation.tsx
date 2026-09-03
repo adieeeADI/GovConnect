@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, BackHandler, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft, MapPin } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { ArrowLeft, MapPin, RefreshCw } from 'lucide-react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, logApiConfig, safeFetchJson } from '../../config/api.config';
 import BottomNav from './bottom';
+import { goBackWithinApp } from '../../utils/navigation';
 
 import { useTranslation } from '../../utils/i18n';
 
@@ -17,16 +18,34 @@ const getMatchColor = (match: number) => {
   return 'text-orange-500';
 };
 
+export const getRecommendationsCacheKey = (userId: string, language: string) =>
+  `recommendations:${userId}:${language}`;
+
 export default function Recommendation() {
   const router = useRouter();
   const { t, language } = useTranslation();
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          goBackWithinApp(router);
+          return true;
+        }
+      );
+      return () => backHandler.remove();
+    }, [router])
+  );
 
   useEffect(() => {
     let isMounted = true;
-    const fetchRecommendations = async () => {
+
+    const loadRecommendations = async () => {
       try {
         logApiConfig();
         const userId = await AsyncStorage.getItem('userId');
@@ -39,7 +58,22 @@ export default function Recommendation() {
           return;
         }
 
-        console.log('📍 Fetching recommendations for userId:', userId, 'language:', language);
+        const cacheKey = getRecommendationsCacheKey(userId, language);
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          const cachedRecommendations = JSON.parse(cached);
+          if (Array.isArray(cachedRecommendations)) {
+            if (isMounted) {
+              console.log('📦 Recommendations loaded from cache for userId:', userId);
+              setRecommendations(cachedRecommendations);
+              setError(null);
+              setLoading(false);
+            }
+            return;
+          }
+        }
+
+        console.log('📍 Fetching recommendations from API for userId:', userId, 'language:', language);
         const endpoint = `${API_ENDPOINTS.RECOMMEND}/${userId}?lang=${language}`;
         console.log('🔗 API Endpoint:', endpoint);
 
@@ -50,6 +84,7 @@ export default function Recommendation() {
           if (Array.isArray(data)) {
             setRecommendations(data);
             setError(null);
+            await AsyncStorage.setItem(cacheKey, JSON.stringify(data));
           } else {
             setRecommendations([]);
             setError(data?.message || null);
@@ -68,24 +103,69 @@ export default function Recommendation() {
       }
     };
 
-    fetchRecommendations();
+    loadRecommendations();
     return () => {
       isMounted = false;
     };
   }, [language]);
+
+  const refreshRecommendations = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) {
+      setError('User not authenticated. Please sign in again.');
+      return;
+    }
+
+    setRefreshing(true);
+    setError(null);
+    try {
+      const cacheKey = getRecommendationsCacheKey(userId, language);
+      await AsyncStorage.removeItem(cacheKey);
+
+      const endpoint = `${API_ENDPOINTS.RECOMMEND}/${userId}?lang=${encodeURIComponent(language)}&refresh=${Date.now()}`;
+      console.log('🔄 Refreshing recommendations from API:', endpoint);
+      const data = await safeFetchJson(endpoint, {
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      if (!Array.isArray(data)) {
+        throw new Error(data?.message || 'Failed to refresh recommendations');
+      }
+      setRecommendations(data);
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(data));
+      console.log('✅ Fresh recommendations saved to local cache:', data.length);
+    } catch (err: any) {
+      setError(err.message || 'Failed to refresh recommendations');
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <CustomStatusBar />
 
       <View className="bg-blue-900 rounded-b-3xl px-6 py-6 mb-4">
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => goBackWithinApp(router)}>
           <ArrowLeft color="#fff" size={24} />
         </TouchableOpacity>
 
-        <Text className="text-white text-3xl font-bold mt-3">
-          {t('recommended_for_you')}
-        </Text>
+        <View className="flex-row items-center justify-between mt-3">
+          <Text className="text-white text-3xl font-bold flex-1">
+            {t('recommended_for_you')}
+          </Text>
+          <TouchableOpacity
+            className="ml-3 p-2"
+            onPress={refreshRecommendations}
+            disabled={refreshing}
+            accessibilityLabel="Refresh recommendations"
+          >
+            {refreshing ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <RefreshCw color="#ffffff" size={24} />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading ? (
@@ -108,7 +188,17 @@ export default function Recommendation() {
           </View>
         </View>
       ) : (
-        <ScrollView className="px-6">
+        <ScrollView
+          className="px-6"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refreshRecommendations}
+              colors={['#1e40af']}
+              tintColor="#1e40af"
+            />
+          }
+        >
 
           <View className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-5">
             <Text className="text-orange-900 font-semibold">✨ AI Match:</Text>

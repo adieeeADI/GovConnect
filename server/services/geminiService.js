@@ -5,7 +5,6 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODELS = [
   process.env.GEMINI_MODEL,
   "gemini-3.6-flash",
-  "gemini-1.5-flash-latest"
 ].filter((m, i, self) => m && self.indexOf(m) === i);
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -104,7 +103,7 @@ Return ONLY valid JSON, no markdown:
         } catch (err) {
           console.log(`⚠️ Model ${modelName} attempt ${attempt} failed: ${err.message}`);
           lastError = err;
-          if (attempt < 3 && (err.message?.includes("503") || err.message?.includes("429"))) {
+          if (attempt < 3 && err.message?.includes("503")) {
             await sleep(1500 * attempt);
           } else {
             break;
@@ -121,13 +120,7 @@ Return ONLY valid JSON, no markdown:
     try {
       validRecs = await tryGemini();
     } catch (err) {
-      if (err.message?.includes("429") || err.message?.includes("Too Many Requests")) {
-        console.log("⏳ Rate limited. Waiting 15s then retrying once...");
-        await sleep(15000);
-        validRecs = await tryGemini();
-      } else {
-        throw err;
-      }
+      throw err;
     }
 
     // Fill any missing categories with fallback
@@ -152,24 +145,47 @@ Return ONLY valid JSON, no markdown:
       }
     });
 
-    return { recommendations: finalRecs };
+    console.log("✅ Recommendation source: GEMINI");
+    return { recommendations: finalRecs, source: "gemini" };
 
   } catch (err) {
+    console.log("⚠️ Recommendation source: FALLBACK");
     console.log("⚠️ Gemini fully failed, using fallback:", err.message);
+
+    const profileTerms = [
+      ...(Array.isArray(user.skills) ? user.skills : []),
+      ...(Array.isArray(user.interests) ? user.interests : []),
+      user.education,
+      user.category,
+      user.location
+    ]
+      .filter(Boolean)
+      .map(term => String(term).toLowerCase());
 
     const fallback = [];
     ["internships", "scholarships", "training", "schemes"].forEach(cat => {
-      grouped[cat].slice(0, 2).forEach((op, i) => {
+      const ranked = grouped[cat]
+        .map((op, index) => {
+          const searchableText = `${op.title} ${op.organization} ${op.location}`.toLowerCase();
+          const profileMatches = profileTerms.filter(term => searchableText.includes(term)).length;
+          return { op, index, score: profileMatches * 10 - index / 100 };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2);
+
+      ranked.forEach(({ op, score }, i) => {
         fallback.push({
           id: op.id,
           category: cat,
-          matchScore: 75 - i * 5,
-          reason: "Recommended based on your profile"
+          matchScore: Math.max(55, Math.min(95, 65 + Math.round(score) - i * 5)),
+          reason: profileTerms.length > 0
+            ? "Recommended using your saved profile preferences"
+            : "Recommended based on available opportunities"
         });
       });
     });
 
-    return { recommendations: fallback };
+    return { recommendations: fallback, source: "fallback" };
   }
 }
 

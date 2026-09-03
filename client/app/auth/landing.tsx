@@ -86,7 +86,7 @@ export default function Landing() {
           onPress={() => router.push("/auth/signupscreen1")}
         >
           <Text className="text-white text-lg font-bold">
-            {t('sign_up')}
+            {t('Sign Up')}
           </Text>
         </TouchableOpacity>
         

@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Delete from './delete';
 import { ArrowLeft } from 'lucide-react-native';
+import { goBackWithinApp } from '../../utils/navigation';
 
 const Toggle = ({ checked }: { checked: boolean }) => (
   <View className={`w-12 h-7 rounded-full justify-center ${checked ? 'bg-blue-900' : 'bg-gray-300'}`}>
@@ -20,7 +21,7 @@ const PrivacySecurity = () => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
-          router.replace('/profile/profile');
+          goBackWithinApp(router);
           return true;
         }
       );
@@ -80,7 +81,7 @@ const PrivacySecurity = () => {
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="bg-blue-900 px-6 pt-12 pb-8 rounded-b-3xl">
-          <TouchableOpacity className="mb-4" onPress={() => router.back()}>
+          <TouchableOpacity className="mb-4" onPress={() => goBackWithinApp(router)}>
             <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
           </TouchableOpacity>
           <Text className="text-white text-3xl font-bold mb-2">Privacy & Security</Text>

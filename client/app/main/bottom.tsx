@@ -4,6 +4,7 @@ import { Home, Search, Star, User } from 'lucide-react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from '../../utils/i18n';
+import { HOME_ROUTE } from '../../utils/navigation';
 
 export default function BottomNav() {
   const router = useRouter();
@@ -21,7 +22,11 @@ export default function BottomNav() {
     if (isActive(path)) {
       return;
     }
-    router.replace(path as any);
+    if (path === HOME_ROUTE) {
+      router.replace(HOME_ROUTE);
+    } else {
+      router.push(path as any);
+    }
   };
 
   return (

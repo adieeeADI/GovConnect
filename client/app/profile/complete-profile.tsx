@@ -11,6 +11,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_ENDPOINTS, getUserEndpoint, safeFetchJson } from '../../config/api.config';
+import { clearRecommendationsCache } from '../../utils/recommendations';
+import { goBackWithinApp } from '../../utils/navigation';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -165,6 +167,7 @@ export default function CompleteProfile() {
               });
               if (updateRes && updateRes.user) {
                 await AsyncStorage.setItem('userData', JSON.stringify(updateRes.user));
+                await clearRecommendationsCache(userId);
               }
             }
 
@@ -211,6 +214,7 @@ export default function CompleteProfile() {
 
       if (data && data.user) {
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+        await clearRecommendationsCache(userId);
       }
 
       if (exitAfter) {
@@ -235,14 +239,7 @@ export default function CompleteProfile() {
       setStep(s => s - 1);
       return;
     }
-    Alert.alert(
-      'Leave Profile Setup?',
-      'Are you sure you want to go back? Unsaved edits on this view will be lost.',
-      [
-        { text: 'Continue Setup', style: 'cancel' },
-        { text: 'Leave', style: 'destructive', onPress: () => router.back() }
-      ]
-    );
+    goBackWithinApp(router);
   };
 
   useFocusEffect(
@@ -252,7 +249,7 @@ export default function CompleteProfile() {
         return true;
       });
       return () => backHandler.remove();
-    }, [step])
+    }, [step, router])
   );
 
   const formattedDOB = dob

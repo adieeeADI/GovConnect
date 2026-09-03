@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } fro
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { getDataDetailsEndpoint } from '../../../config/api.config';
 import { useTranslation, translateValue } from '../../../utils/i18n';
+import { goBackWithinApp } from '../../../utils/navigation';
 
 export default function Individual() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function Individual() {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
-          router.replace('/main/browse');
+          goBackWithinApp(router);
           return true;
         }
       );
@@ -81,7 +82,7 @@ export default function Individual() {
           <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-6">
             <TouchableOpacity 
               className="mb-4"
-              onPress={() => router.back()}
+              onPress={() => goBackWithinApp(router)}
               activeOpacity={0.7}
             >
               <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />

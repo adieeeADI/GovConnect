@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { API_ENDPOINTS } from '../../config/api.config';
 import BottomNav from './bottom';
 import { useTranslation } from '../../utils/i18n';
+import { goBackWithinApp } from '../../utils/navigation';
 
 type Category = 'internships' | 'scholarships' | 'schemes' | 'training';
 
@@ -65,7 +66,7 @@ export default function Browse() {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
-          router.replace('/main/home');
+          goBackWithinApp(router);
           return true;
         }
       );
@@ -102,7 +103,7 @@ export default function Browse() {
         <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-4">
           <TouchableOpacity 
             className="mb-4"
-            onPress={() => router.back()}
+            onPress={() => goBackWithinApp(router)}
             activeOpacity={0.7}
           >
             <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />

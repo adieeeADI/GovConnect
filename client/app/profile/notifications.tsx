@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, BackHandler } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import { goBackWithinApp } from '../../utils/navigation';
 
 const initialSettings = {
   emailNotifications: true,
@@ -49,7 +50,7 @@ const NotificationSettings = () => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
-          router.replace('/profile/profile');
+          goBackWithinApp(router);
           return true;
         }
       );
@@ -72,7 +73,7 @@ const NotificationSettings = () => {
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="bg-blue-900 px-6 pt-12 pb-8 rounded-b-3xl">
-          <TouchableOpacity className="mb-4" onPress={() => router.back()}>
+          <TouchableOpacity className="mb-4" onPress={() => goBackWithinApp(router)}>
             <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
           </TouchableOpacity>
           <Text className="text-white text-3xl font-bold mb-2">Notification Settings</Text>
