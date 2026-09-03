@@ -2,10 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff, Globe } from 'lucide-react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { useTranslation } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignUpScreen1() {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -14,14 +17,15 @@ export default function SignUpScreen1() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
 
   const handleBackConfirm = () => {
     Alert.alert(
-      'Cancel Sign Up?',
+      t('leave_page'),
       'Are you sure you want to go back? Entered details will not be saved.',
       [
         { text: 'Continue Registration', style: 'cancel' },
-        { text: 'Go Back', style: 'destructive', onPress: () => router.back() }
+        { text: t('back'), style: 'destructive', onPress: () => router.back() }
       ]
     );
   };
@@ -74,39 +78,47 @@ export default function SignUpScreen1() {
         {/* Header */}
         <View className="flex-row items-center justify-between mb-6">
           <TouchableOpacity
-            className="border border-gray-300 rounded-xl px-4 py-3"
+            className="border border-gray-300 rounded-xl px-3 py-2"
             activeOpacity={0.7}
             onPress={handleBackConfirm}
           >
             <View className="flex-row items-center">
-              <ArrowLeft color="#000000" size={20} strokeWidth={2} />
-              <Text className="text-black text-base font-semibold ml-2">Back</Text>
+              <ArrowLeft color="#000000" size={18} strokeWidth={2} />
+              <Text className="text-black text-sm font-semibold ml-1">{t('back')}</Text>
             </View>
           </TouchableOpacity>
 
-          <Text className="text-black text-2xl font-bold">
-            Complete Your Profile
+          <Text className="text-black text-xl font-bold">
+            {t('basic_info')}
           </Text>
+
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 border border-gray-200 px-3 py-2 rounded-xl"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Globe color="#1e40af" size={18} />
+          </TouchableOpacity>
         </View>
 
         {/* Full Name */}
         <Text className="text-black text-base font-bold mb-3">
-          Full Name
+          {t('full_name')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Enter your full name"
+          placeholder={t('full_name')}
           value={fullName}
           onChangeText={setFullName}
         />
 
         {/* Email */}
         <Text className="text-black text-base font-bold mb-3">
-          Email Address
+          {t('email')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Enter your email"
+          placeholder={t('email')}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -115,11 +127,11 @@ export default function SignUpScreen1() {
 
         {/* Phone */}
         <Text className="text-black text-base font-bold mb-3">
-          Phone Number
+          {t('phone')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Enter your phone number"
+          placeholder={t('phone')}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
@@ -127,23 +139,23 @@ export default function SignUpScreen1() {
 
         {/* Location */}
         <Text className="text-black text-base font-bold mb-3">
-          Current Location
+          {t('location')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Enter your location"
+          placeholder={t('location')}
           value={location}
           onChangeText={setLocation}
         />
 
         {/* Password */}
         <Text className="text-black text-base font-bold mb-3">
-          Password
+          {t('password')}
         </Text>
         <View className="relative mb-6">
           <TextInput
             className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base pr-12"
-            placeholder="Create a password"
+            placeholder={t('password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -162,12 +174,12 @@ export default function SignUpScreen1() {
 
         {/* Confirm Password */}
         <Text className="text-black text-base font-bold mb-3">
-          Confirm Password
+          {t('password')}
         </Text>
         <View className="relative mb-8">
           <TextInput
             className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base pr-12"
-            placeholder="Re-enter your password"
+            placeholder={t('password')}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}
@@ -190,11 +202,17 @@ export default function SignUpScreen1() {
           onPress={validateAndProceed}
         >
           <Text className="text-white text-xl font-bold">
-            NEXT
+            {t('next')}
           </Text>
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

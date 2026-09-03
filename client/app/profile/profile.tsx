@@ -170,14 +170,14 @@ export default function Profile() {
 
         {/* Contact Information */}
         <View className="px-6 mb-6">
-          <Text className="text-black text-xl font-bold mb-4">Contact Information</Text>
+          <Text className="text-black text-xl font-bold mb-4">{t('contact_info')}</Text>
 
           <View className="bg-gray-100 rounded-2xl p-4 mb-3 flex-row items-center">
             <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
               <Mail color="#2563eb" size={20} strokeWidth={2} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs mb-1">Email</Text>
+              <Text className="text-gray-500 text-xs mb-1">{t('email')}</Text>
               <Text className="text-black text-sm font-semibold">{user.email || '—'}</Text>
             </View>
           </View>
@@ -187,7 +187,7 @@ export default function Profile() {
               <Phone color="#7c3aed" size={20} strokeWidth={2} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs mb-1">Phone</Text>
+              <Text className="text-gray-500 text-xs mb-1">{t('phone')}</Text>
               <Text className="text-black text-sm font-semibold">{user.phone || '—'}</Text>
             </View>
           </View>
@@ -197,7 +197,7 @@ export default function Profile() {
               <MapPin color="#ef4444" size={20} strokeWidth={2} />
             </View>
             <View className="flex-1">
-              <Text className="text-gray-500 text-xs mb-1">Location</Text>
+              <Text className="text-gray-500 text-xs mb-1">{t('location')}</Text>
               <Text className="text-black text-sm font-semibold">{user.location || '—'}</Text>
             </View>
           </View>
@@ -219,14 +219,14 @@ export default function Profile() {
 
           return (
             <View className="px-6 mb-6">
-              <Text className="text-black text-xl font-bold mb-4">Education & Skills</Text>
+              <Text className="text-black text-xl font-bold mb-4">{t('education_skills')}</Text>
 
               <View className="bg-gray-100 rounded-2xl p-4 mb-4">
-                <Text className="text-gray-500 text-xs mb-2">Education</Text>
+                <Text className="text-gray-500 text-xs mb-2">{t('education')}</Text>
                 <Text className="text-black text-base font-semibold">{user.education || '—'}</Text>
               </View>
 
-              <Text className="text-gray-700 text-sm font-semibold mb-3">Skills</Text>
+              <Text className="text-gray-700 text-sm font-semibold mb-3">{t('skills')}</Text>
               {userSkills.length > 0 ? (
                 <View className="flex-row flex-wrap mb-4">
                   {userSkills.map((skill: string, idx: number) => (
@@ -238,21 +238,21 @@ export default function Profile() {
               ) : (
                 <View className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 flex-row items-center justify-between">
                   <View className="flex-1 mr-2">
-                    <Text className="text-blue-900 text-sm font-bold">No skills added yet</Text>
-                    <Text className="text-blue-700 text-xs mt-0.5">Add skills to get targeted scheme & job recommendations.</Text>
+                    <Text className="text-blue-900 text-sm font-bold">{t('no_skills_added')}</Text>
+                    <Text className="text-blue-700 text-xs mt-0.5">{t('add_skills_desc')}</Text>
                   </View>
                   <TouchableOpacity
                     className="bg-blue-700 px-3 py-1.5 rounded-xl"
                     onPress={() => router.push('/profile/edit')}
                   >
-                    <Text className="text-white text-xs font-bold">+ Add Skills</Text>
+                    <Text className="text-white text-xs font-bold">{t('add_skills')}</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
               {userInterests.length > 0 && (
                 <>
-                  <Text className="text-gray-700 text-sm font-semibold mb-3">Interests</Text>
+                  <Text className="text-gray-700 text-sm font-semibold mb-3">{t('interests')}</Text>
                   <View className="flex-row flex-wrap">
                     {userInterests.map((interest: string, idx: number) => (
                       <View key={`${interest}-${idx}`} className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
@@ -268,7 +268,7 @@ export default function Profile() {
 
         {/* Settings */}
         <View className="px-6 mb-6">
-          <Text className="text-black text-xl font-bold mb-4">Settings</Text>
+          <Text className="text-black text-xl font-bold mb-4">{t('settings')}</Text>
 
           <TouchableOpacity
             className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between border border-blue-200 bg-blue-50/50"

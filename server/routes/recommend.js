@@ -82,8 +82,14 @@ router.get("/:userId", async (req, res) => {
       opportunityMap[op.id] = op;
     });
 
-    // AI ranking
-    const aiResult = await rankOpportunities(user, opportunities);
+    // AI ranking with requested language
+    const requestedLang = req.query.lang || user.language || 'en';
+    const userWithLang = {
+      ...user.toObject(),
+      language: requestedLang
+    };
+    console.log("🌐 Requesting AI recommendations in language:", requestedLang);
+    const aiResult = await rankOpportunities(userWithLang, opportunities);
     console.log("AI raw recommendations:", JSON.stringify(aiResult.recommendations, null, 2));
 
     let recommendations = aiResult.recommendations

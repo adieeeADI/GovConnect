@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { AlertCircle, ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from '../../utils/i18n';
 
 interface ProfileCompleteBannerProps {
   completionPercentage?: number;
@@ -12,6 +13,7 @@ export default function ProfileCompleteBanner({
 }: ProfileCompleteBannerProps) {
 
   const router = useRouter();
+  const { t } = useTranslation();
 
   // 🔥 Hide if 100% complete
   if (completionPercentage >= 100) return null;
@@ -21,7 +23,7 @@ export default function ProfileCompleteBanner({
       className="mx-6 mb-6 rounded-2xl p-5"
       style={{ backgroundColor: '#f97316' }}
       activeOpacity={0.8}
-      onPress={() => router.push('/profile/complete-profile')} // ✅ FIXED
+      onPress={() => router.push('/profile/complete-profile')}
     >
       {/* Header */}
       <View className="flex-row items-start mb-3">
@@ -31,10 +33,10 @@ export default function ProfileCompleteBanner({
 
         <View className="flex-1">
           <Text className="text-white text-lg font-bold mb-1">
-            Complete Your Profile
+            {t('profile_completion')}
           </Text>
           <Text className="text-white/90 text-sm">
-            Get better recommendations for schemes, internships & scholarships
+            {t('profile_complete_subtitle')}
           </Text>
         </View>
       </View>
@@ -56,7 +58,7 @@ export default function ProfileCompleteBanner({
       {/* CTA */}
       <View className="flex-row items-center justify-between">
         <Text className="text-white font-semibold">
-          Complete now to unlock recommendations
+          {t('tap_complete_profile')}
         </Text>
         <ArrowRight color="#ffffff" size={20} strokeWidth={2} />
       </View>

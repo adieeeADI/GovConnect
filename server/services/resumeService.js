@@ -5,8 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODELS = [
   process.env.GEMINI_MODEL,
   "gemini-3.6-flash",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro"
+  "gemini-1.5-flash-latest"
 ].filter((m, i, self) => m && self.indexOf(m) === i);
 
 

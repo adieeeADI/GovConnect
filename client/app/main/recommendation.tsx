@@ -8,6 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, logApiConfig, safeFetchJson } from '../../config/api.config';
 import BottomNav from './bottom';
 
+import { useTranslation } from '../../utils/i18n';
+
 const getMatchColor = (match: number) => {
   if (match >= 90) return 'text-green-500';
   if (match >= 85) return 'text-blue-500';
@@ -17,6 +19,7 @@ const getMatchColor = (match: number) => {
 
 export default function Recommendation() {
   const router = useRouter();
+  const { t, language } = useTranslation();
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +39,8 @@ export default function Recommendation() {
           return;
         }
 
-        console.log('📍 Fetching recommendations for userId:', userId);
-        const endpoint = `${API_ENDPOINTS.RECOMMEND}/${userId}`;
+        console.log('📍 Fetching recommendations for userId:', userId, 'language:', language);
+        const endpoint = `${API_ENDPOINTS.RECOMMEND}/${userId}?lang=${language}`;
         console.log('🔗 API Endpoint:', endpoint);
 
         const data = await safeFetchJson(endpoint);
@@ -69,7 +72,7 @@ export default function Recommendation() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [language]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -81,14 +84,14 @@ export default function Recommendation() {
         </TouchableOpacity>
 
         <Text className="text-white text-3xl font-bold mt-3">
-          Recommended For You
+          {t('recommended_for_you')}
         </Text>
       </View>
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#1e40af" />
-          <Text className="mt-4 text-gray-600">Loading recommendations...</Text>
+          <Text className="mt-4 text-gray-600">{t('loading_recommendations')}</Text>
         </View>
       ) : error ? (
         <View className="flex-1 justify-center items-center px-6">
@@ -108,14 +111,14 @@ export default function Recommendation() {
         <ScrollView className="px-6">
 
           <View className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-5">
-            <Text className="text-orange-900 font-semibold">Tip:</Text>
-            <Text>AI analyzed your profile</Text>
+            <Text className="text-orange-900 font-semibold">✨ AI Match:</Text>
+            <Text className="text-orange-800 text-xs">Recommendations generated dynamically based on your profile skills & interests.</Text>
           </View>
 
           {recommendations.map((item, index) => (
             <TouchableOpacity
               key={item.id}
-              className="bg-white rounded-xl p-4 mb-4 border"
+              className="bg-white rounded-xl p-4 mb-4 border border-gray-200"
               onPress={() => {
                 router.push({
                   pathname: '/main/details/[id]' as any,
@@ -126,22 +129,23 @@ export default function Recommendation() {
                 });
               }}
             >
-              <View className="flex-row justify-between">
-                <Text className="font-bold text-lg">{item.title}</Text>
-                <Text className={getMatchColor(item.match)}>
-                  {item.match}%
+              <View className="flex-row justify-between items-start mb-1">
+                <Text className="font-bold text-lg flex-1 mr-2">{item.title}</Text>
+                <Text className={`font-bold text-base ${getMatchColor(item.match)}`}>
+                  {item.match}% {t('match_score')}
                 </Text>
               </View>
 
-              <Text className="text-gray-500">{item.organization}</Text>
+              <Text className="text-gray-500 text-sm mb-2">{item.organization}</Text>
 
-              <View className="flex-row items-center mt-2">
-                <MapPin size={14} />
-                <Text className="ml-1">{item.location}</Text>
+              <View className="flex-row items-center mb-3">
+                <MapPin size={14} color="#6b7280" />
+                <Text className="ml-1 text-gray-600 text-xs">{item.location}</Text>
               </View>
 
-              <View className="bg-blue-50 p-2 mt-2">
-                <Text>{item.reason}</Text>
+              <View className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                <Text className="text-blue-900 text-xs font-semibold mb-1">{t('reason')}:</Text>
+                <Text className="text-blue-800 text-xs">{item.reason}</Text>
               </View>
 
             </TouchableOpacity>

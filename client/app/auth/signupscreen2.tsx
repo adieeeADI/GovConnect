@@ -2,25 +2,29 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Globe } from 'lucide-react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useTranslation } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignUpScreen2() {
   const params = useLocalSearchParams();
+  const { t } = useTranslation();
 
   const [education, setEducation] = useState('');
   const [skills, setSkills] = useState('');
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [langModalVisible, setLangModalVisible] = useState(false);
 
   const interests = ['Technology', 'Finance', 'Healthcare', 'Agriculture', 'Education'];
 
   const handleBackConfirm = () => {
     Alert.alert(
-      'Go Back?',
+      t('leave_page'),
       'Are you sure you want to go back to the previous step?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Go Back', style: 'destructive', onPress: () => router.back() }
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('back'), style: 'destructive', onPress: () => router.back() }
       ]
     );
   };
@@ -44,7 +48,6 @@ export default function SignUpScreen2() {
   };
 
   const handleNext = () => {
-    // Optional validation
     if (!education) {
       Alert.alert("Error", "Please enter your education.");
       return;
@@ -71,19 +74,27 @@ export default function SignUpScreen2() {
         {/* Header */}
         <View className="flex-row items-center justify-between mb-6">
           <TouchableOpacity 
-            className="border border-gray-300 rounded-xl px-4 py-3"
+            className="border border-gray-300 rounded-xl px-3 py-2"
             activeOpacity={0.7}
             onPress={handleBackConfirm}
           >
             <View className="flex-row items-center">
-              <ArrowLeft color="#000000" size={20} strokeWidth={2} />
-              <Text className="text-black text-base font-semibold ml-2">Back</Text>
+              <ArrowLeft color="#000000" size={18} strokeWidth={2} />
+              <Text className="text-black text-sm font-semibold ml-1">{t('back')}</Text>
             </View>
           </TouchableOpacity>
 
-          <Text className="text-black text-2xl font-bold">
-            Complete Your Profile
+          <Text className="text-black text-xl font-bold">
+            {t('education_skills')}
           </Text>
+
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 border border-gray-200 px-3 py-2 rounded-xl"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Globe color="#1e40af" size={18} />
+          </TouchableOpacity>
         </View>
 
         {/* Progress Bar */}
@@ -99,11 +110,11 @@ export default function SignUpScreen2() {
 
         {/* Education */}
         <Text className="text-black text-base font-bold mb-3">
-          Highest Education
+          {t('highest_education')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Highest Education"
+          placeholder={t('highest_education')}
           placeholderTextColor="#9ca3af"
           value={education}
           onChangeText={setEducation}
@@ -111,11 +122,11 @@ export default function SignUpScreen2() {
 
         {/* Skills */}
         <Text className="text-black text-base font-bold mb-3">
-          Skills (Comma Separated)
+          {t('skills_comma')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Skills (Comma Separated)"
+          placeholder={t('skills_comma')}
           placeholderTextColor="#9ca3af"
           value={skills}
           onChangeText={setSkills}
@@ -124,7 +135,7 @@ export default function SignUpScreen2() {
 
         {/* Interests */}
         <Text className="text-black text-base font-bold mb-4">
-          Areas of Interest
+          {t('areas_of_interest')}
         </Text>
 
         {interests.map((interest) => (
@@ -152,11 +163,17 @@ export default function SignUpScreen2() {
           onPress={handleNext}
         >
           <Text className="text-white text-xl font-bold">
-            NEXT
+            {t('next')}
           </Text>
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

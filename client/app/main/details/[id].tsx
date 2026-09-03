@@ -3,10 +3,12 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Mod
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { getDataDetailsEndpoint } from '../../../config/api.config';
+import { useTranslation, translateValue } from '../../../utils/i18n';
 
 export default function Individual() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { t } = useTranslation();
   
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ export default function Individual() {
       ) : !data ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-gray-600 text-center text-base">
-            {"Sorry, we couldn't load the details for this opportunity."}
+            {t('error_loading_details')}
           </Text>
         </View>
       ) : (
@@ -88,14 +90,14 @@ export default function Individual() {
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1">
                 <Text className="text-white text-3xl font-bold mb-2">
-                  {data.basicInfo?.title || 'Opportunity'}
+                  {data.basicInfo?.title || t('opportunity')}
                 </Text>
                 <Text className="text-white text-base opacity-90">
-                  {data.basicInfo?.providerName || 'Provider'}
+                  {data.basicInfo?.providerName || t('provider')}
                 </Text>
                 {data.basicInfo?.department && (
                   <Text className="text-white text-sm opacity-75 mt-1">
-                    Department: {data.basicInfo.department}
+                    {t('department')}: {translateValue(data.basicInfo.department, t)}
                   </Text>
                 )}
               </View>
@@ -118,21 +120,21 @@ export default function Individual() {
               <View className="bg-white/20 rounded-full px-4 py-2 flex-row items-center">
                 <MapPin color="#ffffff" size={16} strokeWidth={2} />
                 <Text className="text-white text-sm ml-1">
-                  {data.internshipDetails?.location?.[0] || data.basicInfo?.location || 'Location'}
+                  {translateValue(data.internshipDetails?.location?.[0] || data.basicInfo?.location, t) || t('location')}
                 </Text>
               </View>
 
               <View className="bg-white/20 rounded-full px-4 py-2 flex-row items-center">
                 <Clock color="#ffffff" size={16} strokeWidth={2} />
                 <Text className="text-white text-sm ml-1">
-                  {data.internshipDetails?.duration || 'Duration'}
+                  {translateValue(data.internshipDetails?.duration, t) || t('duration')}
                 </Text>
               </View>
 
               <View className="bg-white/20 rounded-full px-4 py-2 flex-row items-center">
                 <Wallet color="#ffffff" size={16} strokeWidth={2} />
                 <Text className="text-white text-sm ml-1">
-                  {data.internshipDetails?.stipend || 'Amount'}
+                  {translateValue(data.internshipDetails?.stipend, t) || t('amount')}
                 </Text>
               </View>
             </View>
@@ -143,29 +145,29 @@ export default function Individual() {
             {(data.type || data.internshipDetails?.mode || data.applicationDetails?.applicationMode) && (
               <View className="bg-gray-100 rounded-2xl p-4 mb-6">
                 <Text className="text-black text-lg font-bold mb-3">
-                  Opportunity Details
+                  {t('opportunity_details')}
                 </Text>
                 {data.type && (
                   <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">Type:</Text>
-                    <Text className="text-gray-600">{data.type}</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('type')}:</Text>
+                    <Text className="text-gray-600">{translateValue(data.type, t)}</Text>
                   </View>
                 )}
                 {data.internshipDetails?.mode && (
                   <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">Mode:</Text>
-                    <Text className="text-gray-600">{data.internshipDetails.mode}</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('mode')}:</Text>
+                    <Text className="text-gray-600">{translateValue(data.internshipDetails.mode, t)}</Text>
                   </View>
                 )}
                 {data.applicationDetails?.applicationMode && (
                   <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">Application Mode:</Text>
-                    <Text className="text-gray-600">{data.applicationDetails.applicationMode}</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('application_mode')}:</Text>
+                    <Text className="text-gray-600">{translateValue(data.applicationDetails.applicationMode, t)}</Text>
                   </View>
                 )}
                 {data.internshipDetails?.numberOfSeats && (
                   <View className="flex-row items-center">
-                    <Text className="text-gray-700 font-semibold flex-1">Available Seats:</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('available_seats')}:</Text>
                     <Text className="text-gray-600">{data.internshipDetails.numberOfSeats}</Text>
                   </View>
                 )}
@@ -174,10 +176,10 @@ export default function Individual() {
 
             {/* About This Opportunity */}
             <Text className="text-black text-xl font-bold mb-3">
-              About This Opportunity
+              {t('about_opportunity')}
             </Text>
             <Text className="text-gray-600 text-base leading-6 mb-6">
-              {data.programDetails?.about || data.basicInfo?.shortDescription || 'No description available'}
+              {data.programDetails?.about || data.basicInfo?.shortDescription || t('no_description')}
             </Text>
 
             {/* SCHEME-SPECIFIC SECTIONS */}
@@ -187,12 +189,12 @@ export default function Individual() {
                 {data.schemeDetails?.benefits && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Scheme Benefits
+                      {t('scheme_benefits')}
                     </Text>
                     <View className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
                       {data.schemeDetails.financialDetails?.amount && (
                         <View className="mb-4 pb-4 border-b border-green-200">
-                          <Text className="text-gray-700 font-semibold text-base">Amount:</Text>
+                          <Text className="text-gray-700 font-semibold text-base">{t('amount')}:</Text>
                           <Text className="text-green-700 text-lg font-bold">{data.schemeDetails.financialDetails.amount}</Text>
                         </View>
                       )}
@@ -209,7 +211,7 @@ export default function Individual() {
                 {/* Benefit Type */}
                 {data.schemeDetails?.benefitType && (
                   <View className="bg-blue-50 rounded-2xl p-4 mb-6">
-                    <Text className="text-gray-700 font-semibold mb-2">Benefit Type:</Text>
+                    <Text className="text-gray-700 font-semibold mb-2">{t('benefit_type')}:</Text>
                     <Text className="text-gray-600 text-base">{data.schemeDetails.benefitType}</Text>
                   </View>
                 )}
@@ -218,42 +220,42 @@ export default function Individual() {
                 {data.eligibility && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Eligibility Requirements
+                      {t('eligibility_requirements')}
                     </Text>
                     <View className="bg-purple-50 rounded-2xl p-4 mb-6">
                       {data.eligibility.minimumEducation && (
                         <View className="mb-3 pb-3 border-b border-purple-200">
-                          <Text className="text-gray-700 font-semibold">Minimum Education:</Text>
-                          <Text className="text-gray-600 text-base">{data.eligibility.minimumEducation}</Text>
+                          <Text className="text-gray-700 font-semibold">{t('minimum_education')}:</Text>
+                          <Text className="text-gray-600 text-base">{translateValue(data.eligibility.minimumEducation, t)}</Text>
                         </View>
                       )}
 
                       {data.eligibility.incomeCriteria && (
                         <View className="mb-3 pb-3 border-b border-purple-200">
-                          <Text className="text-gray-700 font-semibold mb-2">Income Criteria:</Text>
+                          <Text className="text-gray-700 font-semibold mb-2">{t('income_criteria')}:</Text>
                           {data.eligibility.incomeCriteria.minIncome !== null && (
-                            <Text className="text-gray-600 text-base">Min: ₹{data.eligibility.incomeCriteria.minIncome.toLocaleString()}</Text>
+                            <Text className="text-gray-600 text-base">{t('min')}: ₹{data.eligibility.incomeCriteria.minIncome.toLocaleString()}</Text>
                           )}
                           {data.eligibility.incomeCriteria.maxIncome !== null && (
-                            <Text className="text-gray-600 text-base">Max: ₹{data.eligibility.incomeCriteria.maxIncome.toLocaleString()}</Text>
+                            <Text className="text-gray-600 text-base">{t('max')}: ₹{data.eligibility.incomeCriteria.maxIncome.toLocaleString()}</Text>
                           )}
                         </View>
                       )}
 
                       {data.eligibility.gender && (
                         <View className="mb-3 pb-3 border-b border-purple-200">
-                          <Text className="text-gray-700 font-semibold">Gender:</Text>
-                          <Text className="text-gray-600 text-base">{data.eligibility.gender}</Text>
+                          <Text className="text-gray-700 font-semibold">{t('gender')}:</Text>
+                          <Text className="text-gray-600 text-base">{translateValue(data.eligibility.gender, t)}</Text>
                         </View>
                       )}
 
                       {data.eligibility.categoryEligible && data.eligibility.categoryEligible.length > 0 && (
                         <View className="mb-3 pb-3 border-b border-purple-200">
-                          <Text className="text-gray-700 font-semibold mb-2">Categories:</Text>
+                          <Text className="text-gray-700 font-semibold mb-2">{t('category')}:</Text>
                           {data.eligibility.categoryEligible.map((cat: string, index: number) => (
                             <View key={index} className="flex-row items-center mb-1">
                               <Check color="#a855f7" size={16} strokeWidth={2} />
-                              <Text className="text-gray-600 text-base ml-2">{cat}</Text>
+                              <Text className="text-gray-600 text-base ml-2">{translateValue(cat, t)}</Text>
                             </View>
                           ))}
                         </View>
@@ -261,18 +263,18 @@ export default function Individual() {
 
                       {data.eligibility.statesEligible && data.eligibility.statesEligible.length > 0 && (
                         <View className="mb-3 pb-3 border-b border-purple-200">
-                          <Text className="text-gray-700 font-semibold mb-2">States Eligible:</Text>
-                          <Text className="text-gray-600 text-base">{data.eligibility.statesEligible.join(', ')}</Text>
+                          <Text className="text-gray-700 font-semibold mb-2">{t('states_eligible')}:</Text>
+                          <Text className="text-gray-600 text-base">{translateValue(data.eligibility.statesEligible, t)}</Text>
                         </View>
                       )}
 
                       {data.eligibility.occupation && data.eligibility.occupation.length > 0 && (
                         <View className="mb-3 pb-3 border-b border-purple-200">
-                          <Text className="text-gray-700 font-semibold mb-2">Occupation:</Text>
+                          <Text className="text-gray-700 font-semibold mb-2">{t('occupation')}:</Text>
                           {data.eligibility.occupation.map((occ: string, index: number) => (
                             <View key={index} className="flex-row items-center mb-1">
                               <Check color="#a855f7" size={16} strokeWidth={2} />
-                              <Text className="text-gray-600 text-base ml-2">{occ}</Text>
+                              <Text className="text-gray-600 text-base ml-2">{translateValue(occ, t)}</Text>
                             </View>
                           ))}
                         </View>
@@ -280,10 +282,10 @@ export default function Individual() {
 
                       {data.eligibility.ageLimit && (data.eligibility.ageLimit.min !== null || data.eligibility.ageLimit.max !== null) && (
                         <View className="mb-3">
-                          <Text className="text-gray-700 font-semibold">Age Limit:</Text>
+                          <Text className="text-gray-700 font-semibold">{t('age_limit')}:</Text>
                           <Text className="text-gray-600 text-base">
                             {data.eligibility.ageLimit.min ? `${data.eligibility.ageLimit.min} - ` : ''}
-                            {data.eligibility.ageLimit.max || 'No limit'}
+                            {data.eligibility.ageLimit.max || t('no_limit')}
                           </Text>
                         </View>
                       )}
@@ -295,7 +297,7 @@ export default function Individual() {
                 {data.eligibility?.specialCriteria && data.eligibility.specialCriteria.length > 0 && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Special Criteria
+                      {t('special_criteria')}
                     </Text>
                     <View className="mb-6">
                       {data.eligibility.specialCriteria.map((criteria: string, index: number) => (
@@ -312,16 +314,16 @@ export default function Individual() {
                 {data.applicationProcess?.steps && data.applicationProcess.steps.length > 0 && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Application Process
+                      {t('application_process')}
                     </Text>
                     <View className="bg-indigo-50 rounded-2xl p-4 mb-6">
                       {data.applicationProcess.applicationMode && (
                         <View className="mb-4 pb-4 border-b border-indigo-200">
-                          <Text className="text-gray-700 font-semibold">Mode:</Text>
-                          <Text className="text-gray-600 text-base">{data.applicationProcess.applicationMode}</Text>
+                          <Text className="text-gray-700 font-semibold">{t('mode')}:</Text>
+                          <Text className="text-gray-600 text-base">{translateValue(data.applicationProcess.applicationMode, t)}</Text>
                         </View>
                       )}
-                      <Text className="text-gray-700 font-semibold mb-3">Steps:</Text>
+                      <Text className="text-gray-700 font-semibold mb-3">{t('steps')}:</Text>
                       {data.applicationProcess.steps.map((step: string, index: number) => (
                         <View key={index} className="flex-row items-start mb-3">
                           <View className="bg-indigo-600 rounded-full w-7 h-7 items-center justify-center mr-3 mt-1">
@@ -338,7 +340,7 @@ export default function Individual() {
                 {data.documentsRequired && data.documentsRequired.length > 0 && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Documents Required
+                      {t('required_documents')}
                     </Text>
                     <View className="mb-6">
                       {data.documentsRequired.map((doc: string, index: number) => (
@@ -354,15 +356,15 @@ export default function Individual() {
                 {/* Important Dates */}
                 {data.importantDates && (data.importantDates.applicationStart || data.importantDates.applicationEnd) && (
                   <View className="mb-6 bg-orange-50 rounded-2xl p-4">
-                    <Text className="text-black text-lg font-bold mb-3">Important Dates</Text>
+                    <Text className="text-black text-lg font-bold mb-3">{t('important_dates')}</Text>
                     {data.importantDates.applicationStart && (
                       <Text className="text-gray-700 text-sm mb-2 font-semibold">
-                        Application Start: {data.importantDates.applicationStart}
+                        {t('application_start')}: {data.importantDates.applicationStart}
                       </Text>
                     )}
                     {data.importantDates.applicationEnd && (
                       <Text className="text-gray-700 text-sm font-semibold">
-                        Application End: {data.importantDates.applicationEnd}
+                        {t('application_end')}: {data.importantDates.applicationEnd}
                       </Text>
                     )}
                   </View>
@@ -372,7 +374,7 @@ export default function Individual() {
                 {data.additionalInfo?.exclusions && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Exclusions & Important Notes
+                      {t('exclusions_notes')}
                     </Text>
                     <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
                       <Text className="text-gray-700 text-base leading-6">{data.additionalInfo.exclusions}</Text>
@@ -385,13 +387,13 @@ export default function Individual() {
                   <View className="bg-gray-100 rounded-2xl p-4 mb-6">
                     {data.additionalInfo.ministry && (
                       <View className="mb-3">
-                        <Text className="text-gray-700 font-semibold">Ministry/Department:</Text>
+                        <Text className="text-gray-700 font-semibold">{t('ministry_dept')}:</Text>
                         <Text className="text-gray-600 text-base">{data.additionalInfo.ministry}</Text>
                       </View>
                     )}
                     {data.additionalInfo.sourceUrl && (
                       <View>
-                        <Text className="text-gray-700 font-semibold">Source:</Text>
+                        <Text className="text-gray-700 font-semibold">{t('source')}:</Text>
                         <Text className="text-blue-600 text-base">{data.additionalInfo.sourceUrl}</Text>
                       </View>
                     )}
@@ -402,7 +404,7 @@ export default function Individual() {
                 {data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0 && (
                   <>
                     <Text className="text-black text-xl font-bold mb-3">
-                      Frequently Asked Questions
+                      {t('faq')}
                     </Text>
                     <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
                       {data.faq.questionsAndAnswers.map((item: any, index: number) => (
@@ -412,10 +414,10 @@ export default function Individual() {
                         >
                           <View className="p-4">
                             <Text className="text-gray-900 font-semibold text-base mb-2">
-                              Q: {item.question}
+                              {t('q_prefix')}: {item.question}
                             </Text>
                             <Text className="text-gray-600 text-base leading-6">
-                              A: {item.answer}
+                              {t('a_prefix')}: {item.answer}
                             </Text>
                           </View>
                         </View>
@@ -430,18 +432,18 @@ export default function Individual() {
             {data.type === 'Scholarship' && data.benefits && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Scholarship Benefits
+                  {t('scholarship_benefits')}
                 </Text>
                 <View className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
                   {data.benefits.scholarshipAmount && (
                     <View className="mb-3">
-                      <Text className="text-gray-700 font-semibold">Amount:</Text>
-                      <Text className="text-gray-600 text-base">{data.benefits.scholarshipAmount}</Text>
+                      <Text className="text-gray-700 font-semibold">{t('amount')}:</Text>
+                      <Text className="text-gray-600 text-base">{translateValue(data.benefits.scholarshipAmount, t)}</Text>
                     </View>
                   )}
                   {data.benefits.covers && data.benefits.covers.length > 0 && (
                     <View>
-                      <Text className="text-gray-700 font-semibold mb-2">Covers:</Text>
+                      <Text className="text-gray-700 font-semibold mb-2">{t('covers')}:</Text>
                       {data.benefits.covers.map((cover: string, index: number) => (
                         <View key={index} className="flex-row items-start mb-2">
                           <Check color="#10b981" size={16} strokeWidth={2} />
@@ -458,7 +460,7 @@ export default function Individual() {
             {data.programDetails?.perks && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Key Highlights & Perks
+                  {t('key_highlights')}
                 </Text>
                 <Text className="text-gray-600 text-base leading-6 mb-6">
                   {data.programDetails.perks}
@@ -470,14 +472,14 @@ export default function Individual() {
             {(data.eligibility?.educationLevels || data.eligibility?.streamsAllowed || data.eligibility?.yearOfStudyAllowed || data.eligibility?.minimumCGPA || data.eligibility?.minimumPercentage || data.eligibility?.categoryEligible || data.eligibility?.genderEligible || data.eligibility?.incomeLimit || data.eligibility?.statesEligible || data.eligibility?.ageLimit || data.eligibility?.isPwDEligible || data.eligibility?.isMinorityEligible) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Eligibility Requirements
+                  {t('eligibility_requirements')}
                 </Text>
                 <View className="mb-6">
                   {data.eligibility?.educationLevels?.length > 0 && (
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Education: {data.eligibility.educationLevels.join(', ')}
+                        {t('education')}: {translateValue(data.eligibility.educationLevels, t)}
                       </Text>
                     </View>
                   )}
@@ -485,7 +487,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Streams: {data.eligibility.streamsAllowed.join(', ')}
+                        {t('streams')}: {translateValue(data.eligibility.streamsAllowed, t)}
                       </Text>
                     </View>
                   )}
@@ -493,7 +495,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Year of Study: {data.eligibility.yearOfStudyAllowed.join(', ')}
+                        {t('year_of_study')}: {translateValue(data.eligibility.yearOfStudyAllowed, t)}
                       </Text>
                     </View>
                   )}
@@ -501,7 +503,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Minimum CGPA: {data.eligibility.minimumCGPA}
+                        {t('min_cgpa')}: {data.eligibility.minimumCGPA}
                       </Text>
                     </View>
                   )}
@@ -509,7 +511,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Minimum Percentage: {data.eligibility.minimumPercentage}%
+                        {t('min_percentage')}: {data.eligibility.minimumPercentage}%
                       </Text>
                     </View>
                   )}
@@ -517,7 +519,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Categories: {data.eligibility.categoryEligible.join(', ')}
+                        {t('category')}: {translateValue(data.eligibility.categoryEligible, t)}
                       </Text>
                     </View>
                   )}
@@ -525,7 +527,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Gender: {data.eligibility.genderEligible.join(', ')}
+                        {t('gender')}: {translateValue(data.eligibility.genderEligible, t)}
                       </Text>
                     </View>
                   )}
@@ -533,7 +535,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Income Limit: ₹{data.eligibility.incomeLimit}
+                        {t('income_limit')}: ₹{data.eligibility.incomeLimit}
                       </Text>
                     </View>
                   )}
@@ -541,7 +543,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        States: {data.eligibility.statesEligible.join(', ')}
+                        {t('states_eligible')}: {translateValue(data.eligibility.statesEligible, t)}
                       </Text>
                     </View>
                   )}
@@ -549,7 +551,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Age Limit: {data.eligibility.ageLimit.min ? `${data.eligibility.ageLimit.min} - ` : ''}{data.eligibility.ageLimit.max || 'No limit'}
+                        {t('age_limit')}: {data.eligibility.ageLimit.min ? `${data.eligibility.ageLimit.min} - ` : ''}{data.eligibility.ageLimit.max || t('no_limit')}
                       </Text>
                     </View>
                   )}
@@ -557,7 +559,7 @@ export default function Individual() {
                     <View className="flex-row items-start mb-3">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        PwD Eligible: Yes
+                        {t('pwd_eligible')}: {t('yes')}
                       </Text>
                     </View>
                   )}
@@ -565,7 +567,7 @@ export default function Individual() {
                     <View className="flex-row items-start">
                       <Check color="#10b981" size={20} strokeWidth={2} />
                       <Text className="text-gray-700 text-base ml-3 flex-1">
-                        Minority Eligible: Yes
+                        {t('minority_eligible')}: {t('yes')}
                       </Text>
                     </View>
                   )}
@@ -577,7 +579,7 @@ export default function Individual() {
             {(data.applicationDetails?.selectionProcess || data.additionalInfo?.selectionProcess) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Selection Process
+                  {t('selection_process')}
                 </Text>
                 <Text className="text-gray-600 text-base leading-6 mb-6">
                   {data.applicationDetails?.selectionProcess || data.additionalInfo?.selectionProcess}
@@ -589,7 +591,7 @@ export default function Individual() {
             {data.applicationDetails?.documentsRequired && data.applicationDetails.documentsRequired.length > 0 && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Required Documents
+                  {t('required_documents')}
                 </Text>
                 <View className="mb-6">
                   {data.applicationDetails.documentsRequired.map((doc: string, index: number) => (
@@ -606,7 +608,7 @@ export default function Individual() {
             {data.additionalInfo?.renewalPolicy && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Renewal Policy
+                  {t('renewal_policy')}
                 </Text>
                 <Text className="text-gray-600 text-base leading-6 mb-6">
                   {data.additionalInfo.renewalPolicy}
@@ -618,7 +620,7 @@ export default function Individual() {
             {data.programDetails?.whoCanApply && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Who Can Apply
+                  {t('who_can_apply')}
                 </Text>
                 <Text className="text-gray-600 text-base leading-6 mb-6">
                   {data.programDetails.whoCanApply}
@@ -630,7 +632,7 @@ export default function Individual() {
             {data.programDetails?.terms && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Terms & Conditions
+                  {t('terms_conditions')}
                 </Text>
                 <Text className="text-gray-600 text-base leading-6 mb-6">
                   {data.programDetails.terms}
@@ -642,7 +644,7 @@ export default function Individual() {
             {data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0 && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
-                  Frequently Asked Questions
+                  {t('faq')}
                 </Text>
                 <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
                   {data.faq.questionsAndAnswers.map((item: any, index: number) => (
@@ -652,10 +654,10 @@ export default function Individual() {
                     >
                       <View className="p-4">
                         <Text className="text-gray-900 font-semibold text-base mb-2">
-                          Q: {item.question}
+                          {t('q_prefix')}: {item.question}
                         </Text>
                         <Text className="text-gray-600 text-base leading-6">
-                          A: {item.answer}
+                          {t('a_prefix')}: {item.answer}
                         </Text>
                       </View>
                     </View>
@@ -667,15 +669,15 @@ export default function Individual() {
             {/* Application Info */}
             {(data.applicationDetails?.startDate || data.applicationDetails?.endDate) && (
               <View className="mb-6 bg-orange-50 rounded-2xl p-4">
-                <Text className="text-black text-lg font-bold mb-3">Application Timeline</Text>
+                <Text className="text-black text-lg font-bold mb-3">{t('application_timeline')}</Text>
                 {data.applicationDetails?.startDate && (
                   <Text className="text-gray-700 text-sm mb-2 font-semibold">
-                    Start Date: {new Date(data.applicationDetails.startDate).toLocaleDateString('en-IN')}
+                    {t('start_date')}: {new Date(data.applicationDetails.startDate).toLocaleDateString('en-IN')}
                   </Text>
                 )}
                 {data.applicationDetails?.endDate && (
                   <Text className="text-gray-700 text-sm font-semibold">
-                    End Date: {new Date(data.applicationDetails.endDate).toLocaleDateString('en-IN')}
+                    {t('end_date')}: {new Date(data.applicationDetails.endDate).toLocaleDateString('en-IN')}
                   </Text>
                 )}
               </View>
@@ -686,19 +688,19 @@ export default function Individual() {
               <View className="bg-gray-100 rounded-2xl p-4 mb-6">
                 {data.metadata?.source && (
                   <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">Source:</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('source')}:</Text>
                     <Text className="text-gray-600">{data.metadata.source}</Text>
                   </View>
                 )}
                 {data.metadata?.viewCount !== undefined && (
                   <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">Views:</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('views')}:</Text>
                     <Text className="text-gray-600">{data.metadata.viewCount}</Text>
                   </View>
                 )}
                 {data.metadata?.saveCount !== undefined && (
                   <View className="flex-row items-center">
-                    <Text className="text-gray-700 font-semibold flex-1">Saves:</Text>
+                    <Text className="text-gray-700 font-semibold flex-1">{t('saves')}:</Text>
                     <Text className="text-gray-600">{data.metadata.saveCount}</Text>
                   </View>
                 )}
@@ -708,10 +710,10 @@ export default function Individual() {
             {/* Status Badge */}
             {data.status && (
               <View className="mb-6 flex-row items-center">
-                <Text className="text-gray-700 font-semibold mr-3">Status:</Text>
+                <Text className="text-gray-700 font-semibold mr-3">{t('status')}:</Text>
                 <View className={`px-3 py-1 rounded-full ${data.status === 'Active' ? 'bg-green-100' : 'bg-gray-200'}`}>
                   <Text className={`font-semibold ${data.status === 'Active' ? 'text-green-700' : 'text-gray-700'}`}>
-                    {data.status}
+                    {translateValue(data.status, t)}
                   </Text>
                 </View>
               </View>
@@ -723,7 +725,7 @@ export default function Individual() {
               activeOpacity={0.8}
             >
               <Text className="text-white text-lg font-bold">
-                Apply Now
+                {t('apply_now')}
               </Text>
             </TouchableOpacity>
 
@@ -733,7 +735,7 @@ export default function Individual() {
                 activeOpacity={0.8}
               >
                 <Text className="text-blue-900 text-lg font-semibold">
-                  Official Portal
+                  {t('official_portal')}
                 </Text>
               </TouchableOpacity>
             )}

@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Globe } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
+import { useTranslation } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignIn() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [langModalVisible, setLangModalVisible] = useState(false);
 
   const handleSignIn = async () => {
     setError('');
@@ -69,28 +73,39 @@ export default function SignIn() {
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back Button */}
-        <TouchableOpacity
-          className="flex-row items-center mb-8 border border-gray-300 rounded-xl px-4 py-3 self-start"
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft color="#000000" size={20} strokeWidth={2} />
-          <Text className="text-black text-base font-semibold ml-2">Back</Text>
-        </TouchableOpacity>
+        {/* Top Header Row with Back and Language */}
+        <View className="flex-row items-center justify-between mb-6">
+          <TouchableOpacity
+            className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2.5"
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft color="#000000" size={20} strokeWidth={2} />
+            <Text className="text-black text-sm font-semibold ml-2">{t('back')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 border border-gray-200 px-3.5 py-2.5 rounded-xl"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Globe color="#1e40af" size={18} />
+            <Text className="text-blue-900 text-xs font-bold ml-1.5">{t('language')}</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Title */}
         <Text className="text-black text-3xl font-bold mb-8">
-          Opportunity Finder
+          {t('sign_in')}
         </Text>
 
         {/* Email */}
         <Text className="text-black text-base font-bold mb-3">
-          Email or Phone Number
+          {t('email')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-6"
-          placeholder="Email or Phone Number"
+          placeholder={t('email')}
           placeholderTextColor="#9ca3af"
           value={email}
           onChangeText={setEmail}
@@ -100,11 +115,11 @@ export default function SignIn() {
 
         {/* Password */}
         <Text className="text-black text-base font-bold mb-3">
-          Password
+          {t('password')}
         </Text>
         <TextInput
           className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base mb-3"
-          placeholder="Password"
+          placeholder={t('password')}
           placeholderTextColor="#9ca3af"
           value={password}
           onChangeText={setPassword}
@@ -138,7 +153,7 @@ export default function SignIn() {
             <ActivityIndicator color="#ffffff" />
           ) : (
             <Text className="text-white text-xl font-bold">
-              Sign In
+              {t('sign_in')}
             </Text>
           )}
         </TouchableOpacity>
@@ -167,6 +182,12 @@ export default function SignIn() {
           <Text className="font-bold">Terms of Service</Text>
         </Text>
       </ScrollView>
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

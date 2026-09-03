@@ -2,15 +2,18 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, BackHandler, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft, Upload, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, Upload, CheckCircle2, Globe } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
+import { useTranslation } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignUpScreen3() {
   const params = useLocalSearchParams();
+  const { t } = useTranslation();
 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [notifyOpportunities, setNotifyOpportunities] = useState(true);
@@ -20,14 +23,15 @@ export default function SignUpScreen3() {
   const [parsingResume, setParsingResume] = useState(false);
   const [parsedData, setParsedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
 
   const handleBackConfirm = () => {
     Alert.alert(
-      'Go Back',
-      'Are you sure you want to go back? Unsaved details will be lost.',
+      t('leave_page'),
+      t('unsaved_changes_warning'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Yes', onPress: () => router.back() }
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('yes'), onPress: () => router.back() }
       ]
     );
   };
@@ -109,25 +113,25 @@ export default function SignUpScreen3() {
           if (parseRes && parseRes.parsed) {
             setParsedData(parseRes.parsed);
             Alert.alert(
-              '✨ AI Resume Parsed!',
-              `Extracted Information:\n• Education: ${parseRes.parsed.education || 'N/A'}\n• Skills (${parseRes.parsed.skills?.length || 0}): ${parseRes.parsed.skills?.slice(0, 4).join(', ') || 'N/A'}\n• Category: ${parseRes.parsed.category || 'N/A'}\n\nYour profile and AI recommendations will be automatically customized!`
+              t('ai_resume_parsed'),
+              `${t('extracted_info')}:\n• ${t('education')}: ${parseRes.parsed.education || 'N/A'}\n• ${t('skills')} (${parseRes.parsed.skills?.length || 0}): ${parseRes.parsed.skills?.slice(0, 4).join(', ') || 'N/A'}\n• ${t('category')}: ${parseRes.parsed.category || 'N/A'}\n\n${t('profile_customized')}`
             );
           }
         } catch (err: any) {
           console.log('Resume parsing error:', err);
-          Alert.alert('Notice', 'File uploaded. AI parsing will automatically retry during account setup.');
+          Alert.alert(t('notice'), t('file_uploaded_parsing_retry'));
         } finally {
           setParsingResume(false);
         }
       }
     } catch {
-      Alert.alert('Error', 'Failed to pick document');
+      Alert.alert(t('error'), t('failed_to_pick_document'));
     }
   };
 
   const handleSubmit = async () => {
     if (!agreedToTerms) {
-      Alert.alert("Error", "You must agree to terms and privacy policy.");
+      Alert.alert(t('error'), t('must_agree_to_terms'));
       return;
     }
 
@@ -238,19 +242,27 @@ export default function SignUpScreen3() {
         {/* Header */}
         <View className="flex-row items-center justify-between mb-6">
           <TouchableOpacity
-            className="border border-gray-300 rounded-xl px-4 py-3"
+            className="border border-gray-300 rounded-xl px-3 py-2"
             activeOpacity={0.7}
             onPress={handleBackConfirm}
           >
             <View className="flex-row items-center">
-              <ArrowLeft color="#000000" size={20} strokeWidth={2} />
-              <Text className="text-black text-base font-semibold ml-2">Back</Text>
+              <ArrowLeft color="#000000" size={18} strokeWidth={2} />
+              <Text className="text-black text-sm font-semibold ml-1">{t('back')}</Text>
             </View>
           </TouchableOpacity>
 
-          <Text className="text-black text-2xl font-bold">
-            Complete Your Profile
+          <Text className="text-black text-xl font-bold">
+            {t('ai_resume_parser')}
           </Text>
+
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 border border-gray-200 px-3 py-2 rounded-xl"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Globe color="#1e40af" size={18} />
+          </TouchableOpacity>
         </View>
 
         {/* Progress Bar */}

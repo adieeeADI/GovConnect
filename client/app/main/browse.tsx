@@ -4,15 +4,9 @@ import { ArrowLeft, MapPin, Clock, ArrowRight } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { API_ENDPOINTS } from '../../config/api.config';
 import BottomNav from './bottom';
+import { useTranslation } from '../../utils/i18n';
 
 type Category = 'internships' | 'scholarships' | 'schemes' | 'training';
-
-const categoryTitles = {
-  internships: 'Government Internships',
-  scholarships: 'Government Scholarships',
-  schemes: 'Government Schemes',
-  training: 'Training & Certification',
-};
 
 const categoryEndpoints = {
   internships: API_ENDPOINTS.INTERNSHIPS,
@@ -24,6 +18,8 @@ const categoryEndpoints = {
 export default function Browse() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { t } = useTranslation();
+
   const [activeCategory, setActiveCategory] = useState<Category>(
     (params.category as Category) || 'internships'
   );
@@ -31,6 +27,16 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState('');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getCategoryTitle = (cat: Category) => {
+    switch (cat) {
+      case 'internships': return t('internships');
+      case 'scholarships': return t('scholarships');
+      case 'schemes': return t('schemes');
+      case 'training': return t('training');
+      default: return t('internships');
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -70,7 +76,6 @@ export default function Browse() {
   const filterAndSearchData = () => {
     let filtered = [...data];
 
-    // Filter by search query
     if (searchQuery.trim()) {
       filtered = filtered.filter(item =>
         item.basicInfo?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,7 +87,6 @@ export default function Browse() {
   };
 
   const displayData = filterAndSearchData();
-  const currentTitle = categoryTitles[activeCategory];
 
   const handleCategoryChange = (cat: Category) => {
     if (activeCategory !== cat) {
@@ -103,9 +107,10 @@ export default function Browse() {
           >
             <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
           </TouchableOpacity>
-          <Text className="text-white text-base mb-1">Browse Opportunities</Text>
-          <Text className="text-white text-2xl font-bold">{currentTitle}</Text>
+          <Text className="text-white text-base mb-1">{t('nav_browse')}</Text>
+          <Text className="text-white text-2xl font-bold">{getCategoryTitle(activeCategory)}</Text>
         </View>
+
         {/* Category Tabs */}
         <View className="mb-4">
           <ScrollView 
@@ -115,7 +120,7 @@ export default function Browse() {
           >
             <TouchableOpacity
               className={`px-4 py-2 rounded-full mr-2 ${
-                activeCategory === 'internships' ? 'bg-blue-900' : 'bg-gray-300'
+                activeCategory === 'internships' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => handleCategoryChange('internships')}
               activeOpacity={0.7}
@@ -123,13 +128,13 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeCategory === 'internships' ? 'text-white' : 'text-gray-700'
               }`}>
-                Internships
+                {t('internships')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               className={`px-4 py-2 rounded-full mr-2 ${
-                activeCategory === 'scholarships' ? 'bg-blue-900' : 'bg-gray-300'
+                activeCategory === 'scholarships' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => handleCategoryChange('scholarships')}
               activeOpacity={0.7}
@@ -137,13 +142,13 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeCategory === 'scholarships' ? 'text-white' : 'text-gray-700'
               }`}>
-                Scholarships
+                {t('scholarships')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               className={`px-4 py-2 rounded-full mr-2 ${
-                activeCategory === 'schemes' ? 'bg-blue-900' : 'bg-gray-300'
+                activeCategory === 'schemes' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => handleCategoryChange('schemes')}
               activeOpacity={0.7}
@@ -151,13 +156,13 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeCategory === 'schemes' ? 'text-white' : 'text-gray-700'
               }`}>
-                Schemes
+                {t('schemes')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               className={`px-4 py-2 rounded-full ${
-                activeCategory === 'training' ? 'bg-blue-900' : 'bg-gray-300'
+                activeCategory === 'training' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => handleCategoryChange('training')}
               activeOpacity={0.7}
@@ -165,7 +170,7 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeCategory === 'training' ? 'text-white' : 'text-gray-700'
               }`}>
-                Training
+                {t('training')}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -175,7 +180,7 @@ export default function Browse() {
         <View className="px-6 mb-4">
           <TextInput
             className="bg-white border border-gray-300 rounded-2xl px-4 py-3 text-base"
-            placeholder="Search Opportunities..."
+            placeholder={t('search_placeholder')}
             placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -191,7 +196,7 @@ export default function Browse() {
           >
             <TouchableOpacity
               className={`px-4 py-2 rounded-full mr-2 ${
-                activeFilter === 'All' ? 'bg-blue-900' : 'bg-gray-300'
+                activeFilter === 'All' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => setActiveFilter('All')}
               activeOpacity={0.7}
@@ -199,13 +204,13 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeFilter === 'All' ? 'text-white' : 'text-gray-700'
               }`}>
-                All
+                {t('all')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               className={`px-4 py-2 rounded-full mr-2 ${
-                activeFilter === 'Nearby' ? 'bg-blue-900' : 'bg-gray-300'
+                activeFilter === 'Nearby' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => setActiveFilter('Nearby')}
               activeOpacity={0.7}
@@ -219,7 +224,7 @@ export default function Browse() {
 
             <TouchableOpacity
               className={`px-4 py-2 rounded-full ${
-                activeFilter === 'Trending' ? 'bg-blue-900' : 'bg-gray-300'
+                activeFilter === 'Trending' ? 'bg-blue-900' : 'bg-gray-200'
               }`}
               onPress={() => setActiveFilter('Trending')}
               activeOpacity={0.7}

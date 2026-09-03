@@ -9,6 +9,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_ENDPOINTS, getUserEndpoint, safeFetchJson } from '../../config/api.config';
+import { useTranslation } from '../../utils/i18n';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -112,6 +113,7 @@ function TagInput({ tags, onChange, placeholder, color = 'blue' }: {
 
 export default function EditProfile() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -211,11 +213,11 @@ export default function EditProfile() {
 
   const handleBackConfirm = () => {
     Alert.alert(
-      'Discard Changes?',
+      t('leave_page'),
       'Are you sure you want to go back? Unsaved changes will be lost.',
       [
-        { text: 'Keep Editing', style: 'cancel' },
-        { text: 'Discard', style: 'destructive', onPress: () => router.back() }
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('back'), style: 'destructive', onPress: () => router.back() }
       ]
     );
   };
@@ -244,53 +246,53 @@ export default function EditProfile() {
         <TouchableOpacity onPress={handleBackConfirm} activeOpacity={0.7}>
           <ArrowLeft color="#fff" size={24} strokeWidth={2} />
         </TouchableOpacity>
-        <Text className="text-white text-2xl font-bold mt-4">Edit Profile</Text>
+        <Text className="text-white text-2xl font-bold mt-4">{t('edit_profile')}</Text>
         <Text className="text-blue-200 text-sm mt-1">Fill any fields you want to update</Text>
       </View>
 
       <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
 
         {/* ── Basic Info ── */}
-        <Text className="text-black text-lg font-bold mb-4">Basic Info</Text>
+        <Text className="text-black text-lg font-bold mb-4">{t('basic_info')}</Text>
 
-        <Field label="Full Name">
-          <StyledInput value={fullName} onChangeText={setFullName} placeholder="Your full name" />
+        <Field label={t('full_name')}>
+          <StyledInput value={fullName} onChangeText={setFullName} placeholder={t('full_name')} />
         </Field>
 
-        <Field label="Email">
+        <Field label={t('email')}>
           <StyledInput value={email} editable={false}
             className="bg-gray-200 rounded-xl px-4 py-3 text-gray-400 text-sm" />
         </Field>
 
-        <Field label="Phone">
+        <Field label={t('phone')}>
           <StyledInput value={phone} onChangeText={setPhone}
             placeholder="+91 XXXXX XXXXX" keyboardType="phone-pad" />
         </Field>
 
-        <Field label="Location">
-          <StyledInput value={location} onChangeText={setLocation} placeholder="City, State" />
+        <Field label={t('location')}>
+          <StyledInput value={location} onChangeText={setLocation} placeholder={t('location')} />
         </Field>
 
-        <Field label="Education">
+        <Field label={t('education')}>
           <StyledInput value={education} onChangeText={setEducation}
-            placeholder="e.g. B.Tech Computer Science" />
+            placeholder={t('education')} />
         </Field>
 
-        <Field label="Skills">
+        <Field label={t('skills')}>
           <TagInput tags={skills} onChange={setSkills}
             placeholder="Type a skill and press enter" color="blue" />
         </Field>
 
-        <Field label="Interests">
+        <Field label={t('interests')}>
           <TagInput tags={interests} onChange={setInterests}
             placeholder="Type an interest and press enter" color="orange" />
         </Field>
 
         {/* ── Govt / Eligibility ── */}
-        <Text className="text-black text-lg font-bold mb-4 mt-2">Eligibility Info</Text>
+        <Text className="text-black text-lg font-bold mb-4 mt-2">{t('eligibility_info')}</Text>
 
         {/* Date of Birth — Calendar */}
-        <Field label="Date of Birth">
+        <Field label={t('date_of_birth')}>
           <TouchableOpacity
             className="bg-gray-100 rounded-xl px-4 py-3 flex-row items-center justify-between"
             onPress={() => setShowDatePicker(true)}
@@ -316,24 +318,24 @@ export default function EditProfile() {
           />
         )}
 
-        <Field label="Gender">
+        <Field label={t('gender')}>
           <ChipSelector options={GENDERS} value={gender} onChange={setGender} color="blue" />
         </Field>
 
-        <Field label="State">
-          <StyledInput value={state} onChangeText={setState} placeholder="e.g. Maharashtra" />
+        <Field label={t('state')}>
+          <StyledInput value={state} onChangeText={setState} placeholder={t('state')} />
         </Field>
 
-        <Field label="Caste">
-          <StyledInput value={caste} onChangeText={setCaste} placeholder="e.g. OBC" />
+        <Field label={t('caste')}>
+          <StyledInput value={caste} onChangeText={setCaste} placeholder={t('caste')} />
         </Field>
 
-        <Field label="Religion">
-          <StyledInput value={religion} onChangeText={setReligion} placeholder="e.g. Hindu" />
+        <Field label={t('religion')}>
+          <StyledInput value={religion} onChangeText={setReligion} placeholder={t('religion')} />
         </Field>
 
         {/* Family Income — Range Chips */}
-        <Field label="Annual Family Income">
+        <Field label={t('family_income')}>
           <View className="flex-row flex-wrap">
             {INCOME_RANGES.map(range => (
               <TouchableOpacity
@@ -355,7 +357,7 @@ export default function EditProfile() {
           )}
         </Field>
 
-        <Field label="Category">
+        <Field label={t('category')}>
           <ChipSelector options={CATEGORIES} value={category} onChange={setCategory} color="green" />
         </Field>
 
@@ -367,7 +369,7 @@ export default function EditProfile() {
           activeOpacity={0.8}
         >
           <Text className="text-white text-center font-bold text-base">
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('saving') : t('save_changes')}
           </Text>
         </TouchableOpacity>
 

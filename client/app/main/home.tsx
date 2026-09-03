@@ -99,7 +99,7 @@ export default function Home() {
           <View className="flex-1 mr-4">
             <Text className="text-blue-200 text-lg mb-1">{t('welcome_back')}</Text>
             <Text className="text-white text-3xl font-bold mb-2">{userName}</Text>
-            <Text className="text-blue-100 text-sm">Ready to find out your next opportunity?</Text>
+            <Text className="text-blue-100 text-sm">{t('ready_find_next')}</Text>
           </View>
 
           <TouchableOpacity
@@ -128,7 +128,7 @@ export default function Home() {
               <View className="h-full bg-white rounded-full" style={{ width: `${completionPercentage}%` }} />
             </View>
             <Text className="text-white text-xs">
-              Tap here to complete remaining details for better AI recommendations
+              {t('tap_complete_profile')}
             </Text>
           </TouchableOpacity>
         ) : (
@@ -136,14 +136,14 @@ export default function Home() {
             <View className="bg-emerald-600 rounded-2xl p-4">
               <View className="flex-row items-center justify-between mb-2">
                 <Text className="text-white text-base font-bold">
-                  Profile 100% Complete!
+                  {t('profile_complete_100')}
                 </Text>
               </View>
               <View className="h-2 bg-white/30 rounded-full overflow-hidden">
                 <View className="h-full bg-white rounded-full" style={{ width: '100%' }} />
               </View>
               <Text className="text-white text-xs mt-2">
-                Your profile is fully optimized for AI opportunity matching
+                {t('profile_optimized_msg')}
               </Text>
             </View>
           </View>
@@ -153,21 +153,21 @@ export default function Home() {
         <View className="flex-row justify-between px-6 mb-6">
           <View className="flex-1 bg-blue-100 rounded-2xl p-4 mr-2 items-center">
             <Text className="text-blue-900 text-3xl font-bold">5</Text>
-            <Text className="text-blue-900 text-xs font-semibold text-center">Recommended</Text>
+            <Text className="text-blue-900 text-xs font-semibold text-center">{t('stats_recommended')}</Text>
           </View>
           <View className="flex-1 bg-purple-100 rounded-2xl p-4 mx-2 items-center">
             <Text className="text-purple-900 text-3xl font-bold">12</Text>
-            <Text className="text-purple-900 text-xs font-semibold text-center">Opportunity</Text>
+            <Text className="text-purple-900 text-xs font-semibold text-center">{t('stats_opportunity')}</Text>
           </View>
           <View className="flex-1 bg-teal-100 rounded-2xl p-4 ml-2 items-center">
             <Text className="text-teal-900 text-3xl font-bold">8</Text>
-            <Text className="text-teal-900 text-xs font-semibold text-center">Applied</Text>
+            <Text className="text-teal-900 text-xs font-semibold text-center">{t('stats_applied')}</Text>
           </View>
         </View>
 
         {/* Find your Opportunity */}
         <Text className="text-black text-xl font-bold px-6 mb-4">
-          Find your Opportunity
+          {t('find_opportunity')}
         </Text>
 
         {/* AI Recommendation Card */}
@@ -178,10 +178,10 @@ export default function Home() {
         >
           <View className="flex-1">
             <Text className="text-white text-xl font-bold mb-1">
-              AI Recommendation
+              {t('ai_recommendation')}
             </Text>
             <Text className="text-white text-sm">
-              Top 5 Opportunities for you
+              {t('top_5_opportunities')}
             </Text>
           </View>
           <Sparkles color="#ffffff" size={48} strokeWidth={2} />
@@ -195,10 +195,10 @@ export default function Home() {
         >
           <View className="flex-1">
             <Text className="text-white text-xl font-bold mb-1">
-              Browse all Opportunity
+              {t('browse_all_opportunity')}
             </Text>
             <Text className="text-white text-sm">
-              Search By Category
+              {t('search_by_category')}
             </Text>
           </View>
           <FolderOpen color="#ffffff" size={48} strokeWidth={2} />
@@ -206,7 +206,7 @@ export default function Home() {
 
         {/* Browse Categories */}
         <Text className="text-black text-xl font-bold px-6 mb-4">
-          Browse Categories
+          {t('browse_categories')}
         </Text>
 
         <View className="px-6 mb-6">
@@ -219,7 +219,7 @@ export default function Home() {
             >
               <Building2 color="#ef4444" size={48} strokeWidth={1.5} />
               <Text className="text-black text-sm font-bold text-center mt-3">
-                Government{'\n'}Internship
+                {t('govt_internship')}
               </Text>
             </TouchableOpacity>
 
@@ -231,7 +231,7 @@ export default function Home() {
             >
               <GraduationCap color="#000000" size={48} strokeWidth={1.5} />
               <Text className="text-black text-sm font-bold text-center mt-3">
-                Scholarship
+                {t('scholarship')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -245,7 +245,7 @@ export default function Home() {
             >
               <FileText color="#10b981" size={48} strokeWidth={1.5} />
               <Text className="text-black text-sm font-bold text-center mt-3">
-                Government{'\n'}Scheme
+                {t('govt_scheme')}
               </Text>
             </TouchableOpacity>
 
@@ -257,7 +257,7 @@ export default function Home() {
             >
               <Award color="#3b82f6" size={48} strokeWidth={1.5} />
               <Text className="text-black text-sm font-bold text-center mt-3">
-                Training &{'\n'}Certification
+                {t('training_certification')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -266,10 +266,10 @@ export default function Home() {
         {/* New Opportunity Alert */}
         <View className="bg-blue-100 rounded-2xl p-4 mx-6 mb-6">
           <Text className="text-blue-900 text-base font-bold mb-1">
-            New Opportunity Alert
+            {t('new_opportunity_alert')}
           </Text>
           <Text className="text-blue-800 text-sm">
-            2 new internships matching your profile match. Check recommendations.
+            {t('new_opportunity_msg')}
           </Text>
         </View>
 

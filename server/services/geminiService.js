@@ -5,8 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODELS = [
   process.env.GEMINI_MODEL,
   "gemini-3.6-flash",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro"
+  "gemini-1.5-flash-latest"
 ].filter((m, i, self) => m && self.indexOf(m) === i);
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -79,31 +78,38 @@ Return ONLY valid JSON, no markdown:
   const tryGemini = async () => {
     let lastError = null;
     for (const modelName of MODELS) {
-      try {
-        console.log(`🤖 Requesting recommendations from model: ${modelName}...`);
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        const cleanText = text.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(cleanText);
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`🤖 Requesting recommendations from model: ${modelName} (attempt ${attempt}/3)...`);
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(prompt);
+          const text = result.response.text();
+          const cleanText = text.replace(/```json|```/g, "").trim();
+          const parsed = JSON.parse(cleanText);
 
-        if (!parsed || !Array.isArray(parsed.recommendations)) {
-          throw new Error("Invalid response format from Gemini");
+          if (!parsed || !Array.isArray(parsed.recommendations)) {
+            throw new Error("Invalid response format from Gemini");
+          }
+
+          const validRecs = parsed.recommendations
+            .filter(rec => {
+              const isValid = validIds.includes(String(rec.id));
+              if (!isValid) console.log(`❌ Invalid id from Gemini: "${rec.id}"`);
+              return isValid;
+            })
+            .map(rec => ({ ...rec, id: String(rec.id) }));
+
+          console.log(`✅ Gemini (${modelName}) returned ${validRecs.length} valid recommendations`);
+          return validRecs;
+        } catch (err) {
+          console.log(`⚠️ Model ${modelName} attempt ${attempt} failed: ${err.message}`);
+          lastError = err;
+          if (attempt < 3 && (err.message?.includes("503") || err.message?.includes("429"))) {
+            await sleep(1500 * attempt);
+          } else {
+            break;
+          }
         }
-
-        const validRecs = parsed.recommendations
-          .filter(rec => {
-            const isValid = validIds.includes(String(rec.id));
-            if (!isValid) console.log(`❌ Invalid id from Gemini: "${rec.id}"`);
-            return isValid;
-          })
-          .map(rec => ({ ...rec, id: String(rec.id) }));
-
-        console.log(`✅ Gemini (${modelName}) returned ${validRecs.length} valid recommendations`);
-        return validRecs;
-      } catch (err) {
-        console.log(`⚠️ Model ${modelName} failed: ${err.message}`);
-        lastError = err;
       }
     }
     throw lastError || new Error("All Gemini models failed");
