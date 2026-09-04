@@ -231,6 +231,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     year: 'Year',
     q_prefix: 'Q',
     a_prefix: 'A',
+    translating_details: 'Translating details...',
   },
   hi: {
     nav_home: 'मुख्य पृष्ठ',
@@ -444,6 +445,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     year: 'वर्ष',
     q_prefix: 'प्रश्न',
     a_prefix: 'उत्तर',
+    translating_details: 'विवरण का अनुवाद किया जा रहा है...',
   },
   mr: {
     nav_home: 'मुख्यपृष्ठ',
@@ -657,6 +659,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     year: 'वर्ष',
     q_prefix: 'प्र',
     a_prefix: 'उ',
+    translating_details: 'तपशीलांचे भाषांतर केले जात आहे...',
   },
   ta: {
     nav_home: 'முகப்பு',
@@ -870,6 +873,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     year: 'ஆண்டு',
     q_prefix: 'கே',
     a_prefix: 'ப',
+    translating_details: 'விவரங்கள் மொழிபெயர்க்கப்படுகின்றன...',
   },
   te: {
     nav_home: 'హోమ్',
@@ -1083,6 +1087,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     year: 'సంవత్సరం',
     q_prefix: 'ప్ర',
     a_prefix: 'జ',
+    translating_details: 'వివరాలు అనువదించబడుతున్నాయి...',
   },
   bn: {
     nav_home: 'হোম',
@@ -1296,6 +1301,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     year: 'বছর',
     q_prefix: 'প্র',
     a_prefix: 'উ',
+    translating_details: 'বিবরণ অনুবাদ করা হচ্ছে...',
   },
 };
 

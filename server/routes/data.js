@@ -3,6 +3,7 @@ const Internship = require("../models/Internship");
 const Scholarship = require("../models/Scholarship");
 const Scheme = require("../models/Scheme");
 const Training = require("../models/Training");
+const { translateOpportunityDetails } = require("../services/translateService");
 
 const router = express.Router();
 
@@ -22,11 +23,16 @@ router.get("/internships/:id", async (req, res) => {
     const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
     const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    const data = await Internship.findById(id).lean();
+    let data = await Internship.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Internship not found" });
     }
+
+    if (req.query.lang && req.query.lang !== "en") {
+      data = await translateOpportunityDetails(data, req.query.lang);
+    }
+
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -49,11 +55,16 @@ router.get("/scholarships/:id", async (req, res) => {
     const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
     const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    const data = await Scholarship.findById(id).lean();
+    let data = await Scholarship.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Scholarship not found" });
     }
+
+    if (req.query.lang && req.query.lang !== "en") {
+      data = await translateOpportunityDetails(data, req.query.lang);
+    }
+
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -76,11 +87,16 @@ router.get("/schemes/:id", async (req, res) => {
     const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
     const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    const data = await Scheme.findById(id).lean();
+    let data = await Scheme.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Scheme not found" });
     }
+
+    if (req.query.lang && req.query.lang !== "en") {
+      data = await translateOpportunityDetails(data, req.query.lang);
+    }
+
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -103,11 +119,16 @@ router.get("/training/:id", async (req, res) => {
     const rawId = req.params.id.replace(/^(internships|scholarships|schemes|training)_/, "");
     const id = isNaN(rawId) ? rawId : Number(rawId);
     
-    const data = await Training.findById(id).lean();
+    let data = await Training.findById(id).lean();
     
     if (!data) {
       return res.status(404).json({ error: "Training not found" });
     }
+
+    if (req.query.lang && req.query.lang !== "en") {
+      data = await translateOpportunityDetails(data, req.query.lang);
+    }
+
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });

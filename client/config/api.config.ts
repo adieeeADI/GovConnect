@@ -61,8 +61,9 @@ export const getUserEndpoint = (userId: string) => {
 };
 
 // Helper function to get data details endpoint
-export const getDataDetailsEndpoint = (category: string, id: string) => {
-  return `${API_BASE_URL}/api/data/${category}/${id}`;
+export const getDataDetailsEndpoint = (category: string, id: string, lang?: string) => {
+  const url = `${API_BASE_URL}/api/data/${category}/${id}`;
+  return lang ? `${url}?lang=${encodeURIComponent(lang)}` : url;
 };
 
 /**

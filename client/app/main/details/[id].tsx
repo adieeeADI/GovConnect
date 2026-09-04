@@ -9,7 +9,7 @@ import { goBackWithinApp } from '../../../utils/navigation';
 export default function Individual() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,11 +25,12 @@ export default function Individual() {
     if (!id) return;
 
     let isMounted = true;
+    setLoading(true);
 
     const idString = Array.isArray(id) ? id[0] : id;
     const categoryString = Array.isArray(category) ? category[0] : category;
     const cleanId = idString.replace(/^(internships|scholarships|schemes|training)_/, "");
-    const endpoint = getDataDetailsEndpoint(categoryString, cleanId);
+    const endpoint = getDataDetailsEndpoint(categoryString, cleanId, language);
 
     fetch(endpoint)
       .then((res) => (res.ok ? res.json() : null))
@@ -48,7 +49,7 @@ export default function Individual() {
     return () => {
       isMounted = false;
     };
-  }, [params?.id, params?.category]);
+  }, [params?.id, params?.category, language]);
 
   // Prevent back navigation
   useFocusEffect(
@@ -69,6 +70,7 @@ export default function Individual() {
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#1e3a8a" />
+          <Text className="text-gray-500 text-sm mt-3">{t('translating_details')}</Text>
         </View>
       ) : !data ? (
         <View className="flex-1 items-center justify-center px-6">
