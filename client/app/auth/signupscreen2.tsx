@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Globe } from 'lucide-react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { useTranslation } from '../../utils/i18n';
+import { useTranslation, translateValue } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignUpScreen2() {
@@ -21,7 +21,7 @@ export default function SignUpScreen2() {
   const handleBackConfirm = () => {
     Alert.alert(
       t('leave_page'),
-      'Are you sure you want to go back to the previous step?',
+      t('unsaved_changes_warning'),
       [
         { text: t('cancel'), style: 'cancel' },
         { text: t('back'), style: 'destructive', onPress: () => router.back() }
@@ -49,7 +49,7 @@ export default function SignUpScreen2() {
 
   const handleNext = () => {
     if (!education) {
-      Alert.alert("Error", "Please enter your education.");
+      Alert.alert(t('notice'), t('enter_education'));
       return;
     }
 
@@ -100,7 +100,7 @@ export default function SignUpScreen2() {
         {/* Progress Bar */}
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-gray-600 text-sm font-semibold">Step 2 of 3</Text>
+            <Text className="text-gray-600 text-sm font-semibold">{t('step_2_of_3')}</Text>
             <Text className="text-gray-600 text-sm font-semibold">66%</Text>
           </View>
           <View className="h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -152,7 +152,7 @@ export default function SignUpScreen2() {
                 <Text className="text-white text-sm font-bold">✓</Text>
               )}
             </View>
-            <Text className="text-black text-base">{interest}</Text>
+            <Text className="text-black text-base">{translateValue(interest, t)}</Text>
           </TouchableOpacity>
         ))}
 

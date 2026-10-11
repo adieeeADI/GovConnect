@@ -6,6 +6,9 @@ import { getDataDetailsEndpoint } from '../../../config/api.config';
 import { useTranslation, translateValue } from '../../../utils/i18n';
 import { goBackWithinApp } from '../../../utils/navigation';
 
+// In-memory cache for fast instant detail loads
+const detailsCache = new Map<string, any>();
+
 export default function Individual() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -13,6 +16,7 @@ export default function Individual() {
   
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [translating, setTranslating] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [imageZoom, setImageZoom] = useState(1);
 
@@ -25,11 +29,35 @@ export default function Individual() {
     if (!id) return;
 
     let isMounted = true;
-    setLoading(true);
 
     const idString = Array.isArray(id) ? id[0] : id;
     const categoryString = Array.isArray(category) ? category[0] : category;
     const cleanId = idString.replace(/^(internships|scholarships|schemes|training)_/, "");
+    const cacheKey = `${cleanId}_${categoryString}_${language}`;
+    const englishCacheKey = `${cleanId}_${categoryString}_en`;
+
+    // 1. Check exact language cache first (0ms Instant Load)
+    if (detailsCache.has(cacheKey)) {
+      setData(detailsCache.get(cacheKey));
+      setLoading(false);
+      setTranslating(false);
+      return;
+    }
+
+    // 2. Optimistic Instant Render: If we have English cache or existing data, show it immediately without blocking
+    const fallbackData = detailsCache.get(englishCacheKey) || data;
+    if (fallbackData) {
+      setData(fallbackData);
+      setLoading(false);
+      if (language !== 'en') {
+        setTranslating(true);
+      }
+    } else {
+      setLoading(true);
+      setTranslating(false);
+    }
+
+    // 3. Fetch translated/latest data in background
     const endpoint = getDataDetailsEndpoint(categoryString, cleanId, language);
 
     fetch(endpoint)
@@ -37,13 +65,21 @@ export default function Individual() {
       .then((resData) => {
         if (isMounted) {
           if (resData && Object.keys(resData).length > 0 && !resData.error) {
+            detailsCache.set(cacheKey, resData);
+            if (language === 'en') {
+              detailsCache.set(englishCacheKey, resData);
+            }
             setData(resData);
           }
           setLoading(false);
+          setTranslating(false);
         }
       })
       .catch(() => {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setTranslating(false);
+        }
       });
 
     return () => {
@@ -82,13 +118,23 @@ export default function Individual() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-6">
-            <TouchableOpacity 
-              className="mb-4"
-              onPress={() => goBackWithinApp(router)}
-              activeOpacity={0.7}
-            >
-              <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
-            </TouchableOpacity>
+            <View className="flex-row items-center justify-between mb-4">
+              <TouchableOpacity 
+                onPress={() => goBackWithinApp(router)}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
+              </TouchableOpacity>
+
+              {translating && (
+                <View className="bg-blue-800/80 rounded-full px-3 py-1 flex-row items-center">
+                  <ActivityIndicator size="small" color="#ffffff" />
+                  <Text className="text-white text-xs ml-1.5 font-medium">
+                    ✨ {t('translating_details')}
+                  </Text>
+                </View>
+              )}
+            </View>
 
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1">

@@ -2,29 +2,57 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft, Smartphone } from 'lucide-react-native';
+import { ArrowLeft, Smartphone, Globe } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 
 export default function PhoneInput() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
 
-  const handleSendOTP = () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
+  const handleSendOTP = async () => {
+    const cleanPhone = phoneNumber.trim().replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      Alert.alert(t('notice'), t('enter_valid_phone'));
       return;
     }
 
     setIsLoading(true);
-    console.log('Sending OTP to:', phoneNumber);
-    
-    // Simulate API call
-    setTimeout(() => {
+    console.log('Sending OTP to:', cleanPhone);
+
+    try {
+      const data = await safeFetchJson(API_ENDPOINTS.SEND_OTP, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: cleanPhone }),
+      });
+
       setIsLoading(false);
-      Alert.alert('Success', 'OTP sent to your phone number!');
-      router.push('/auth/otp');
-    }, 1500);
+
+      if (data?.otp) {
+        Alert.alert(
+          t('notice'),
+          `${t('otp_sent')}\n\n[Dev Code: ${data.otp}]`
+        );
+      } else {
+        Alert.alert(t('notice'), t('otp_sent'));
+      }
+
+      router.push({
+        pathname: '/auth/otp',
+        params: { phone: cleanPhone },
+      });
+    } catch (err: any) {
+      setIsLoading(false);
+      Alert.alert(t('notice'), err.message || 'Failed to send OTP. Please check backend connection.');
+    }
   };
 
   return (
@@ -34,15 +62,26 @@ export default function PhoneInput() {
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back Button */}
-        <TouchableOpacity 
-          className="flex-row items-center mb-8 border border-gray-300 rounded-xl px-4 py-3 self-start"
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft color="#000000" size={20} strokeWidth={2} />
-          <Text className="text-black text-base font-semibold ml-2">Back</Text>
-        </TouchableOpacity>
+        {/* Header Row with Back and Language */}
+        <View className="flex-row items-center justify-between mb-6">
+          <TouchableOpacity 
+            className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2.5"
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft color="#000000" size={20} strokeWidth={2} />
+            <Text className="text-black text-sm font-semibold ml-2">{t('back')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 border border-gray-200 px-3.5 py-2.5 rounded-xl"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Globe color="#1e40af" size={18} />
+            <Text className="text-blue-900 text-xs font-bold ml-1.5">{t('language')}</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Icon */}
         <View className="items-center mb-8">
@@ -53,22 +92,22 @@ export default function PhoneInput() {
 
         {/* Title */}
         <Text className="text-black text-3xl font-bold text-center mb-3">
-          Enter Your Phone Number
+          {t('enter_phone_title')}
         </Text>
-        <Text className="text-gray-500 text-center mb-8 px-4">
-          {"We'll send you a verification code to confirm your identity"}
+        <Text className="text-gray-500 text-center mb-8 px-4 leading-5">
+          {t('phone_subtitle')}
         </Text>
 
         {/* Phone Number Input */}
         <Text className="text-black text-base font-bold mb-3">
-          Phone Number
+          {t('phone_number_label')}
         </Text>
         <View className="flex-row items-center border-2 border-gray-800 rounded-2xl px-4 mb-8">
           <Text className="text-gray-600 text-lg mr-2">+91</Text>
           <View className="w-px h-8 bg-gray-300 mr-3" />
           <TextInput
             className="flex-1 py-4 text-base"
-            placeholder="Enter your phone number"
+            placeholder={t('enter_phone_placeholder')}
             placeholderTextColor="#9ca3af"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
@@ -80,8 +119,7 @@ export default function PhoneInput() {
         {/* Info Box */}
         <View className="bg-blue-50 rounded-2xl p-4 mb-8">
           <Text className="text-blue-800 text-sm leading-5">
-            <Text className="font-bold">Note: </Text>
-            {"You'll receive a 6-digit OTP on this number. Make sure the number is active and can receive SMS."}
+            {t('otp_note')}
           </Text>
         </View>
 
@@ -95,16 +133,21 @@ export default function PhoneInput() {
           disabled={isLoading}
         >
           <Text className="text-white text-xl font-bold">
-            {isLoading ? 'Sending...' : 'Send OTP'}
+            {isLoading ? t('sending') : t('send_otp')}
           </Text>
         </TouchableOpacity>
 
         {/* Terms of Service */}
         <Text className="text-black text-sm text-center leading-5">
-          By continuing, you agree to our{' '}
-          <Text className="font-bold">Terms of Service</Text>
+          {t('terms_agreement_notice')}
         </Text>
       </ScrollView>
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

@@ -22,9 +22,9 @@ export default function SignUpScreen1() {
   const handleBackConfirm = () => {
     Alert.alert(
       t('leave_page'),
-      'Are you sure you want to go back? Entered details will not be saved.',
+      t('unsaved_changes_warning'),
       [
-        { text: 'Continue Registration', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         { text: t('back'), style: 'destructive', onPress: () => router.back() }
       ]
     );
@@ -42,17 +42,17 @@ export default function SignUpScreen1() {
 
   const validateAndProceed = () => {
     if (!fullName || !email || !phone || !location || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields.");
+      Alert.alert(t('notice'), t('fill_all_fields'));
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters.");
+      Alert.alert(t('notice'), t('password_min_8'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
+      Alert.alert(t('notice'), t('passwords_dont_match'));
       return;
     }
 
@@ -174,12 +174,12 @@ export default function SignUpScreen1() {
 
         {/* Confirm Password */}
         <Text className="text-black text-base font-bold mb-3">
-          {t('password')}
+          {t('confirm_password')}
         </Text>
         <View className="relative mb-8">
           <TextInput
             className="border-2 border-gray-800 rounded-2xl px-4 py-4 text-base pr-12"
-            placeholder={t('password')}
+            placeholder={t('confirm_password')}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}

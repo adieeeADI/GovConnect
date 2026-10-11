@@ -71,11 +71,11 @@ export default function Home() {
         'hardwareBackPress',
         () => {
           Alert.alert(
-            'Exit App',
-            'Are you sure you want to exit the app?',
+            t('exit_app'),
+            t('confirm_exit_app'),
             [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() }
+              { text: t('cancel'), style: 'cancel' },
+              { text: t('exit'), style: 'destructive', onPress: () => BackHandler.exitApp() }
             ]
           );
           return true;

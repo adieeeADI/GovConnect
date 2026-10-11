@@ -268,7 +268,7 @@ export default function SignUpScreen3() {
         {/* Progress Bar */}
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-gray-600 text-sm font-semibold">Step 3 of 3</Text>
+            <Text className="text-gray-600 text-sm font-semibold">{t('step_3_of_3')}</Text>
             <Text className="text-gray-600 text-sm font-semibold">100%</Text>
           </View>
           <View className="h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -287,20 +287,14 @@ export default function SignUpScreen3() {
             <View className="items-center py-2">
               <ActivityIndicator size="large" color="#1d4ed8" />
               <Text className="text-blue-900 text-lg font-bold mt-3">
-                ✨ Analyzing Resume with AI...
-              </Text>
-              <Text className="text-blue-600 text-xs mt-1">
-                Extracting skills, education & career goals using Gemini
+                {t('ai_extracting')}
               </Text>
             </View>
           ) : (
             <View className="items-center">
               <Upload color="#1e40af" size={36} strokeWidth={2} />
               <Text className="text-blue-900 text-xl font-bold mt-2">
-                {uploadedFile ? "Replace Resume" : "Upload Resume (PDF / DOC)"}
-              </Text>
-              <Text className="text-gray-500 text-xs mt-1 text-center">
-                Auto-extracts skills, education & personalized scheme recommendations
+                {uploadedFile ? uploadedFile : t('upload_resume')}
               </Text>
 
               {uploadedFile && (
@@ -321,12 +315,9 @@ export default function SignUpScreen3() {
             <View className="flex-row items-center mb-2">
               <ActivityIndicator color="#1d4ed8" size="small" className="mr-2" />
               <Text className="text-blue-900 text-base font-bold ml-2">
-                ✨ AI Resume Analysis in Progress...
+                {t('ai_extracting')}
               </Text>
             </View>
-            <Text className="text-blue-700 text-xs font-medium">
-              Please wait while Gemini AI parses skills, education, and interests from your document. "Start Exploring" will enable as soon as analysis completes.
-            </Text>
           </View>
         )}
 
@@ -337,7 +328,7 @@ export default function SignUpScreen3() {
               <View className="flex-row items-center">
                 <CheckCircle2 color="#15803d" size={20} />
                 <Text className="text-green-900 text-base font-bold ml-2">
-                  ✨ Resume Extracted Successfully!
+                  {t('ai_extracted')}
                 </Text>
               </View>
               {parsedData.category ? (
@@ -349,7 +340,7 @@ export default function SignUpScreen3() {
 
             {parsedData.education ? (
               <View className="mb-2.5">
-                <Text className="text-gray-500 text-xs font-semibold mb-0.5">Education Found:</Text>
+                <Text className="text-gray-500 text-xs font-semibold mb-0.5">{t('education')}:</Text>
                 <Text className="text-gray-900 text-sm font-bold">{parsedData.education}</Text>
               </View>
             ) : null}
@@ -357,7 +348,7 @@ export default function SignUpScreen3() {
             {Array.isArray(parsedData.skills) && parsedData.skills.length > 0 ? (
               <View className="mb-2.5">
                 <Text className="text-gray-500 text-xs font-semibold mb-1.5">
-                  Extracted Skills ({parsedData.skills.length}):
+                  {t('skills')} ({parsedData.skills.length}):
                 </Text>
                 <View className="flex-row flex-wrap">
                   {parsedData.skills.map((skill: string, index: number) => (
@@ -372,7 +363,7 @@ export default function SignUpScreen3() {
             {Array.isArray(parsedData.interests) && parsedData.interests.length > 0 ? (
               <View>
                 <Text className="text-gray-500 text-xs font-semibold mb-1.5">
-                  Extracted Interests ({parsedData.interests.length}):
+                  {t('interests')} ({parsedData.interests.length}):
                 </Text>
                 <View className="flex-row flex-wrap">
                   {parsedData.interests.map((interest: string, index: number) => (
@@ -399,7 +390,7 @@ export default function SignUpScreen3() {
             )}
           </View>
           <Text className="text-black text-base flex-1">
-            I agree to terms and privacy policy
+            {t('agree_terms')}
           </Text>
         </TouchableOpacity>
 
@@ -415,7 +406,7 @@ export default function SignUpScreen3() {
             )}
           </View>
           <Text className="text-black text-base flex-1">
-            Notify me about new opportunities
+            {t('notify_me')}
           </Text>
         </TouchableOpacity>
 
@@ -431,7 +422,7 @@ export default function SignUpScreen3() {
             )}
           </View>
           <Text className="text-black text-base flex-1">
-            Forgery will lead to cancellation
+            {t('forgery_warning')}
           </Text>
         </TouchableOpacity>
 
@@ -454,19 +445,19 @@ export default function SignUpScreen3() {
             <>
               <ActivityIndicator color="#ffffff" size="small" style={{ marginRight: 8 }} />
               <Text className="text-white text-xl font-bold">
-                AI PARSING RESUME...
+                {t('ai_parsing_resume_btn')}
               </Text>
             </>
           ) : loading ? (
             <>
               <ActivityIndicator color="#ffffff" size="small" style={{ marginRight: 8 }} />
               <Text className="text-white text-xl font-bold">
-                CREATING ACCOUNT...
+                {t('creating_account_btn')}
               </Text>
             </>
           ) : (
             <Text className="text-white text-xl font-bold">
-              START EXPLORING
+              {t('start_exploring')}
             </Text>
           )}
         </TouchableOpacity>

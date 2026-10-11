@@ -34,11 +34,8 @@ export default function Landing() {
         </View>
         
         {/* Title */}
-        <Text className="text-white text-4xl font-bold text-center mb-1">
-          Government
-        </Text>
-        <Text className="text-white text-4xl font-bold text-center mb-3">
-          Opportunities
+        <Text className="text-white text-4xl font-bold text-center mb-3 leading-tight">
+          {t('govt_opportunities')}
         </Text>
         
         {/* Subtitle */}
@@ -86,7 +83,7 @@ export default function Landing() {
           onPress={() => router.push("/auth/signupscreen1")}
         >
           <Text className="text-white text-lg font-bold">
-            {t('Sign Up')}
+            {t('sign_up')}
           </Text>
         </TouchableOpacity>
         

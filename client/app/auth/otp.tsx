@@ -1,14 +1,23 @@
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import Svg, { Rect, Circle, Path } from 'react-native-svg';
+import { ArrowLeft, Globe } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from '../../utils/i18n';
+import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 
 const OTPVerification = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const phone = (params.phone as string) || '';
+  const { t } = useTranslation();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -36,27 +45,72 @@ const OTPVerification = () => {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const otpValue = otp.join('');
     if (otpValue.length !== 6) {
-      Alert.alert('Error', 'Please enter all 6 digits');
+      Alert.alert(t('notice'), t('enter_all_6_digits'));
       return;
     }
 
     setIsLoading(true);
-    console.log('Verifying OTP:', otpValue);
+    console.log('Verifying OTP:', otpValue, 'for phone:', phone);
 
-    setTimeout(() => {
+    try {
+      const data = await safeFetchJson(API_ENDPOINTS.VERIFY_OTP, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone,
+          otp: otpValue,
+        }),
+      });
+
+      if (data && data.user) {
+        await AsyncStorage.setItem('userId', data.user.id);
+        await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+      }
+
       setIsLoading(false);
-      Alert.alert('Success', 'OTP verified successfully!');
-    }, 1500);
+      Alert.alert(t('notice'), t('otp_verified_success'));
+      router.replace('/main/home');
+    } catch (err: any) {
+      setIsLoading(false);
+      Alert.alert(t('notice'), err.message || 'OTP verification failed. Please try again.');
+    }
   };
 
-  const handleResend = () => {
-    console.log('Resending OTP...');
+  const handleResend = async () => {
+    console.log('Resending OTP to:', phone);
     setOtp(['', '', '', '', '', '']);
     inputRefs.current[0]?.focus();
-    Alert.alert('Success', 'OTP has been resent to your phone');
+
+    if (!phone) {
+      Alert.alert(t('notice'), t('otp_resent_success'));
+      return;
+    }
+
+    try {
+      const data = await safeFetchJson(API_ENDPOINTS.SEND_OTP, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone }),
+      });
+
+      if (data?.otp) {
+        Alert.alert(
+          t('notice'),
+          `${t('otp_resent_success')}\n\n[Dev Code: ${data.otp}]`
+        );
+      } else {
+        Alert.alert(t('notice'), t('otp_resent_success'));
+      }
+    } catch (err: any) {
+      Alert.alert(t('notice'), err.message || 'Failed to resend OTP.');
+    }
   };
 
   return (
@@ -67,15 +121,26 @@ const OTPVerification = () => {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* Back Button - Same style as phone.tsx */}
-        <TouchableOpacity 
-          className="flex-row items-center mb-8 border border-gray-300 rounded-xl px-4 py-3 self-start"
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-        >
-          <Text className="text-black text-2xl font-bold">←</Text>
-          <Text className="text-black text-base font-semibold ml-2">Back</Text>
-        </TouchableOpacity>
+        {/* Header Row with Back and Language */}
+        <View className="flex-row items-center justify-between mb-6">
+          <TouchableOpacity 
+            className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2.5"
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft color="#000000" size={20} strokeWidth={2} />
+            <Text className="text-black text-sm font-semibold ml-2">{t('back')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 border border-gray-200 px-3.5 py-2.5 rounded-xl"
+            activeOpacity={0.8}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <Globe color="#1e40af" size={18} />
+            <Text className="text-blue-900 text-xs font-bold ml-1.5">{t('language')}</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Icon */}
         <View className="items-center mb-8">
@@ -96,10 +161,10 @@ const OTPVerification = () => {
 
         {/* Title */}
         <Text className="text-3xl font-bold text-gray-900 text-center mb-3">
-          Verify Your Identity
+          {t('verify_identity')}
         </Text>
         <Text className="text-gray-500 text-center mb-8">
-          Enter the 6-digit OTP sent to your phone
+          {t('enter_6_digit_otp')}
         </Text>
 
         {/* OTP Inputs */}
@@ -125,22 +190,28 @@ const OTPVerification = () => {
         <TouchableOpacity
           onPress={handleVerify}
           disabled={isLoading}
-          className={`bg-gray-400 rounded-lg py-4 items-center ${isLoading ? 'opacity-70' : ''}`}
+          className={`bg-blue-700 rounded-2xl py-4 items-center mb-6 ${isLoading ? 'opacity-70' : ''}`}
         >
-          <Text className="text-white text-base font-semibold">
-            {isLoading ? 'Verifying...' : 'Verify OTP'}
+          <Text className="text-white text-xl font-bold">
+            {isLoading ? t('verifying') : t('verify_otp')}
           </Text>
         </TouchableOpacity>
 
         {/* Resend OTP */}
         <View className="items-center mt-6">
-          <Text className="text-gray-500 text-sm mb-2">{"Didn't receive the code?"}</Text>
+          <Text className="text-gray-500 text-sm mb-2">{t('didnt_receive_code')}</Text>
           <TouchableOpacity onPress={handleResend}>
-            <Text className="text-blue-900 font-semibold text-base">Resend OTP</Text>
+            <Text className="text-blue-900 font-semibold text-base">{t('resend_otp')}</Text>
           </TouchableOpacity>
         </View>
 
       </ScrollView>
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };

@@ -22,17 +22,17 @@ export default function SignIn() {
 
     // Validation
     if (!email.trim()) {
-      setError('Please enter your email');
+      setError(t('enter_email'));
       return;
     }
 
     if (!password.trim()) {
-      setError('Please enter your password');
+      setError(t('enter_password'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('password_min_6'));
       return;
     }
 
@@ -129,7 +129,7 @@ export default function SignIn() {
         {/* Forget Password */}
         <TouchableOpacity activeOpacity={0.7} className="mb-8">
           <Text className="text-blue-600 text-base font-semibold">
-            Forget Password?
+            {t('forget_password')}
           </Text>
         </TouchableOpacity>
 
@@ -161,7 +161,7 @@ export default function SignIn() {
         {/* OR Divider */}
         <View className="flex-row items-center mb-6">
           <View className="flex-1 h-px bg-gray-300" />
-          <Text className="text-black text-lg font-bold mx-4">OR</Text>
+          <Text className="text-black text-lg font-bold mx-4">{t('or')}</Text>
           <View className="flex-1 h-px bg-gray-300" />
         </View>
 
@@ -172,14 +172,13 @@ export default function SignIn() {
           onPress={() => router.push("/auth/phone")}
         >
           <Text className="text-black text-lg font-semibold">
-            Continue With OTP
+            {t('continue_otp')}
           </Text>
         </TouchableOpacity>
 
         {/* Terms */}
         <Text className="text-black text-sm text-center leading-5">
-          By continuing, you agree to our{' '}
-          <Text className="font-bold">Terms of Service</Text>
+          {t('terms_agreement_notice')}
         </Text>
       </ScrollView>
 
