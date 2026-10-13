@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler, Linking, Alert } from 'react-native';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { getDataDetailsEndpoint } from '../../../config/api.config';
@@ -106,6 +106,25 @@ export default function Individual() {
       return () => backHandler.remove();
     }, [router])
   );
+
+  const handleOfficialPortal = async () => {
+    const url = data?.basicInfo?.applicationLink?.trim();
+
+    if (!url) {
+      Alert.alert('Error', 'Official portal link is not available.');
+      return;
+    }
+
+    try {
+      const validUrl = /^https?:\/\//i.test(url)
+        ? url
+        : `https://${url}`;
+
+      await Linking.openURL(validUrl);
+    } catch (error) {
+      Alert.alert('Error', 'Unable to open the official portal.');
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -827,6 +846,7 @@ export default function Individual() {
               <TouchableOpacity
                 className="bg-white border-2 border-blue-900 rounded-2xl py-4 items-center mb-8"
                 activeOpacity={0.8}
+                onPress={handleOfficialPortal}
               >
                 <Text className="text-blue-900 text-lg font-semibold">
                   {t('official_portal')}
