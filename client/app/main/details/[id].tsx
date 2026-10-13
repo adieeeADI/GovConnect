@@ -14,7 +14,7 @@ export default function Individual() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { t, language } = useTranslation();
-  
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [translating, setTranslating] = useState(false);
@@ -125,7 +125,7 @@ export default function Individual() {
           {/* Header */}
           <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-8 mb-6">
             <View className="flex-row items-center justify-between mb-4">
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => goBackWithinApp(router)}
                 activeOpacity={0.7}
               >
@@ -163,7 +163,7 @@ export default function Individual() {
                 )}
               </View>
               {data.basicInfo?.logo && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="w-16 h-16 bg-white rounded-lg ml-2 overflow-hidden"
                   onPress={() => setImageModalVisible(true)}
                 >
@@ -473,8 +473,8 @@ export default function Individual() {
                     </Text>
                     <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
                       {data.faq.questionsAndAnswers.map((item: any, index: number) => (
-                        <View 
-                          key={index} 
+                        <View
+                          key={index}
                           className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
                         >
                           <View className="p-4">
@@ -747,8 +747,8 @@ export default function Individual() {
                 </Text>
                 <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
                   {data.faq.questionsAndAnswers.map((item: any, index: number) => (
-                    <View 
-                      key={index} 
+                    <View
+                      key={index}
                       className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
                     >
                       <View className="p-4">
@@ -823,17 +823,8 @@ export default function Individual() {
             )}
 
             {/* Action Buttons */}
-            <TouchableOpacity 
-              className="bg-blue-900 rounded-2xl py-4 items-center mb-3"
-              activeOpacity={0.8}
-            >
-              <Text className="text-white text-lg font-bold">
-                {t('apply_now')}
-              </Text>
-            </TouchableOpacity>
-
             {data.basicInfo?.applicationLink && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="bg-white border-2 border-blue-900 rounded-2xl py-4 items-center mb-8"
                 activeOpacity={0.8}
               >
@@ -854,7 +845,7 @@ export default function Individual() {
       >
         <View className="flex-1 bg-black/90 justify-center items-center">
           {/* Close Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             className="absolute top-12 right-6 z-10"
             onPress={() => {
               setImageModalVisible(false);
@@ -881,15 +872,15 @@ export default function Individual() {
 
           {/* Zoom Controls */}
           <View className="flex-row justify-center gap-6 pb-12">
-            <TouchableOpacity 
+            <TouchableOpacity
               className="bg-white/20 rounded-full p-4"
               onPress={() => setImageZoom(Math.max(1, imageZoom - 0.2))}
               disabled={imageZoom <= 1}
             >
               <ZoomOut color="#ffffff" size={24} strokeWidth={2} />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               className="bg-white/20 rounded-full p-4"
               onPress={() => setImageZoom(Math.min(3, imageZoom + 0.2))}
               disabled={imageZoom >= 3}

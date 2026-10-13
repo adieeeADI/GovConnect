@@ -67,14 +67,16 @@ const OTPVerification = () => {
         }),
       });
 
-      if (data && data.user) {
+      if (data && data.user && data.user.id) {
         await AsyncStorage.setItem('userId', data.user.id);
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+        setIsLoading(false);
+        Alert.alert(t('notice'), t('otp_verified_success'));
+        router.replace('/main/home');
+      } else {
+        setIsLoading(false);
+        Alert.alert(t('notice'), data?.message || 'Verification failed. No registered account found.');
       }
-
-      setIsLoading(false);
-      Alert.alert(t('notice'), t('otp_verified_success'));
-      router.replace('/main/home');
     } catch (err: any) {
       setIsLoading(false);
       Alert.alert(t('notice'), err.message || 'OTP verification failed. Please try again.');

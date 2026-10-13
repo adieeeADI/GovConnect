@@ -50,14 +50,15 @@ export default function SignIn() {
         }),
       });
 
-      if (data && data.user) {
+      if (data && data.user && data.user.id) {
         await AsyncStorage.setItem('userId', data.user.id);
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+        setLoading(false);
+        router.replace('/main/home');
+      } else {
+        setError(data?.message || 'Login failed. Invalid account details.');
+        setLoading(false);
       }
-
-      setLoading(false);
-      router.replace('/main/home');
-
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
       setLoading(false);

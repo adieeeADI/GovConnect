@@ -44,6 +44,15 @@ export default function Home() {
       const loadUserData = async () => {
         try {
           const cachedUser = await AsyncStorage.getItem('userData');
+          const userId = await AsyncStorage.getItem('userId');
+
+          if (!cachedUser && !userId) {
+            if (isMounted) {
+              router.replace('/auth/landing');
+            }
+            return;
+          }
+
           if (cachedUser) {
             const parsed = JSON.parse(cachedUser);
             if (isMounted) {
@@ -52,7 +61,6 @@ export default function Home() {
             }
           }
 
-          const userId = await AsyncStorage.getItem('userId');
           if (!userId) return;
           const data = await safeFetchJson(getUserEndpoint(userId));
           if (isMounted && data) {

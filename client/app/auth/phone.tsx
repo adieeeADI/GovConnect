@@ -51,7 +51,22 @@ export default function PhoneInput() {
       });
     } catch (err: any) {
       setIsLoading(false);
-      Alert.alert(t('notice'), err.message || 'Failed to send OTP. Please check backend connection.');
+      const isNotRegistered = err.message && err.message.toLowerCase().includes('sign up');
+      if (isNotRegistered) {
+        Alert.alert(
+          t('notice'),
+          err.message,
+          [
+            { text: t('cancel'), style: 'cancel' },
+            { 
+              text: t('sign_up'), 
+              onPress: () => router.push('/auth/signupscreen1') 
+            }
+          ]
+        );
+      } else {
+        Alert.alert(t('notice'), err.message || 'Failed to send OTP. Please check backend connection.');
+      }
     }
   };
 

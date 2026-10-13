@@ -249,7 +249,7 @@ async function sendSmsNotification(phone, otpCode) {
 /* ===================== SEND OTP ===================== */
 router.post("/send-otp", async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, purpose } = req.body;
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
@@ -257,6 +257,16 @@ router.post("/send-otp", async (req, res) => {
     const cleanPhone = String(phone).replace(/\D/g, "");
     if (cleanPhone.length < 10) {
       return res.status(400).json({ message: "Invalid phone number format" });
+    }
+
+    // If purpose is not explicitly "signup", verify user account exists
+    if (purpose !== "signup") {
+      const existingUser = await User.findOne({ phone: cleanPhone });
+      if (!existingUser) {
+        return res.status(404).json({
+          message: "No account found with this phone number. Please sign up first."
+        });
+      }
     }
 
     // Generate 6-digit random OTP
@@ -293,8 +303,8 @@ router.post("/verify-otp", async (req, res) => {
 
     const storedData = otpStore.get(cleanPhone);
 
-    // Support standard test code 123456 as dev fallback or match stored OTP
-    const isTestOtp = cleanOtp === "123456";
+    // Support standard test code 123456 as dev fallback strictly in non-production
+    const isTestOtp = process.env.NODE_ENV !== "production" && cleanOtp === "123456";
     const isValidOtp = (storedData && storedData.otp === cleanOtp && Date.now() < storedData.expiresAt) || isTestOtp;
 
     if (!isValidOtp) {
@@ -308,18 +318,12 @@ router.post("/verify-otp", async (req, res) => {
     // Clear used OTP from store
     otpStore.delete(cleanPhone);
 
-    // Find existing user or create a new user record for this phone number
+    // Find existing user - do NOT auto-create account for sign-in
     let user = await User.findOne({ phone: cleanPhone });
     if (!user) {
-      user = new User({
-        fullName: `User ${cleanPhone.slice(-4)}`,
-        email: `${cleanPhone}@govconnect.app`,
-        phone: cleanPhone,
-        password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
-        category: "Job Seeker",
-        profileCompletePercentage: 20
+      return res.status(404).json({
+        message: "No account found with this phone number. Please sign up first."
       });
-      await user.save();
     }
 
     return res.status(200).json({
