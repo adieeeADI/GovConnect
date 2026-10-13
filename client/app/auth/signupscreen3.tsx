@@ -131,8 +131,11 @@ export default function SignUpScreen3() {
   };
 
   const handleSubmit = async () => {
-    if (!agreedToTerms) {
-      Alert.alert(t('error'), t('must_agree_to_terms'));
+    if (!agreedToTerms || !forgeryWarning) {
+      Alert.alert(
+        t('error'),
+        'Please accept the Terms & Conditions and acknowledge the Forgery Warning.'
+      );
       return;
     }
 
@@ -383,25 +386,44 @@ export default function SignUpScreen3() {
           className="flex-row items-center mb-4"
           onPress={() => setAgreedToTerms(!agreedToTerms)}
         >
-          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${
-            agreedToTerms ? 'bg-blue-700' : 'bg-white'
-          }`}>
+          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${agreedToTerms ? 'bg-blue-700' : 'bg-white'
+            }`}>
             {agreedToTerms && (
               <Text className="text-white text-sm font-bold">✓</Text>
             )}
           </View>
-          <Text className="text-black text-base flex-1">
-            {t('agree_terms')}
-          </Text>
+          <View className="flex-1 flex-row flex-wrap items-center">
+            <Text className="text-red-600 text-sm font-bold mr-1">*</Text>
+            <Text className="text-black text-base flex-shrink">
+              {t('agree_terms')}
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center mb-8"
+          onPress={() => setForgeryWarning(!forgeryWarning)}
+        >
+          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${forgeryWarning ? 'bg-blue-700' : 'bg-white'
+            }`}>
+            {forgeryWarning && (
+              <Text className="text-white text-sm font-bold">✓</Text>
+            )}
+          </View>
+          <View className="flex-1 flex-row flex-wrap items-center">
+            <Text className="text-red-600 text-sm font-bold mr-1">*</Text>
+            <Text className="text-black text-base flex-shrink">
+              {t('forgery_warning')}
+            </Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           className="flex-row items-center mb-4"
           onPress={() => setNotifyOpportunities(!notifyOpportunities)}
         >
-          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${
-            notifyOpportunities ? 'bg-blue-700' : 'bg-white'
-          }`}>
+          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${notifyOpportunities ? 'bg-blue-700' : 'bg-white'
+            }`}>
             {notifyOpportunities && (
               <Text className="text-white text-sm font-bold">✓</Text>
             )}
@@ -411,36 +433,19 @@ export default function SignUpScreen3() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          className="flex-row items-center mb-8"
-          onPress={() => setForgeryWarning(!forgeryWarning)}
-        >
-          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${
-            forgeryWarning ? 'bg-blue-700' : 'bg-white'
-          }`}>
-            {forgeryWarning && (
-              <Text className="text-white text-sm font-bold">✓</Text>
-            )}
-          </View>
-          <Text className="text-black text-base flex-1">
-            {t('forgery_warning')}
-          </Text>
-        </TouchableOpacity>
-
         {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-2xl py-4 items-center flex-row justify-center ${
-            parsingResume
-              ? 'bg-gray-400 opacity-80'
-              : loading
+          className={`rounded-2xl py-4 items-center flex-row justify-center ${parsingResume
+            ? 'bg-gray-400 opacity-80'
+            : loading
               ? 'bg-blue-800'
               : agreedToTerms
-              ? 'bg-blue-700'
-              : 'bg-gray-300'
-          }`}
+                ? 'bg-blue-700'
+                : 'bg-gray-300'
+            }`}
           activeOpacity={0.8}
           onPress={handleSubmit}
-          disabled={loading || parsingResume || !agreedToTerms}
+          disabled={loading || parsingResume || !agreedToTerms || !forgeryWarning}
         >
           {parsingResume ? (
             <>
