@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { X } from 'lucide-react-native';
+import { useTranslation } from '../../utils/i18n';
+import TranslatedText from '../../components/TranslatedText';
 
 interface DeleteProps {
   visible: boolean;
@@ -9,8 +11,9 @@ interface DeleteProps {
 }
 
 export default function Delete({ visible, onClose, onConfirm }: DeleteProps) {
+  const { t } = useTranslation();
   const [confirmText, setConfirmText] = useState('');
-  const isConfirmValid = confirmText === 'DELETE MY ACCOUNT';
+  const isConfirmValid = confirmText.trim().toUpperCase() === 'DELETE MY ACCOUNT';
 
   const handleDelete = () => {
     if (isConfirmValid) {
@@ -42,51 +45,37 @@ export default function Delete({ visible, onClose, onConfirm }: DeleteProps) {
               activeOpacity={0.7}
             >
               <X color="#000000" size={20} strokeWidth={2} />
-              <Text className="text-black text-base font-semibold ml-2">Close</Text>
+              <Text className="text-black text-base font-semibold ml-2">{t('cancel')}</Text>
             </TouchableOpacity>
 
             <Text className="text-red-600 text-2xl font-bold mb-1">
-              Delete Account
+              {t('delete_account')}
             </Text>
-            <Text className="text-gray-500 text-sm">
-              This action cannot be undone
-            </Text>
+            <TranslatedText text="This action cannot be undone" className="text-gray-500 text-sm" />
           </View>
 
           {/* Content */}
           <View className="px-6 py-6">
             {/* Warning Box */}
             <View className="bg-red-50 border-l-4 border-red-600 rounded-lg p-4 mb-6">
-              <Text className="text-red-900 text-base font-bold mb-3">
-                Warning
-              </Text>
-              <Text className="text-red-800 text-sm mb-3">
-                Deleting your account will permanently remove all your data including:
-              </Text>
+              <TranslatedText text="Warning" className="text-red-900 text-base font-bold mb-3" />
+              <TranslatedText text="Deleting your account will permanently remove all your data including:" className="text-red-800 text-sm mb-3" />
               <View className="ml-2">
                 <View className="flex-row items-start mb-2">
                   <Text className="text-red-800 text-sm">• </Text>
-                  <Text className="text-red-800 text-sm flex-1">
-                    Profile information and resume
-                  </Text>
+                  <TranslatedText text="Profile information and resume" className="text-red-800 text-sm flex-1" />
                 </View>
                 <View className="flex-row items-start mb-2">
                   <Text className="text-red-800 text-sm">• </Text>
-                  <Text className="text-red-800 text-sm flex-1">
-                    All saved internship opportunities
-                  </Text>
+                  <TranslatedText text="All saved internship opportunities" className="text-red-800 text-sm flex-1" />
                 </View>
                 <View className="flex-row items-start mb-2">
                   <Text className="text-red-800 text-sm">• </Text>
-                  <Text className="text-red-800 text-sm flex-1">
-                    Application history and recommendations
-                  </Text>
+                  <TranslatedText text="Application history and recommendations" className="text-red-800 text-sm flex-1" />
                 </View>
                 <View className="flex-row items-start">
                   <Text className="text-red-800 text-sm">• </Text>
-                  <Text className="text-red-800 text-sm flex-1">
-                    Settings and preferences
-                  </Text>
+                  <TranslatedText text="Settings and preferences" className="text-red-800 text-sm flex-1" />
                 </View>
               </View>
             </View>
@@ -94,15 +83,15 @@ export default function Delete({ visible, onClose, onConfirm }: DeleteProps) {
             {/* Recovery Notice */}
             <View className="bg-gray-100 rounded-lg p-4 mb-6">
               <Text className="text-gray-700 text-sm">
-                <Text className="font-bold">Account Recovery: </Text>
-                {"You won't be able to recover your account once deleted."}
+                <TranslatedText text="Account Recovery" className="font-bold" />:{" "}
+                <TranslatedText text="You won't be able to recover your account once deleted." />
               </Text>
             </View>
 
             {/* Confirmation Input */}
             <View className="mb-6">
               <Text className="text-black text-sm mb-2">
-                Type <Text className="text-red-600 font-bold">{"DELETE MY ACCOUNT"}</Text> to confirm
+                <TranslatedText text="Type" /> <Text className="text-red-600 font-bold">DELETE MY ACCOUNT</Text> <TranslatedText text="to confirm" />
               </Text>
               <TextInput
                 className="bg-white border-2 border-gray-300 rounded-xl px-4 py-3 text-base"
@@ -126,7 +115,7 @@ export default function Delete({ visible, onClose, onConfirm }: DeleteProps) {
               <Text className={`text-lg font-bold ${
                 isConfirmValid ? 'text-white' : 'text-gray-500'
               }`}>
-                Delete My Account
+                {t('delete_account')}
               </Text>
             </TouchableOpacity>
 
@@ -136,7 +125,7 @@ export default function Delete({ visible, onClose, onConfirm }: DeleteProps) {
               onPress={onClose}
             >
               <Text className="text-gray-700 text-lg font-semibold">
-                Cancel
+                {t('cancel')}
               </Text>
             </TouchableOpacity>
           </View>

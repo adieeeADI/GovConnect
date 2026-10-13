@@ -2,24 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
 import { ArrowLeft, MapPin, Clock, ArrowRight } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { API_ENDPOINTS } from '../../config/api.config';
+import { API_ENDPOINTS, getDataCategoryEndpoint } from '../../config/api.config';
 import BottomNav from './bottom';
 import { useTranslation } from '../../utils/i18n';
 import { goBackWithinApp } from '../../utils/navigation';
+import TranslatedText from '../../components/TranslatedText';
 
 type Category = 'internships' | 'scholarships' | 'schemes' | 'training';
-
-const categoryEndpoints = {
-  internships: API_ENDPOINTS.INTERNSHIPS,
-  scholarships: API_ENDPOINTS.SCHOLARSHIPS,
-  schemes: API_ENDPOINTS.SCHEMES,
-  training: API_ENDPOINTS.TRAINING,
-};
 
 export default function Browse() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [activeCategory, setActiveCategory] = useState<Category>(
     (params.category as Category) || 'internships'
@@ -41,11 +35,12 @@ export default function Browse() {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(categoryEndpoints[activeCategory])
+    setLoading(true);
+    fetch(getDataCategoryEndpoint(activeCategory, language))
       .then((res) => res.json())
       .then((json) => {
         if (isMounted) {
-          setData(json);
+          setData(Array.isArray(json) ? json : []);
           setLoading(false);
         }
       })
@@ -58,7 +53,7 @@ export default function Browse() {
     return () => {
       isMounted = false;
     };
-  }, [activeCategory]);
+  }, [activeCategory, language]);
 
   // Prevent back navigation
   useFocusEffect(
@@ -219,7 +214,7 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeFilter === 'Nearby' ? 'text-white' : 'text-gray-700'
               }`}>
-                Nearby
+                {t('nearby')}
               </Text>
             </TouchableOpacity>
 
@@ -233,7 +228,7 @@ export default function Browse() {
               <Text className={`text-sm font-semibold ${
                 activeFilter === 'Trending' ? 'text-white' : 'text-gray-700'
               }`}>
-                Trending
+                {t('trending')}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -261,39 +256,44 @@ export default function Browse() {
                 }}
               >
                 <View className="flex-row items-start justify-between mb-2">
-                  <Text className="text-black text-lg font-bold flex-1">
-                    {item.basicInfo?.title || 'Opportunity'}
-                  </Text>
+                  <TranslatedText 
+                    text={item.basicInfo?.title || t('opportunity')} 
+                    className="text-black text-lg font-bold flex-1" 
+                  />
                   <ArrowRight color="#000000" size={24} strokeWidth={2} />
                 </View>
 
-                <Text className="text-gray-600 text-sm mb-3">
-                  {item.basicInfo?.providerName || 'Provider'}
-                </Text>
+                <TranslatedText 
+                  text={item.basicInfo?.providerName || t('provider')} 
+                  className="text-gray-600 text-sm mb-3" 
+                />
 
                 <View className="flex-row items-center mb-2">
                   <MapPin color="#6b7280" size={16} strokeWidth={2} />
-                  <Text className="text-gray-600 text-sm ml-1">
-                    {item.internshipDetails?.location?.[0] || item.benefits?.covers?.[0] || 'Location'}
-                  </Text>
+                  <TranslatedText 
+                    text={item.internshipDetails?.location?.[0] || item.benefits?.covers?.[0] || t('location')} 
+                    className="text-gray-600 text-sm ml-1" 
+                  />
                   <View className="mx-3 w-1 h-1 bg-gray-400 rounded-full" />
                   <Clock color="#6b7280" size={16} strokeWidth={2} />
-                  <Text className="text-gray-600 text-sm ml-1">
-                    {item.internshipDetails?.duration || item.applicationDetails?.endDate || 'Duration'}
-                  </Text>
+                  <TranslatedText 
+                    text={item.internshipDetails?.duration || item.applicationDetails?.endDate || t('duration')} 
+                    className="text-gray-600 text-sm ml-1" 
+                  />
                 </View>
 
                 <View className={`self-start px-3 py-1 rounded-full bg-green-100`}>
-                  <Text className="text-sm font-semibold text-green-700">
-                    {item.internshipDetails?.stipend || item.benefits?.scholarshipAmount || 'Amount'}
-                  </Text>
+                  <TranslatedText 
+                    text={item.internshipDetails?.stipend || item.benefits?.scholarshipAmount || t('amount')} 
+                    className="text-sm font-semibold text-green-700" 
+                  />
                 </View>
               </TouchableOpacity>
             );
             })
           ) : (
             <View className="items-center py-12">
-              <Text className="text-gray-500 text-base">No opportunities found</Text>
+              <Text className="text-gray-500 text-base">{t('no_opportunities_found')}</Text>
             </View>
           )}
         </View>

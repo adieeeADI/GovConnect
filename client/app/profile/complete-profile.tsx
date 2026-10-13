@@ -13,6 +13,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_ENDPOINTS, getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { clearRecommendationsCache } from '../../utils/recommendations';
 import { goBackWithinApp } from '../../utils/navigation';
+import { useTranslation, translateValue } from '../../utils/i18n';
+import TranslatedText from '../../components/TranslatedText';
 
 const INCOME_RANGES = [
   { label: 'Below ₹1L', value: 50000 },
@@ -33,6 +35,7 @@ const STEPS = [
 
 export default function CompleteProfile() {
   const router = useRouter();
+  const { t, language } = useTranslation();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
@@ -265,12 +268,14 @@ export default function CompleteProfile() {
           <ArrowLeft color="#fff" size={24} strokeWidth={2} />
         </TouchableOpacity>
 
-        <Text className="text-white text-2xl font-bold mt-4">
-          {STEPS[step - 1].title}
-        </Text>
-        <Text className="text-blue-200 text-sm mt-1">
-          {STEPS[step - 1].subtitle} — fill what you know, save anytime
-        </Text>
+        <TranslatedText
+          text={STEPS[step - 1].title}
+          className="text-white text-2xl font-bold mt-4"
+        />
+        <TranslatedText
+          text={`${STEPS[step - 1].subtitle} — fill what you know, save anytime`}
+          className="text-blue-200 text-sm mt-1"
+        />
 
         {/* Clickable Step Tabs */}
         <View className="flex-row items-center justify-between mt-4 mb-2">
@@ -282,7 +287,7 @@ export default function CompleteProfile() {
               activeOpacity={0.7}
             >
               <Text className={`text-xs font-bold ${step === i + 1 ? 'text-blue-900' : 'text-white'}`}>
-                {i + 1}. {s.title}
+                {i + 1}. <TranslatedText text={s.title} />
               </Text>
             </TouchableOpacity>
           ))}
@@ -301,7 +306,7 @@ export default function CompleteProfile() {
           <>
             {/* Date of Birth */}
             <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">
-              Date of Birth
+              {t('date_of_birth')}
             </Text>
             <TouchableOpacity
               className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex-row
@@ -310,7 +315,7 @@ export default function CompleteProfile() {
               activeOpacity={0.7}
             >
               <Text className={dob ? 'text-black text-sm' : 'text-gray-400 text-sm'}>
-                {dob ? formattedDOB : 'Select your date of birth'}
+                {dob ? formattedDOB : <TranslatedText text="Select your date of birth" />}
               </Text>
               <Calendar size={18} color="#6b7280" />
             </TouchableOpacity>
@@ -330,7 +335,7 @@ export default function CompleteProfile() {
 
             {/* State */}
             <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">
-              State
+              {t('state')}
             </Text>
             <TextInput
               className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-black mb-5"
@@ -342,7 +347,7 @@ export default function CompleteProfile() {
 
             {/* Gender */}
             <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">
-              Gender
+              {t('gender')}
             </Text>
             <View className="flex-row flex-wrap mb-5">
               {GENDERS.map(g => (
@@ -353,10 +358,10 @@ export default function CompleteProfile() {
                   onPress={() => setGender(g)}
                   activeOpacity={0.7}
                 >
-                  <Text className={`text-sm font-semibold
-                    ${gender === g ? 'text-white' : 'text-gray-700'}`}>
-                    {g}
-                  </Text>
+                  <TranslatedText
+                    text={g}
+                    className={`text-sm font-semibold ${gender === g ? 'text-white' : 'text-gray-700'}`}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
@@ -367,7 +372,7 @@ export default function CompleteProfile() {
         {step === 2 && (
           <>
             <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">
-              Caste
+              {t('caste')}
             </Text>
             <TextInput
               className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-black mb-5"
@@ -378,7 +383,7 @@ export default function CompleteProfile() {
             />
 
             <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">
-              Religion
+              {t('religion')}
             </Text>
             <TextInput
               className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-black mb-5"
@@ -390,7 +395,7 @@ export default function CompleteProfile() {
 
             {/* Income Range */}
             <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">
-              Annual Family Income
+              {t('family_income')}
             </Text>
             <View className="flex-row flex-wrap mb-2">
               {INCOME_RANGES.map(range => (
@@ -401,17 +406,21 @@ export default function CompleteProfile() {
                   onPress={() => setIncome(range.value)}
                   activeOpacity={0.7}
                 >
-                  <Text className={`text-sm font-semibold
-                    ${income === range.value ? 'text-white' : 'text-gray-700'}`}>
-                    {range.label}
-                  </Text>
+                  <TranslatedText
+                    text={range.label}
+                    className={`text-sm font-semibold ${income === range.value ? 'text-white' : 'text-gray-700'}`}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
             {income > 0 && (
-              <Text className="text-green-700 text-xs mb-5">
-                ✓ {INCOME_RANGES.find(r => r.value === income)?.label} selected
-              </Text>
+              <View className="flex-row items-center mb-5">
+                <Text className="text-green-700 text-xs">✓ </Text>
+                <TranslatedText
+                  text={INCOME_RANGES.find(r => r.value === income)?.label || ''}
+                  className="text-green-700 text-xs"
+                />
+              </View>
             )}
           </>
         )}
@@ -419,9 +428,10 @@ export default function CompleteProfile() {
         {/* ── STEP 3: Career ── */}
         {step === 3 && (
           <>
-            <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">
-              I am a...
-            </Text>
+            <TranslatedText
+              text="I am a..."
+              className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2"
+            />
             <View className="flex-row flex-wrap mb-6">
               {CATEGORIES.map(c => (
                 <TouchableOpacity
@@ -431,10 +441,10 @@ export default function CompleteProfile() {
                   onPress={() => setCategory(c)}
                   activeOpacity={0.7}
                 >
-                  <Text className={`text-sm font-semibold
-                    ${category === c ? 'text-white' : 'text-gray-700'}`}>
-                    {c}
-                  </Text>
+                  <TranslatedText
+                    text={c}
+                    className={`text-sm font-semibold ${category === c ? 'text-white' : 'text-gray-700'}`}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
@@ -449,23 +459,32 @@ export default function CompleteProfile() {
               {parsingResume ? (
                 <>
                   <ActivityIndicator size="small" color="#1e40af" />
-                  <Text className="text-blue-900 font-semibold mt-2 text-sm">✨ AI Parsing Resume...</Text>
-                  <Text className="text-gray-400 text-xs mt-1">Extracting skills & career category</Text>
+                  <TranslatedText text="✨ AI Parsing Resume..." className="text-blue-900 font-semibold mt-2 text-sm" />
+                  <TranslatedText text="Extracting skills & career category" className="text-gray-400 text-xs mt-1" />
                 </>
               ) : (
                 <>
                   <Upload size={28} color="#6b7280" />
-                  <Text className="text-gray-600 font-semibold mt-2">Upload Resume</Text>
-                  <Text className="text-gray-400 text-xs mt-1">PDF, DOC up to 5MB (Auto-fills profile)</Text>
+                  <Text className="text-gray-600 font-semibold mt-2">{t('upload_resume')}</Text>
+                  <TranslatedText text="PDF, DOC up to 5MB (Auto-fills profile)" className="text-gray-400 text-xs mt-1" />
                 </>
               )}
             </TouchableOpacity>
 
             {resume && (
-              <View className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex-row items-center mb-4">
-                <Text className="text-green-700 text-sm flex-1 font-semibold" numberOfLines={1}>
+              <View className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                <Text className="text-green-700 text-sm font-semibold mb-2" numberOfLines={1}>
                   ✓ {resume} {parsedSkills.length > 0 ? `(${parsedSkills.length} AI skills extracted)` : ''}
                 </Text>
+                {parsedSkills.length > 0 && (
+                  <View className="flex-row flex-wrap mt-1">
+                    {parsedSkills.map((s, idx) => (
+                      <View key={idx} className="bg-green-200/80 rounded-full px-3 py-1 mr-1.5 mb-1.5">
+                        <TranslatedText text={s} className="text-green-900 text-xs font-bold" />
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
             )}
           </>
@@ -480,7 +499,7 @@ export default function CompleteProfile() {
             activeOpacity={0.7}
           >
             <Text className="text-gray-800 text-center font-bold text-sm">
-              {submitting ? 'Saving...' : 'Save & Exit'}
+              {submitting ? t('saving') : <TranslatedText text="Save & Exit" />}
             </Text>
           </TouchableOpacity>
 
@@ -497,7 +516,7 @@ export default function CompleteProfile() {
             activeOpacity={0.8}
           >
             <Text className="text-white text-center font-bold text-sm">
-              {step === 3 ? (submitting ? 'Saving...' : 'Save & Finish') : 'Save & Continue →'}
+              {step === 3 ? (submitting ? t('saving') : <TranslatedText text="Save & Finish" />) : <TranslatedText text="Save & Continue →" />}
             </Text>
           </TouchableOpacity>
         </View>

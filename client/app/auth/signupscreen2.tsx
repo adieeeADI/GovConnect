@@ -5,6 +5,7 @@ import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Globe } from 'lucide-react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useTranslation, translateValue } from '../../utils/i18n';
+import TranslatedText from '../../components/TranslatedText';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignUpScreen2() {
@@ -152,7 +153,7 @@ export default function SignUpScreen2() {
                 <Text className="text-white text-sm font-bold">✓</Text>
               )}
             </View>
-            <Text className="text-black text-base">{translateValue(interest, t)}</Text>
+            <TranslatedText text={interest} className="text-black text-base" />
           </TouchableOpacity>
         ))}
 

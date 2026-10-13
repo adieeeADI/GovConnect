@@ -9,6 +9,7 @@ import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
+import TranslatedText from '../../components/TranslatedText';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function SignUpScreen3() {
@@ -332,16 +333,16 @@ export default function SignUpScreen3() {
                 </Text>
               </View>
               {parsedData.category ? (
-                <Text className="text-green-800 text-xs font-bold bg-green-200/80 px-2.5 py-1 rounded-full">
-                  {parsedData.category}
-                </Text>
+                <View className="bg-green-200/80 px-2.5 py-1 rounded-full">
+                  <TranslatedText text={parsedData.category} className="text-green-800 text-xs font-bold" />
+                </View>
               ) : null}
             </View>
 
             {parsedData.education ? (
               <View className="mb-2.5">
                 <Text className="text-gray-500 text-xs font-semibold mb-0.5">{t('education')}:</Text>
-                <Text className="text-gray-900 text-sm font-bold">{parsedData.education}</Text>
+                <TranslatedText text={parsedData.education} className="text-gray-900 text-sm font-bold" />
               </View>
             ) : null}
 
@@ -353,7 +354,7 @@ export default function SignUpScreen3() {
                 <View className="flex-row flex-wrap">
                   {parsedData.skills.map((skill: string, index: number) => (
                     <View key={index} className="bg-green-200/80 rounded-full px-3 py-1 mr-1.5 mb-1.5">
-                      <Text className="text-green-900 text-xs font-bold">{skill}</Text>
+                      <TranslatedText text={skill} className="text-green-900 text-xs font-bold" />
                     </View>
                   ))}
                 </View>
@@ -368,7 +369,7 @@ export default function SignUpScreen3() {
                 <View className="flex-row flex-wrap">
                   {parsedData.interests.map((interest: string, index: number) => (
                     <View key={index} className="bg-emerald-200/80 rounded-full px-3 py-1 mr-1.5 mb-1.5">
-                      <Text className="text-emerald-900 text-xs font-bold">{interest}</Text>
+                      <TranslatedText text={interest} className="text-emerald-900 text-xs font-bold" />
                     </View>
                   ))}
                 </View>

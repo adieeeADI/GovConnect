@@ -127,7 +127,14 @@ export default function SignIn() {
         />
 
         {/* Forget Password */}
-        <TouchableOpacity activeOpacity={0.7} className="mb-8">
+        <TouchableOpacity 
+          activeOpacity={0.7} 
+          className="mb-8 self-start"
+          onPress={() => router.push({
+            pathname: '/auth/forgot-password',
+            params: { initialEmail: email.trim() }
+          })}
+        >
           <Text className="text-blue-600 text-base font-semibold">
             {t('forget_password')}
           </Text>

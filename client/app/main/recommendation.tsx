@@ -10,6 +10,7 @@ import BottomNav from './bottom';
 import { goBackWithinApp } from '../../utils/navigation';
 
 import { useTranslation } from '../../utils/i18n';
+import TranslatedText from '../../components/TranslatedText';
 
 const getMatchColor = (match: number) => {
   if (match >= 90) return 'text-green-500';
@@ -176,15 +177,15 @@ export default function Recommendation() {
       ) : error ? (
         <View className="flex-1 justify-center items-center px-6">
           <View className="bg-red-50 border-l-4 border-red-400 p-4 mb-5">
-            <Text className="text-red-900 font-semibold">Error</Text>
+            <Text className="text-red-900 font-semibold">{t('error')}</Text>
             <Text className="text-red-800">{error}</Text>
           </View>
         </View>
       ) : recommendations.length === 0 ? (
         <View className="flex-1 justify-center items-center px-6">
           <View className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-5">
-            <Text className="text-blue-900 font-semibold">No Recommendations</Text>
-            <Text className="text-blue-800">Complete your profile to get personalized recommendations.</Text>
+            <Text className="text-blue-900 font-semibold">{t('no_recommendations')}</Text>
+            <Text className="text-blue-800">{t('no_recommendations_desc')}</Text>
           </View>
         </View>
       ) : (
@@ -201,8 +202,8 @@ export default function Recommendation() {
         >
 
           <View className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-5">
-            <Text className="text-orange-900 font-semibold">✨ AI Match:</Text>
-            <Text className="text-orange-800 text-xs">Recommendations generated dynamically based on your profile skills & interests.</Text>
+            <Text className="text-orange-900 font-semibold">{t('ai_match_badge')}</Text>
+            <Text className="text-orange-800 text-xs">{t('ai_match_desc')}</Text>
           </View>
 
           {recommendations.map((item, index) => (
@@ -220,22 +221,22 @@ export default function Recommendation() {
               }}
             >
               <View className="flex-row justify-between items-start mb-1">
-                <Text className="font-bold text-lg flex-1 mr-2">{item.title}</Text>
+                <TranslatedText text={item.title} className="font-bold text-lg flex-1 mr-2" />
                 <Text className={`font-bold text-base ${getMatchColor(item.match)}`}>
                   {item.match}% {t('match_score')}
                 </Text>
               </View>
 
-              <Text className="text-gray-500 text-sm mb-2">{item.organization}</Text>
+              <TranslatedText text={item.organization} className="text-gray-500 text-sm mb-2" />
 
               <View className="flex-row items-center mb-3">
                 <MapPin size={14} color="#6b7280" />
-                <Text className="ml-1 text-gray-600 text-xs">{item.location}</Text>
+                <TranslatedText text={item.location} className="ml-1 text-gray-600 text-xs" />
               </View>
 
               <View className="bg-blue-50 rounded-xl p-3 border border-blue-100">
                 <Text className="text-blue-900 text-xs font-semibold mb-1">{t('reason')}:</Text>
-                <Text className="text-blue-800 text-xs">{item.reason}</Text>
+                <TranslatedText text={item.reason} className="text-blue-800 text-xs" />
               </View>
 
             </TouchableOpacity>

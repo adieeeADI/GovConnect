@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { getDataDetailsEndpoint } from '../../../config/api.config';
 import { useTranslation, translateValue } from '../../../utils/i18n';
 import { goBackWithinApp } from '../../../utils/navigation';
+import TranslatedText from '../../../components/TranslatedText';
 
 // In-memory cache for fast instant detail loads
 const detailsCache = new Map<string, any>();
@@ -38,10 +39,15 @@ export default function Individual() {
 
     // 1. Check exact language cache first (0ms Instant Load)
     if (detailsCache.has(cacheKey)) {
-      setData(detailsCache.get(cacheKey));
-      setLoading(false);
-      setTranslating(false);
-      return;
+      const cached = detailsCache.get(cacheKey);
+      const englishCached = detailsCache.get(englishCacheKey);
+      const isUntranslated = language !== 'en' && englishCached?.basicInfo?.title && cached?.basicInfo?.title === englishCached?.basicInfo?.title;
+      if (!isUntranslated) {
+        setData(cached);
+        setLoading(false);
+        setTranslating(false);
+        return;
+      }
     }
 
     // 2. Optimistic Instant Render: If we have English cache or existing data, show it immediately without blocking
@@ -138,16 +144,22 @@ export default function Individual() {
 
             <View className="flex-row items-start justify-between mb-4">
               <View className="flex-1">
-                <Text className="text-white text-3xl font-bold mb-2">
-                  {data.basicInfo?.title || t('opportunity')}
-                </Text>
-                <Text className="text-white text-base opacity-90">
-                  {data.basicInfo?.providerName || t('provider')}
-                </Text>
+                <TranslatedText
+                  text={data.basicInfo?.title || t('opportunity')}
+                  className="text-white text-3xl font-bold mb-2"
+                />
+                <TranslatedText
+                  text={data.basicInfo?.providerName || t('provider')}
+                  className="text-white text-base opacity-90"
+                />
                 {data.basicInfo?.department && (
-                  <Text className="text-white text-sm opacity-75 mt-1">
-                    {t('department')}: {translateValue(data.basicInfo.department, t)}
-                  </Text>
+                  <View className="flex-row items-center mt-1">
+                    <Text className="text-white text-sm opacity-75">{t('department')}: </Text>
+                    <TranslatedText
+                      text={data.basicInfo.department}
+                      className="text-white text-sm opacity-75"
+                    />
+                  </View>
                 )}
               </View>
               {data.basicInfo?.logo && (
@@ -168,23 +180,26 @@ export default function Individual() {
             <View className="flex-row flex-wrap gap-2">
               <View className="bg-white/20 rounded-full px-4 py-2 flex-row items-center">
                 <MapPin color="#ffffff" size={16} strokeWidth={2} />
-                <Text className="text-white text-sm ml-1">
-                  {translateValue(data.internshipDetails?.location?.[0] || data.basicInfo?.location, t) || t('location')}
-                </Text>
+                <TranslatedText
+                  text={data.internshipDetails?.location?.[0] || data.basicInfo?.location || t('location')}
+                  className="text-white text-sm ml-1"
+                />
               </View>
 
               <View className="bg-white/20 rounded-full px-4 py-2 flex-row items-center">
                 <Clock color="#ffffff" size={16} strokeWidth={2} />
-                <Text className="text-white text-sm ml-1">
-                  {translateValue(data.internshipDetails?.duration, t) || t('duration')}
-                </Text>
+                <TranslatedText
+                  text={data.internshipDetails?.duration || data.trainingDetails?.duration || t('duration')}
+                  className="text-white text-sm ml-1"
+                />
               </View>
 
               <View className="bg-white/20 rounded-full px-4 py-2 flex-row items-center">
                 <Wallet color="#ffffff" size={16} strokeWidth={2} />
-                <Text className="text-white text-sm ml-1">
-                  {translateValue(data.internshipDetails?.stipend, t) || t('amount')}
-                </Text>
+                <TranslatedText
+                  text={data.internshipDetails?.stipend || data.benefits?.scholarshipAmount || t('amount')}
+                  className="text-white text-sm ml-1"
+                />
               </View>
             </View>
           </View>
@@ -199,19 +214,19 @@ export default function Individual() {
                 {data.type && (
                   <View className="flex-row items-center mb-2">
                     <Text className="text-gray-700 font-semibold flex-1">{t('type')}:</Text>
-                    <Text className="text-gray-600">{translateValue(data.type, t)}</Text>
+                    <TranslatedText text={data.type} className="text-gray-600" />
                   </View>
                 )}
                 {data.internshipDetails?.mode && (
                   <View className="flex-row items-center mb-2">
                     <Text className="text-gray-700 font-semibold flex-1">{t('mode')}:</Text>
-                    <Text className="text-gray-600">{translateValue(data.internshipDetails.mode, t)}</Text>
+                    <TranslatedText text={data.internshipDetails.mode} className="text-gray-600" />
                   </View>
                 )}
                 {data.applicationDetails?.applicationMode && (
                   <View className="flex-row items-center mb-2">
                     <Text className="text-gray-700 font-semibold flex-1">{t('application_mode')}:</Text>
-                    <Text className="text-gray-600">{translateValue(data.applicationDetails.applicationMode, t)}</Text>
+                    <TranslatedText text={data.applicationDetails.applicationMode} className="text-gray-600" />
                   </View>
                 )}
                 {data.internshipDetails?.numberOfSeats && (
@@ -227,9 +242,10 @@ export default function Individual() {
             <Text className="text-black text-xl font-bold mb-3">
               {t('about_opportunity')}
             </Text>
-            <Text className="text-gray-600 text-base leading-6 mb-6">
-              {data.programDetails?.about || data.basicInfo?.shortDescription || t('no_description')}
-            </Text>
+            <TranslatedText
+              text={data.programDetails?.about || data.basicInfo?.shortDescription || t('no_description')}
+              className="text-gray-600 text-base leading-6 mb-6"
+            />
 
             {/* SCHEME-SPECIFIC SECTIONS */}
             {data.type === 'Scheme' && (
@@ -250,7 +266,7 @@ export default function Individual() {
                       {data.schemeDetails.benefits.map((benefit: string, index: number) => (
                         <View key={index} className="flex-row items-start mb-3">
                           <Gift color="#10b981" size={18} strokeWidth={2} />
-                          <Text className="text-gray-700 text-base ml-2 flex-1">{benefit}</Text>
+                          <TranslatedText text={benefit} className="text-gray-700 text-base ml-2 flex-1" />
                         </View>
                       ))}
                     </View>
@@ -261,7 +277,7 @@ export default function Individual() {
                 {data.schemeDetails?.benefitType && (
                   <View className="bg-blue-50 rounded-2xl p-4 mb-6">
                     <Text className="text-gray-700 font-semibold mb-2">{t('benefit_type')}:</Text>
-                    <Text className="text-gray-600 text-base">{data.schemeDetails.benefitType}</Text>
+                    <TranslatedText text={data.schemeDetails.benefitType} className="text-gray-600 text-base" />
                   </View>
                 )}
 
@@ -352,7 +368,7 @@ export default function Individual() {
                       {data.eligibility.specialCriteria.map((criteria: string, index: number) => (
                         <View key={index} className="flex-row items-start mb-2">
                           <Check color="#f59e0b" size={20} strokeWidth={2} />
-                          <Text className="text-gray-700 text-base ml-3 flex-1">{criteria}</Text>
+                          <TranslatedText text={criteria} className="text-gray-700 text-base ml-3 flex-1" />
                         </View>
                       ))}
                     </View>
@@ -378,7 +394,7 @@ export default function Individual() {
                           <View className="bg-indigo-600 rounded-full w-7 h-7 items-center justify-center mr-3 mt-1">
                             <Text className="text-white font-bold text-sm">{index + 1}</Text>
                           </View>
-                          <Text className="text-gray-700 text-base ml-2 flex-1">{step}</Text>
+                          <TranslatedText text={step} className="text-gray-700 text-base ml-2 flex-1" />
                         </View>
                       ))}
                     </View>
@@ -395,7 +411,7 @@ export default function Individual() {
                       {data.documentsRequired.map((doc: string, index: number) => (
                         <View key={index} className="flex-row items-start mb-2">
                           <Check color="#10b981" size={20} strokeWidth={2} />
-                          <Text className="text-gray-700 text-base ml-3 flex-1">{doc}</Text>
+                          <TranslatedText text={doc} className="text-gray-700 text-base ml-3 flex-1" />
                         </View>
                       ))}
                     </View>
@@ -426,7 +442,7 @@ export default function Individual() {
                       {t('exclusions_notes')}
                     </Text>
                     <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-                      <Text className="text-gray-700 text-base leading-6">{data.additionalInfo.exclusions}</Text>
+                      <TranslatedText text={data.additionalInfo.exclusions} className="text-gray-700 text-base leading-6" />
                     </View>
                   </>
                 )}
@@ -437,7 +453,7 @@ export default function Individual() {
                     {data.additionalInfo.ministry && (
                       <View className="mb-3">
                         <Text className="text-gray-700 font-semibold">{t('ministry_dept')}:</Text>
-                        <Text className="text-gray-600 text-base">{data.additionalInfo.ministry}</Text>
+                        <TranslatedText text={data.additionalInfo.ministry} className="text-gray-600 text-base" />
                       </View>
                     )}
                     {data.additionalInfo.sourceUrl && (
@@ -462,12 +478,16 @@ export default function Individual() {
                           className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
                         >
                           <View className="p-4">
-                            <Text className="text-gray-900 font-semibold text-base mb-2">
-                              {t('q_prefix')}: {item.question}
-                            </Text>
-                            <Text className="text-gray-600 text-base leading-6">
-                              {t('a_prefix')}: {item.answer}
-                            </Text>
+                            <TranslatedText
+                              text={item.question}
+                              prefix={`${t('q_prefix')}: `}
+                              className="text-gray-900 font-semibold text-base mb-2"
+                            />
+                            <TranslatedText
+                              text={item.answer}
+                              prefix={`${t('a_prefix')}: `}
+                              className="text-gray-600 text-base leading-6"
+                            />
                           </View>
                         </View>
                       ))}
@@ -487,7 +507,7 @@ export default function Individual() {
                   {data.benefits.scholarshipAmount && (
                     <View className="mb-3">
                       <Text className="text-gray-700 font-semibold">{t('amount')}:</Text>
-                      <Text className="text-gray-600 text-base">{translateValue(data.benefits.scholarshipAmount, t)}</Text>
+                      <TranslatedText text={data.benefits.scholarshipAmount} className="text-gray-600 text-base" />
                     </View>
                   )}
                   {data.benefits.covers && data.benefits.covers.length > 0 && (
@@ -496,12 +516,37 @@ export default function Individual() {
                       {data.benefits.covers.map((cover: string, index: number) => (
                         <View key={index} className="flex-row items-start mb-2">
                           <Check color="#10b981" size={16} strokeWidth={2} />
-                          <Text className="text-gray-600 text-base ml-2 flex-1">{cover}</Text>
+                          <TranslatedText text={cover} className="text-gray-600 text-base ml-2 flex-1" />
                         </View>
                       ))}
                     </View>
                   )}
                 </View>
+              </>
+            )}
+
+            {/* TRAINING-SPECIFIC SECTIONS */}
+            {(data.type === 'Training' || data.trainingDetails) && (
+              <>
+                {data.trainingDetails?.certificate && (
+                  <View className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+                    <Text className="text-gray-700 font-semibold mb-1">
+                      {t('certificate') || 'Certificate'}:
+                    </Text>
+                    <TranslatedText text={data.trainingDetails.certificate} className="text-blue-900 text-base font-bold" />
+                  </View>
+                )}
+                {data.programDetails?.curriculum && (
+                  <>
+                    <Text className="text-black text-xl font-bold mb-3">
+                      {t('curriculum') || 'Curriculum / Syllabus'}
+                    </Text>
+                    <TranslatedText
+                      text={data.programDetails.curriculum}
+                      className="text-gray-600 text-base leading-6 mb-6"
+                    />
+                  </>
+                )}
               </>
             )}
 
@@ -511,9 +556,10 @@ export default function Individual() {
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('key_highlights')}
                 </Text>
-                <Text className="text-gray-600 text-base leading-6 mb-6">
-                  {data.programDetails.perks}
-                </Text>
+                <TranslatedText
+                  text={data.programDetails.perks}
+                  className="text-gray-600 text-base leading-6 mb-6"
+                />
               </>
             )}
 
@@ -630,9 +676,10 @@ export default function Individual() {
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('selection_process')}
                 </Text>
-                <Text className="text-gray-600 text-base leading-6 mb-6">
-                  {data.applicationDetails?.selectionProcess || data.additionalInfo?.selectionProcess}
-                </Text>
+                <TranslatedText
+                  text={data.applicationDetails?.selectionProcess || data.additionalInfo?.selectionProcess}
+                  className="text-gray-600 text-base leading-6 mb-6"
+                />
               </>
             )}
 
@@ -646,7 +693,7 @@ export default function Individual() {
                   {data.applicationDetails.documentsRequired.map((doc: string, index: number) => (
                     <View key={index} className="flex-row items-start mb-2">
                       <Check color="#10b981" size={20} strokeWidth={2} />
-                      <Text className="text-gray-700 text-base ml-3 flex-1">{doc}</Text>
+                      <TranslatedText text={doc} className="text-gray-700 text-base ml-3 flex-1" />
                     </View>
                   ))}
                 </View>
@@ -659,9 +706,10 @@ export default function Individual() {
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('renewal_policy')}
                 </Text>
-                <Text className="text-gray-600 text-base leading-6 mb-6">
-                  {data.additionalInfo.renewalPolicy}
-                </Text>
+                <TranslatedText
+                  text={data.additionalInfo.renewalPolicy}
+                  className="text-gray-600 text-base leading-6 mb-6"
+                />
               </>
             )}
 
@@ -671,9 +719,10 @@ export default function Individual() {
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('who_can_apply')}
                 </Text>
-                <Text className="text-gray-600 text-base leading-6 mb-6">
-                  {data.programDetails.whoCanApply}
-                </Text>
+                <TranslatedText
+                  text={data.programDetails.whoCanApply}
+                  className="text-gray-600 text-base leading-6 mb-6"
+                />
               </>
             )}
 
@@ -683,9 +732,10 @@ export default function Individual() {
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('terms_conditions')}
                 </Text>
-                <Text className="text-gray-600 text-base leading-6 mb-6">
-                  {data.programDetails.terms}
-                </Text>
+                <TranslatedText
+                  text={data.programDetails.terms}
+                  className="text-gray-600 text-base leading-6 mb-6"
+                />
               </>
             )}
 
@@ -702,12 +752,16 @@ export default function Individual() {
                       className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
                     >
                       <View className="p-4">
-                        <Text className="text-gray-900 font-semibold text-base mb-2">
-                          {t('q_prefix')}: {item.question}
-                        </Text>
-                        <Text className="text-gray-600 text-base leading-6">
-                          {t('a_prefix')}: {item.answer}
-                        </Text>
+                        <TranslatedText
+                          text={item.question}
+                          prefix={`${t('q_prefix')}: `}
+                          className="text-gray-900 font-semibold text-base mb-2"
+                        />
+                        <TranslatedText
+                          text={item.answer}
+                          prefix={`${t('a_prefix')}: `}
+                          className="text-gray-600 text-base leading-6"
+                        />
                       </View>
                     </View>
                   ))}

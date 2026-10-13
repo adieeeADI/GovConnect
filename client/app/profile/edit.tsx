@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_ENDPOINTS, getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
+import TranslatedText from '../../components/TranslatedText';
 import { clearRecommendationsCache } from '../../utils/recommendations';
 import { goBackWithinApp } from '../../utils/navigation';
 
@@ -59,9 +60,10 @@ function ChipSelector({
           onPress={() => onChange(opt)}
           activeOpacity={0.7}
         >
-          <Text className={`text-sm font-semibold ${value === opt ? 'text-white' : 'text-gray-700'}`}>
-            {opt}
-          </Text>
+          <TranslatedText
+            text={opt}
+            className={`text-sm font-semibold ${value === opt ? 'text-white' : 'text-gray-700'}`}
+          />
         </TouchableOpacity>
       ))}
     </View>
@@ -88,7 +90,7 @@ function TagInput({ tags, onChange, placeholder, color = 'blue' }: {
       <View className="flex-row flex-wrap mb-2">
         {tags.map(t => (
           <View key={t} className={`${bg} flex-row items-center rounded-full px-3 py-1 mr-2 mb-2`}>
-            <Text className={`${textColor} text-sm font-semibold mr-1`}>{t}</Text>
+            <TranslatedText text={t} className={`${textColor} text-sm font-semibold mr-1`} />
             <TouchableOpacity onPress={() => remove(t)}>
               <X size={12} color={color === 'blue' ? '#1e3a8a' : '#c2410c'} />
             </TouchableOpacity>
@@ -239,7 +241,7 @@ export default function EditProfile() {
           <ArrowLeft color="#fff" size={24} strokeWidth={2} />
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold mt-4">{t('edit_profile')}</Text>
-        <Text className="text-blue-200 text-sm mt-1">Fill any fields you want to update</Text>
+        <TranslatedText text="Fill any fields you want to update" className="text-blue-200 text-sm mt-1" />
       </View>
 
       <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
@@ -337,15 +339,19 @@ export default function EditProfile() {
                 onPress={() => setFamilyIncome(range.value)}
                 activeOpacity={0.7}
               >
-                <Text className={`text-sm font-semibold
-                  ${familyIncome === range.value ? 'text-white' : 'text-gray-700'}`}>
-                  {range.label}
-                </Text>
+                <TranslatedText
+                  text={range.label}
+                  className={`text-sm font-semibold
+                    ${familyIncome === range.value ? 'text-white' : 'text-gray-700'}`}
+                />
               </TouchableOpacity>
             ))}
           </View>
           {familyIncome > 0 && (
-            <Text className="text-green-700 text-xs mt-1">Selected: {selectedIncomeLabel}</Text>
+            <View className="flex-row items-center mt-1">
+              <Text className="text-green-700 text-xs">Selected: </Text>
+              <TranslatedText text={selectedIncomeLabel} className="text-green-700 text-xs font-semibold" />
+            </View>
           )}
         </Field>
 

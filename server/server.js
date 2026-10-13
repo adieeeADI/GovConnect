@@ -19,6 +19,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/recommend", require("./routes/recommend"));
 app.use("/api/user", require("./routes/user"));
 app.use("/api/resume", require("./routes/resume"));
+app.use("/api/translate", require("./routes/translate"));
 
 // Test route
 app.get("/", (req, res) => {

@@ -11,6 +11,7 @@ import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation, LANGUAGES } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 import { goBackWithinApp } from '../../utils/navigation';
+import TranslatedText from '../../components/TranslatedText';
 
 function getCompletionPercentage(data: Record<string, any>): number {
   const checks = [
@@ -133,9 +134,10 @@ export default function Profile() {
               <Text className="text-white text-2xl font-bold mb-1">
                 {user.fullName || t('guest')}
               </Text>
-              <Text className="text-blue-200 text-sm">
-                {user.location || 'Location not set'}
-              </Text>
+              <TranslatedText 
+                text={user.location || 'Location not set'} 
+                className="text-blue-200 text-sm" 
+              />
             </View>
           </View>
           <TouchableOpacity
@@ -184,7 +186,7 @@ export default function Profile() {
             </View>
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1">{t('location')}</Text>
-              <Text className="text-black text-sm font-semibold">{user.location || '—'}</Text>
+              <TranslatedText text={user.location || '—'} className="text-black text-sm font-semibold" />
             </View>
           </View>
         </View>
@@ -209,7 +211,7 @@ export default function Profile() {
 
               <View className="bg-gray-100 rounded-2xl p-4 mb-4">
                 <Text className="text-gray-500 text-xs mb-2">{t('education')}</Text>
-                <Text className="text-black text-base font-semibold">{user.education || '—'}</Text>
+                <TranslatedText text={user.education || '—'} className="text-black text-base font-semibold" />
               </View>
 
               <Text className="text-gray-700 text-sm font-semibold mb-3">{t('skills')}</Text>
@@ -217,7 +219,7 @@ export default function Profile() {
                 <View className="flex-row flex-wrap mb-4">
                   {userSkills.map((skill: string, idx: number) => (
                     <View key={`${skill}-${idx}`} className="bg-blue-100 rounded-full px-4 py-2 mr-2 mb-2">
-                      <Text className="text-blue-900 text-sm font-semibold">{skill}</Text>
+                      <TranslatedText text={skill} className="text-blue-900 text-sm font-semibold" />
                     </View>
                   ))}
                 </View>
@@ -242,7 +244,7 @@ export default function Profile() {
                   <View className="flex-row flex-wrap">
                     {userInterests.map((interest: string, idx: number) => (
                       <View key={`${interest}-${idx}`} className="bg-orange-100 rounded-full px-4 py-2 mr-2 mb-2">
-                        <Text className="text-orange-700 text-sm font-semibold">{interest}</Text>
+                        <TranslatedText text={interest} className="text-orange-700 text-sm font-semibold" />
                       </View>
                     ))}
                   </View>

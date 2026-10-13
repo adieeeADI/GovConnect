@@ -51,14 +51,14 @@ export default function ProfileCompleteBanner({
         </View>
 
         <Text className="text-white text-xs mt-1">
-          {completionPercentage}% Complete
+          {completionPercentage}% {t('percent_complete')}
         </Text>
       </View>
 
       {/* CTA */}
       <View className="flex-row items-center justify-between">
         <Text className="text-white font-semibold">
-          {t('tap_complete_profile')}
+          {t('complete_now')}
         </Text>
         <ArrowRight color="#ffffff" size={20} strokeWidth={2} />
       </View>

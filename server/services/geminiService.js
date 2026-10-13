@@ -3,6 +3,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
   process.env.GEMINI_MODEL,
   "gemini-3.6-flash",
 ].filter((m, i, self) => m && self.indexOf(m) === i);

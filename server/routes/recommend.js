@@ -8,6 +8,7 @@ const Training = require("../models/Training");
 const Scheme = require("../models/Scheme");
 
 const { rankOpportunities } = require("../services/geminiService");
+const { translateTexts } = require("../services/translateService");
 
 router.get("/:userId", async (req, res) => {
   try {
@@ -112,6 +113,36 @@ router.get("/:userId", async (req, res) => {
 
     // Sort by match score
     recommendations.sort((a, b) => b.match - a.match);
+
+    // If requested language is not English, translate card fields
+    if (requestedLang && requestedLang !== 'en') {
+      const textsToTranslate = [];
+      recommendations.forEach(r => {
+        if (r.title) textsToTranslate.push(r.title);
+        if (r.organization) textsToTranslate.push(r.organization);
+        if (r.location) textsToTranslate.push(r.location);
+        if (r.reason) textsToTranslate.push(r.reason);
+      });
+      const transMap = await translateTexts(textsToTranslate, requestedLang);
+      const getTrans = (text) => {
+        if (!text || typeof text !== 'string') return text;
+        if (transMap[text]) return transMap[text];
+        const trimmed = text.trim();
+        if (transMap[trimmed]) return transMap[trimmed];
+        const lower = trimmed.toLowerCase();
+        for (const [k, v] of Object.entries(transMap)) {
+          if (k.trim().toLowerCase() === lower && v) return v;
+        }
+        return text;
+      };
+      recommendations = recommendations.map(r => ({
+        ...r,
+        title: getTrans(r.title),
+        organization: getTrans(r.organization),
+        location: getTrans(r.location),
+        reason: getTrans(r.reason)
+      }));
+    }
 
     res.json(recommendations);
 

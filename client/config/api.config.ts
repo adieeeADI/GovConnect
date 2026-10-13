@@ -44,6 +44,9 @@ export const API_ENDPOINTS = {
   SIGNUP: `${API_BASE_URL}/api/auth/signup`,
   SEND_OTP: `${API_BASE_URL}/api/auth/send-otp`,
   VERIFY_OTP: `${API_BASE_URL}/api/auth/verify-otp`,
+  FORGOT_PASSWORD: `${API_BASE_URL}/api/auth/forgot-password`,
+  VERIFY_RESET_OTP: `${API_BASE_URL}/api/auth/verify-reset-otp`,
+  RESET_PASSWORD: `${API_BASE_URL}/api/auth/reset-password`,
   COMPLETE_PROFILE: `${API_BASE_URL}/api/user/complete-profile`,
   PARSE_RESUME: `${API_BASE_URL}/api/resume/parse`,
 
@@ -55,6 +58,14 @@ export const API_ENDPOINTS = {
 
   // Recommendation endpoint (userId will be appended)
   RECOMMEND: `${API_BASE_URL}/api/recommend`,
+
+  // Translation endpoint
+  TRANSLATE: `${API_BASE_URL}/api/translate`,
+};
+
+export const getDataCategoryEndpoint = (category: string, lang?: string) => {
+  const url = `${API_BASE_URL}/api/data/${category}`;
+  return lang && lang !== 'en' ? `${url}?lang=${encodeURIComponent(lang)}` : url;
 };
 
 // Helper function to get user endpoint
