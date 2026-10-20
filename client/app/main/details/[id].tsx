@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler, Linking, Alert } from 'react-native';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getDataDetailsEndpoint } from '../../../config/api.config';
 import { useTranslation, translateValue } from '../../../utils/i18n';
 import { goBackWithinApp } from '../../../utils/navigation';
@@ -94,18 +94,14 @@ export default function Individual() {
   }, [params?.id, params?.category, language]);
 
   // Prevent back navigation
-  useFocusEffect(
-    useCallback(() => {
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        () => {
-          goBackWithinApp(router);
-          return true;
-        }
-      );
-      return () => backHandler.remove();
-    }, [router])
-  );
+  useEffect(() => {
+    const backAction = () => {
+      goBackWithinApp(router);
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [router]);
 
   const handleOfficialPortal = async () => {
     const url = data?.basicInfo?.applicationLink?.trim();

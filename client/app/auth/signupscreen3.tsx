@@ -205,10 +205,10 @@ export default function SignUpScreen3() {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            fullName: params.fullName || activeParsedData?.fullName || "",
-            email: params.email,
-            phone: params.phone || activeParsedData?.phone || "",
-            location: params.location || activeParsedData?.location || "",
+            fullName: String(params.fullName || activeParsedData?.fullName || "").trim(),
+            email: String(params.email || "").trim().toLowerCase(),
+            phone: String(params.phone || activeParsedData?.phone || "").trim().replace(/\D/g, '').slice(-10),
+            location: String(params.location || activeParsedData?.location || "").trim(),
             password: params.password,
             education: params.education || activeParsedData?.education || "",
             skills: combinedSkills,

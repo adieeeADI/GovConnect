@@ -3,6 +3,19 @@ const User = require("../models/User");
 
 const router = express.Router();
 
+function normalizePhone(phone) {
+  if (!phone) return "";
+  let digits = String(phone).replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) {
+    digits = digits.slice(2);
+  } else if (digits.length === 11 && digits.startsWith("0")) {
+    digits = digits.slice(1);
+  } else if (digits.length > 10) {
+    digits = digits.slice(-10);
+  }
+  return digits;
+}
+
 /* ===================== COMPLETE / UPDATE PROFILE ===================== */
 router.post("/complete-profile", async (req, res) => {
   try {
@@ -17,8 +30,20 @@ router.post("/complete-profile", async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (fullName !== undefined) user.fullName = fullName;
-    if (phone !== undefined) user.phone = phone;
+    if (fullName !== undefined) user.fullName = String(fullName).trim();
+    if (phone !== undefined) {
+      const cleanPhone = normalizePhone(phone);
+      if (cleanPhone && cleanPhone !== user.phone) {
+        if (cleanPhone.length !== 10) {
+          return res.status(400).json({ message: "Please provide a valid 10-digit mobile number" });
+        }
+        const existing = await User.findOne({ phone: cleanPhone, _id: { $ne: user._id } });
+        if (existing) {
+          return res.status(400).json({ message: "This phone number is already registered to another account" });
+        }
+        user.phone = cleanPhone;
+      }
+    }
     if (location !== undefined) user.location = location;
     if (education !== undefined) user.education = education;
 

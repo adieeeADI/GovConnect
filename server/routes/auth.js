@@ -4,6 +4,80 @@ const User = require("../models/User");
 
 const router = express.Router();
 
+/* ===================== HELPERS ===================== */
+function normalizeEmail(email) {
+  if (!email) return "";
+  return String(email).trim().toLowerCase();
+}
+
+function normalizePhone(phone) {
+  if (!phone) return "";
+  let digits = String(phone).replace(/\D/g, "");
+  // Support Indian numbers with country code (+91) or leading 0
+  if (digits.length === 12 && digits.startsWith("91")) {
+    digits = digits.slice(2);
+  } else if (digits.length === 11 && digits.startsWith("0")) {
+    digits = digits.slice(1);
+  } else if (digits.length > 10) {
+    digits = digits.slice(-10);
+  }
+  return digits;
+}
+
+/* ===================== CHECK EMAIL & PHONE AVAILABILITY ===================== */
+router.post("/check-availability", async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    const cleanEmail = normalizeEmail(email);
+    const cleanPhone = normalizePhone(phone);
+
+    let emailExists = false;
+    let phoneExists = false;
+
+    if (cleanEmail) {
+      const userWithEmail = await User.findOne({ email: cleanEmail });
+      if (userWithEmail) emailExists = true;
+    }
+
+    if (cleanPhone) {
+      const userWithPhone = await User.findOne({ phone: cleanPhone });
+      if (userWithPhone) phoneExists = true;
+    }
+
+    if (emailExists && phoneExists) {
+      return res.status(409).json({
+        available: false,
+        field: "both",
+        message: "Both this email and phone number are already registered. Please sign in instead."
+      });
+    }
+
+    if (emailExists) {
+      return res.status(409).json({
+        available: false,
+        field: "email",
+        message: "This email is already registered. Please sign in or use another email."
+      });
+    }
+
+    if (phoneExists) {
+      return res.status(409).json({
+        available: false,
+        field: "phone",
+        message: "This phone number is already registered. Please sign in or use another phone number."
+      });
+    }
+
+    return res.status(200).json({
+      available: true,
+      message: "Email and phone are available"
+    });
+  } catch (err) {
+    console.error("Error in /check-availability:", err);
+    return res.status(500).json({ message: "Server error checking availability", error: err.message });
+  }
+});
+
 /* ===================== SIGNUP ===================== */
 router.post("/signup", async (req, res) => {
   try {
@@ -22,17 +96,36 @@ router.post("/signup", async (req, res) => {
       forgeryWarning
     } = req.body;
 
-    if (!fullName || !email || !password) {
-      return res.status(400).json({ message: "Required fields missing" });
+    const cleanEmail = normalizeEmail(email);
+    const cleanPhone = normalizePhone(phone);
+
+    if (!fullName || !cleanEmail || !cleanPhone || !password) {
+      return res.status(400).json({ message: "Full name, email, phone number, and password are required" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({ message: "Please enter a valid 10-digit mobile number" });
     }
 
     if (!agreedToTerms) {
       return res.status(400).json({ message: "You must agree to terms" });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+    // Check unique email
+    const existingUserByEmail = await User.findOne({ email: cleanEmail });
+    if (existingUserByEmail) {
+      return res.status(400).json({ message: "Email is already registered. Please sign in or use another email." });
+    }
+
+    // Check unique phone
+    const existingUserByPhone = await User.findOne({ phone: cleanPhone });
+    if (existingUserByPhone) {
+      return res.status(400).json({ message: "Phone number is already registered. Please sign in or use another phone number." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,10 +147,10 @@ router.post("/signup", async (req, res) => {
     }
 
     const user = new User({
-      fullName,
-      email,
-      phone,
-      location,
+      fullName: String(fullName).trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      location: String(location || "").trim(),
       password: hashedPassword,
       education,
       skills: parsedSkills,
@@ -88,7 +181,18 @@ router.post("/signup", async (req, res) => {
       (checks.filter(Boolean).length / checks.length) * 100
     );
 
-    await user.save();
+    try {
+      await user.save();
+    } catch (saveErr) {
+      if (saveErr.code === 11000) {
+        const dupKey = Object.keys(saveErr.keyPattern || {})[0];
+        if (dupKey === "phone") {
+          return res.status(400).json({ message: "Phone number is already registered. Please use another phone number." });
+        }
+        return res.status(400).json({ message: "Email is already registered. Please use another email." });
+      }
+      throw saveErr;
+    }
 
     res.status(201).json({
       message: "User registered successfully",
@@ -124,7 +228,8 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = normalizeEmail(email);
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -254,9 +359,9 @@ router.post("/send-otp", async (req, res) => {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    const cleanPhone = String(phone).replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      return res.status(400).json({ message: "Invalid phone number format" });
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return res.status(400).json({ message: "Invalid 10-digit phone number format" });
     }
 
     // If purpose is not explicitly "signup", verify user account exists
@@ -298,7 +403,7 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "Phone number and OTP are required" });
     }
 
-    const cleanPhone = String(phone).replace(/\D/g, "");
+    const cleanPhone = normalizePhone(phone);
     const cleanOtp = String(otp).trim();
 
     const storedData = otpStore.get(cleanPhone);
@@ -357,18 +462,19 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ message: "Please provide your registered email or phone number" });
     }
 
-    const cleanPhone = target.replace(/\D/g, "");
+    const cleanEmail = normalizeEmail(target);
+    const cleanPhone = normalizePhone(target);
     let user = null;
 
     if (target.includes("@")) {
-      user = await User.findOne({ email: target.toLowerCase() });
-    } else if (cleanPhone.length >= 10) {
+      user = await User.findOne({ email: cleanEmail });
+    } else if (cleanPhone && cleanPhone.length === 10) {
       user = await User.findOne({ phone: cleanPhone });
     } else {
       user = await User.findOne({
         $or: [
-          { email: target.toLowerCase() },
-          { phone: target }
+          { email: cleanEmail },
+          { phone: cleanPhone || target }
         ]
       });
     }
@@ -384,7 +490,7 @@ router.post("/forgot-password", async (req, res) => {
     otpStore.set(`reset_${lookupKey}`, { otp: generatedOtp, expiresAt, userId: user._id.toString() });
 
     if (user.phone) {
-      const cleanUserPhone = user.phone.replace(/\D/g, "");
+      const cleanUserPhone = normalizePhone(user.phone);
       otpStore.set(`reset_${cleanUserPhone}`, { otp: generatedOtp, expiresAt, userId: user._id.toString() });
       await sendSmsNotification(cleanUserPhone, generatedOtp);
     }
@@ -414,10 +520,10 @@ router.post("/verify-reset-otp", async (req, res) => {
     }
 
     const clean = String(identifier).trim().toLowerCase();
-    const cleanPhone = clean.replace(/\D/g, "");
+    const cleanPhone = normalizePhone(clean);
     const cleanOtp = String(otp).trim();
 
-    const storedData = otpStore.get(`reset_${clean}`) || (cleanPhone.length >= 10 ? otpStore.get(`reset_${cleanPhone}`) : null);
+    const storedData = otpStore.get(`reset_${clean}`) || (cleanPhone ? otpStore.get(`reset_${cleanPhone}`) : null);
 
     const isTestOtp = cleanOtp === "123456";
     const isValid = (storedData && storedData.otp === cleanOtp && Date.now() < storedData.expiresAt) || isTestOtp;
@@ -451,10 +557,10 @@ router.post("/reset-password", async (req, res) => {
     }
 
     const clean = String(identifier).trim().toLowerCase();
-    const cleanPhone = clean.replace(/\D/g, "");
+    const cleanPhone = normalizePhone(clean);
     const cleanOtp = String(otp).trim();
 
-    const storedData = otpStore.get(`reset_${clean}`) || (cleanPhone.length >= 10 ? otpStore.get(`reset_${cleanPhone}`) : null);
+    const storedData = otpStore.get(`reset_${clean}`) || (cleanPhone ? otpStore.get(`reset_${cleanPhone}`) : null);
 
     const isTestOtp = cleanOtp === "123456";
     const isValid = (storedData && storedData.otp === cleanOtp && Date.now() < storedData.expiresAt) || isTestOtp;
@@ -470,11 +576,11 @@ router.post("/reset-password", async (req, res) => {
     if (!user) {
       if (clean.includes("@")) {
         user = await User.findOne({ email: clean });
-      } else if (cleanPhone.length >= 10) {
+      } else if (cleanPhone && cleanPhone.length === 10) {
         user = await User.findOne({ phone: cleanPhone });
       } else {
         user = await User.findOne({
-          $or: [{ email: clean }, { phone: clean }]
+          $or: [{ email: clean }, { phone: cleanPhone || clean }]
         });
       }
     }

@@ -73,10 +73,99 @@ async function translateListItems(items, targetLang) {
   });
 }
 
+const STATE_CITY_MAP = {
+  'maharashtra': ['nashik', 'mumbai', 'pune', 'nagpur', 'aurangabad', 'thane', 'navi mumbai'],
+  'karnataka': ['bangalore', 'bengaluru', 'mysore', 'hubli', 'mangalore'],
+  'telangana': ['hyderabad', 'secunderabad', 'warangal'],
+  'andhra pradesh': ['guntur', 'visakapatanam', 'visakhapatnam', 'vijayawada', 'tirupati'],
+  'delhi': ['delhi', 'new delhi', 'ncr'],
+  'uttar pradesh': ['lucknow', 'kanpur', 'noida', 'varanasi', 'agra', 'ghaziabad', 'prayagraj'],
+  'tamil nadu': ['chennai', 'coimbatore', 'madurai', 'trichy', 'salem'],
+  'gujarat': ['ahmedabad', 'surat', 'vadodara', 'gandhinagar', 'rajkot'],
+  'west bengal': ['kolkata', 'howrah', 'durgapur', 'siliguri'],
+  'rajasthan': ['jaipur', 'jodhpur', 'udaipur', 'kota'],
+  'kerala': ['kochi', 'thiruvananthapuram', 'kozhikode'],
+  'madhya pradesh': ['bhopal', 'indore', 'gwalior', 'jabalpur'],
+  'punjab': ['chandigarh', 'ludhiana', 'amritsar', 'jalandhar'],
+  'haryana': ['gurugram', 'gurgaon', 'faridabad', 'panipat'],
+  'bihar': ['patna', 'gaya', 'muzaffarpur'],
+  'odisha': ['bhubaneswar', 'cuttack'],
+  'assam': ['guwahati', 'silchar'],
+  'manipur': ['imphal'],
+  'nagaland': ['kohima', 'dimapur'],
+};
+
+function filterDataItems(items, query) {
+  if (!items || !items.length) return items;
+  let result = items;
+
+  if (query.mode) {
+    const targetMode = query.mode.toLowerCase();
+    if (targetMode === 'online') {
+      result = result.filter(item => {
+        const modeStr = (item.internshipDetails?.mode || item.programDetails?.mode || item.schemeDetails?.mode || item.trainingDetails?.mode || item.applicationDetails?.applicationMode || item.applicationProcess?.applicationMode || '').toLowerCase();
+        const locStr = (item.internshipDetails?.location || item.trainingDetails?.location || []).join(' ').toLowerCase();
+        return modeStr.includes('online') || modeStr.includes('virtual') || modeStr.includes('remote') || modeStr.includes('form-only') || locStr.includes('pan india') || locStr.includes('remote');
+      });
+    } else if (targetMode === 'offline') {
+      result = result.filter(item => {
+        const modeStr = (item.internshipDetails?.mode || item.programDetails?.mode || item.schemeDetails?.mode || item.trainingDetails?.mode || item.applicationDetails?.applicationMode || item.applicationProcess?.applicationMode || '').toLowerCase();
+        const locStr = (item.internshipDetails?.location || item.trainingDetails?.location || []).join(' ').toLowerCase();
+        if (modeStr.includes('offline') || modeStr.includes('in-office') || modeStr.includes('classroom') || modeStr.includes('full time')) return true;
+        if (locStr && !locStr.includes('remote') && !locStr.includes('pan india') && locStr.trim().length > 0) return true;
+        return false;
+      });
+    }
+  }
+
+  if (query.education && query.education.toLowerCase() !== 'all') {
+    const edu = query.education.toLowerCase();
+    result = result.filter(item => {
+      const levels = (item.eligibility?.educationLevels || []).map(l => String(l).toLowerCase());
+      const minEdu = String(item.eligibility?.minimumEducation || '').toLowerCase();
+      const streams = (item.eligibility?.streamsAllowed || []).map(s => String(s).toLowerCase());
+      const allEduStr = [...levels, minEdu, ...streams].join(' ');
+      if (!allEduStr.trim()) return true;
+
+      if (edu === '10th') return /class\s*(9|10|1-12|9-12|9 to 12)|10th|matric|secondary|school/.test(allEduStr);
+      if (edu === '12th') return /class\s*(11|12|11-12|1-12)|12th|intermediate|senior\s*secondary|higher\s*secondary/.test(allEduStr);
+      if (edu === 'diploma') return /diploma|polytechnic|iti/.test(allEduStr);
+      if (edu === 'ug') return /\bug\b|undergrad|bachelor|b\.tech|graduate|degree|medical|engineering/.test(allEduStr);
+      if (edu === 'pg') return /\bpg\b|postgrad|post-grad|master|ph\.?d/.test(allEduStr);
+      return true;
+    });
+  }
+
+  if (query.state && query.state.toLowerCase() !== 'all') {
+    const targetState = query.state.toLowerCase();
+    result = result.filter(item => {
+      const statesEligible = (item.eligibility?.statesEligible || []).map(s => String(s).toLowerCase());
+      const locList = (item.internshipDetails?.location || item.trainingDetails?.location || []).map(l => String(l).toLowerCase());
+      const provider = String(item.basicInfo?.providerName || '').toLowerCase();
+      const department = String(item.basicInfo?.department || '').toLowerCase();
+      const title = String(item.basicInfo?.title || '').toLowerCase();
+
+      if (targetState === 'all india') {
+        return statesEligible.includes('all india') || statesEligible.includes('all') || locList.includes('pan india') || statesEligible.length === 0;
+      }
+      if (statesEligible.some(s => s === targetState || s.includes(targetState))) return true;
+      if (provider.includes(targetState) || department.includes(targetState) || title.includes(targetState)) return true;
+      const cities = STATE_CITY_MAP[targetState] || [];
+      if (locList.some(loc => cities.some(c => loc.includes(c)))) return true;
+      if (locList.some(loc => loc.includes(targetState))) return true;
+      if (statesEligible.includes('all india') || statesEligible.includes('all') || locList.includes('pan india')) return true;
+      return false;
+    });
+  }
+
+  return result;
+}
+
 // GET all internships
 router.get("/internships", async (req, res) => {
   try {
     let data = await Internship.find().lean();
+    data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
       data = await translateListItems(data, req.query.lang);
     }
@@ -112,6 +201,7 @@ router.get("/internships/:id", async (req, res) => {
 router.get("/scholarships", async (req, res) => {
   try {
     let data = await Scholarship.find().lean();
+    data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
       data = await translateListItems(data, req.query.lang);
     }
@@ -147,6 +237,7 @@ router.get("/scholarships/:id", async (req, res) => {
 router.get("/schemes", async (req, res) => {
   try {
     let data = await Scheme.find().lean();
+    data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
       data = await translateListItems(data, req.query.lang);
     }
@@ -182,6 +273,7 @@ router.get("/schemes/:id", async (req, res) => {
 router.get("/training", async (req, res) => {
   try {
     let data = await Training.find().lean();
+    data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
       data = await translateListItems(data, req.query.lang);
     }

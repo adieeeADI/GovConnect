@@ -199,7 +199,7 @@ export default function Home() {
         <TouchableOpacity 
           className="bg-red-600 rounded-2xl p-5 mx-6 mb-6 flex-row items-center justify-between"
           activeOpacity={0.8}
-          onPress={() => router.push('/main/browse?category=internships')}
+          onPress={() => router.push('/main/browse?category=all')}
         >
           <View className="flex-1">
             <Text className="text-white text-xl font-bold mb-1">

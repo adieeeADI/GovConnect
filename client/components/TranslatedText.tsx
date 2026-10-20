@@ -26,26 +26,27 @@ export default function TranslatedText({
   // Helper to determine the best immediate translation available synchronously
   const getImmediateTranslation = (raw: string | null | undefined): string => {
     if (!raw) return '';
-    if (language === 'en') return raw;
+    const rawStr = typeof raw === 'string' ? raw : String(raw);
+    if (language === 'en') return rawStr;
 
     // 1. Try static translateValue dictionary
-    const staticVal = translateValue(raw, t);
-    if (staticVal && staticVal.toLowerCase() !== raw.toLowerCase()) {
+    const staticVal = translateValue(rawStr, t);
+    if (staticVal && staticVal.toLowerCase() !== rawStr.toLowerCase()) {
       return staticVal;
     }
 
     // 2. Try static t(key)
-    const staticKey = t(raw);
-    if (staticKey && staticKey !== raw) {
+    const staticKey = t(rawStr);
+    if (staticKey && staticKey !== rawStr) {
       return staticKey;
     }
 
     // 3. Try memory cache
-    const cached = getCachedTranslation(raw, language);
+    const cached = getCachedTranslation(rawStr, language);
     if (cached) return cached;
 
     // Fallback to raw text until background fetch completes
-    return raw;
+    return rawStr;
   };
 
   const [displayText, setDisplayText] = useState<string>(() =>

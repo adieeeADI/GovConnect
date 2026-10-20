@@ -16,8 +16,8 @@ export default function PhoneInput() {
   const [langModalVisible, setLangModalVisible] = useState(false);
 
   const handleSendOTP = async () => {
-    const cleanPhone = phoneNumber.trim().replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
+    const cleanPhone = phoneNumber.trim().replace(/\D/g, '').slice(-10);
+    if (!cleanPhone || cleanPhone.length !== 10) {
       Alert.alert(t('notice'), t('enter_valid_phone'));
       return;
     }
