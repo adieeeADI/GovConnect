@@ -10,8 +10,19 @@ LogBox.ignoreLogs([
 export default function RootLayout() {
   return (
     <LanguageProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: true,
+          animation: 'slide_from_right',
+        }}
+      >
+        {/* Root screens: Gesture back is disabled because there is no previous screen */}
+        <Stack.Screen name="index" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="auth/landing" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="main/home" options={{ gestureEnabled: false }} />
+
+        {/* All other screens (details, edit, privacy, auth sub-screens) inherit gestureEnabled: true */}
       </Stack>
     </LanguageProvider>
   );

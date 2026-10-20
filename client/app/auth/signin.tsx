@@ -3,13 +3,15 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Globe } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import { resetToHome } from '../../utils/navigation';
 
 export default function SignIn() {
+  const navigation = useNavigation();
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,7 +56,7 @@ export default function SignIn() {
         await AsyncStorage.setItem('userId', data.user.id);
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
         setLoading(false);
-        router.replace('/main/home');
+        resetToHome(navigation, router);
       } else {
         setError(data?.message || 'Login failed. Invalid account details.');
         setLoading(false);

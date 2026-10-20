@@ -5,14 +5,16 @@ import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Upload, CheckCircle2, Globe } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
 import TranslatedText from '../../components/TranslatedText';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import { resetToHome } from '../../utils/navigation';
 
 export default function SignUpScreen3() {
+  const navigation = useNavigation();
   const params = useLocalSearchParams();
   const { t } = useTranslation();
 
@@ -227,7 +229,7 @@ export default function SignUpScreen3() {
       }
 
       Alert.alert("Success", "Account created successfully! Welcome to GovConnect.");
-      router.replace("/main/home");
+      resetToHome(navigation, router);
 
     } catch (err: any) {
       Alert.alert("Error", err.message || "Signup failed. Please try again.");

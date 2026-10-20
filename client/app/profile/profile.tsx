@@ -18,14 +18,14 @@ import {
   Globe,
   User as UserIcon,
 } from 'lucide-react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from '../main/bottom';
 import ProfileCompleteBanner from './ProfileCompleteBanner';
 import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation, LANGUAGES } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
-import { goBackWithinApp } from '../../utils/navigation';
+import { goBackWithinApp, resetToAuth } from '../../utils/navigation';
 import TranslatedText from '../../components/TranslatedText';
 
 function getCompletionPercentage(data: Record<string, any>): number {
@@ -52,6 +52,7 @@ function getCompletionPercentage(data: Record<string, any>): number {
 
 export default function Profile() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { t, language } = useTranslation();
 
@@ -65,13 +66,18 @@ export default function Profile() {
   const loadUser = async () => {
     try {
       const cached = await AsyncStorage.getItem('userData');
+      const userId = await AsyncStorage.getItem('userId');
+
+      if (!cached && !userId) {
+        setLoading(false);
+        resetToAuth(navigation, router);
+        return;
+      }
 
       if (cached) {
         setUser(JSON.parse(cached));
         setLoading(false);
       }
-
-      const userId = await AsyncStorage.getItem('userId');
 
       if (!userId) {
         setLoading(false);
@@ -101,7 +107,7 @@ export default function Profile() {
           try {
             await AsyncStorage.removeItem('userId');
             await AsyncStorage.removeItem('userData');
-            router.replace('/auth/landing');
+            resetToAuth(navigation, router);
           } catch (err) {
             console.error('Logout error:', err);
           }

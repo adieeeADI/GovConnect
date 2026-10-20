@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Delete from './delete';
 import { ArrowLeft } from 'lucide-react-native';
-import { goBackWithinApp } from '../../utils/navigation';
+import { goBackWithinApp, resetToAuth } from '../../utils/navigation';
 
 const Toggle = ({ checked }: { checked: boolean }) => (
   <View className={`w-12 h-7 rounded-full justify-center ${checked ? 'bg-blue-900' : 'bg-gray-300'}`}>
@@ -14,6 +15,7 @@ const Toggle = ({ checked }: { checked: boolean }) => (
 
 const PrivacySecurity = () => {
   const router = useRouter();
+  const navigation = useNavigation();
 
   // Prevent back navigation
   useFocusEffect(
@@ -65,11 +67,16 @@ const PrivacySecurity = () => {
   };
 
   // Add this function to handle actual deletion
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
+    try {
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('userData');
+    } catch (e) {
+      console.log('Error clearing storage on delete:', e);
+    }
     Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
     setShowDeleteModal(false);
-    // Navigate back to landing/login
-    router.replace('/auth/landing');
+    resetToAuth(navigation, router);
   };
 
   const handleManageDevices = () => {

@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
 import { Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award, ArrowRight, Globe } from 'lucide-react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from './bottom';
 import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import { resetToAuth } from '../../utils/navigation';
 
 function getCompletionPercentage(data: Record<string, any>): number {
   const checks = [
@@ -31,6 +32,7 @@ function getCompletionPercentage(data: Record<string, any>): number {
 
 export default function Home() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { t } = useTranslation();
   const [userName, setUserName] = useState('Guest');
   const [completionPercentage, setCompletionPercentage] = useState<number>(50);
@@ -48,7 +50,7 @@ export default function Home() {
 
           if (!cachedUser && !userId) {
             if (isMounted) {
-              router.replace('/auth/landing');
+              resetToAuth(navigation, router);
             }
             return;
           }

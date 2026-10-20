@@ -22,11 +22,8 @@ export default function BottomNav() {
     if (isActive(path)) {
       return;
     }
-    if (path === HOME_ROUTE) {
-      router.replace(HOME_ROUTE);
-    } else {
-      router.push(path as any);
-    }
+    // Use replace for peer tabs so switching tabs does not accumulate an endless back-stack
+    router.replace(path as any);
   };
 
   return (

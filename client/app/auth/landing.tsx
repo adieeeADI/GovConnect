@@ -1,15 +1,57 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { Briefcase, Globe } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect, useNavigation } from 'expo-router';
 import { useTranslation } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 
 export default function Landing() {
+  const navigation = useNavigation();
   const { t } = useTranslation();
   const [langModalVisible, setLangModalVisible] = useState(false);
+
+  // Trap back navigation on the root landing screen so it never goes back into pre-logout state
+  useFocusEffect(
+    useCallback(() => {
+      // If there are any stale screens in the stack behind the landing screen, clear them
+      if (navigation && typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+        try {
+          if (typeof (navigation as any).reset === 'function') {
+            (navigation as any).reset({
+              index: 0,
+              routes: [{ name: 'auth/landing' }],
+            });
+            return;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      const onBackPress = () => {
+        Alert.alert(
+          t('exit_app') || 'Exit App',
+          t('confirm_exit_app') || 'Are you sure you want to exit the app?',
+          [
+            { text: t('cancel') || 'Cancel', style: 'cancel' },
+            {
+              text: t('exit') || 'Exit',
+              style: 'destructive',
+              onPress: () => BackHandler.exitApp(),
+            },
+          ]
+        );
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress
+      );
+      return () => subscription.remove();
+    }, [t])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-blue-900" edges={['top', 'bottom']}>

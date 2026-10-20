@@ -1,4 +1,4 @@
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,9 +9,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
+import { resetToHome } from '../../utils/navigation';
 
 const OTPVerification = () => {
   const router = useRouter();
+  const navigation = useNavigation();
   const params = useLocalSearchParams();
   const phone = (params.phone as string) || '';
   const { t } = useTranslation();
@@ -72,7 +74,7 @@ const OTPVerification = () => {
         await AsyncStorage.setItem('userData', JSON.stringify(data.user));
         setIsLoading(false);
         Alert.alert(t('notice'), t('otp_verified_success'));
-        router.replace('/main/home');
+        resetToHome(navigation, router);
       } else {
         setIsLoading(false);
         Alert.alert(t('notice'), data?.message || 'Verification failed. No registered account found.');
