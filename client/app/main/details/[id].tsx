@@ -216,11 +216,10 @@ export default function Individual() {
 
                 {/* Bookmark Toggle in Header */}
                 <TouchableOpacity
-                  className={`w-10 h-10 rounded-full items-center justify-center border ${
-                    bookmarked
+                  className={`w-10 h-10 rounded-full items-center justify-center border ${bookmarked
                       ? 'bg-amber-400 border-amber-300'
                       : 'bg-white/10 border-white/20'
-                  }`}
+                    }`}
                   activeOpacity={0.8}
                   onPress={handleToggleBookmark}
                 >
@@ -556,36 +555,6 @@ export default function Individual() {
                     )}
                   </View>
                 )}
-
-                {/* FAQ Section for Schemes */}
-                {data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0 && (
-                  <>
-                    <Text className="text-black text-xl font-bold mb-3">
-                      {t('faq')}
-                    </Text>
-                    <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
-                      {data.faq.questionsAndAnswers.map((item: any, index: number) => (
-                        <View
-                          key={index}
-                          className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
-                        >
-                          <View className="p-4">
-                            <TranslatedText
-                              text={item.question}
-                              prefix={`${t('q_prefix')}: `}
-                              className="text-gray-900 font-semibold text-base mb-2"
-                            />
-                            <TranslatedText
-                              text={item.answer}
-                              prefix={`${t('a_prefix')}: `}
-                              className="text-gray-600 text-base leading-6"
-                            />
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
               </>
             )}
 
@@ -656,7 +625,7 @@ export default function Individual() {
             )}
 
             {/* Eligibility */}
-            {(data.eligibility?.educationLevels || data.eligibility?.streamsAllowed || data.eligibility?.yearOfStudyAllowed || data.eligibility?.minimumCGPA || data.eligibility?.minimumPercentage || data.eligibility?.categoryEligible || data.eligibility?.genderEligible || data.eligibility?.incomeLimit || data.eligibility?.statesEligible || data.eligibility?.ageLimit || data.eligibility?.isPwDEligible || data.eligibility?.isMinorityEligible) && (
+            {data.type !== 'Scheme' && (data.eligibility?.educationLevels || data.eligibility?.streamsAllowed || data.eligibility?.yearOfStudyAllowed || data.eligibility?.minimumCGPA || data.eligibility?.minimumPercentage || data.eligibility?.categoryEligible || data.eligibility?.genderEligible || data.eligibility?.incomeLimit || data.eligibility?.statesEligible || data.eligibility?.ageLimit || data.eligibility?.isPwDEligible || data.eligibility?.isMinorityEligible) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('eligibility_requirements')}
@@ -832,16 +801,17 @@ export default function Individual() {
             )}
 
             {/* FAQ Section */}
-            {data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0 && (
+            {((data.faq?.questionsAndAnswers && data.faq.questionsAndAnswers.length > 0) ||
+              (Array.isArray(data.faqs) && data.faqs.length > 0)) && (
               <>
                 <Text className="text-black text-xl font-bold mb-3">
                   {t('faq')}
                 </Text>
                 <View className="mb-6 bg-blue-50 rounded-2xl overflow-hidden">
-                  {data.faq.questionsAndAnswers.map((item: any, index: number) => (
+                  {(data.faq?.questionsAndAnswers || data.faqs).map((item: any, index: number, arr: any[]) => (
                     <View
                       key={index}
-                      className={`border-b border-blue-200 ${index === data.faq.questionsAndAnswers.length - 1 ? 'border-b-0' : ''}`}
+                      className={`border-b border-blue-200 ${index === arr.length - 1 ? 'border-b-0' : ''}`}
                     >
                       <View className="p-4">
                         <TranslatedText
@@ -878,30 +848,6 @@ export default function Individual() {
               </View>
             )}
 
-            {/* Metadata Info */}
-            {(data.metadata?.source || data.metadata?.viewCount !== undefined || data.metadata?.saveCount !== undefined) && (
-              <View className="bg-gray-100 rounded-2xl p-4 mb-6">
-                {data.metadata?.source && (
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">{t('source')}:</Text>
-                    <Text className="text-gray-600">{data.metadata.source}</Text>
-                  </View>
-                )}
-                {data.metadata?.viewCount !== undefined && (
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-700 font-semibold flex-1">{t('views')}:</Text>
-                    <Text className="text-gray-600">{data.metadata.viewCount}</Text>
-                  </View>
-                )}
-                {data.metadata?.saveCount !== undefined && (
-                  <View className="flex-row items-center">
-                    <Text className="text-gray-700 font-semibold flex-1">{t('saves')}:</Text>
-                    <Text className="text-gray-600">{data.metadata.saveCount}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-
             {/* Status Badge */}
             {data.status && (
               <View className="mb-6 flex-row items-center">
@@ -918,11 +864,10 @@ export default function Individual() {
             <View className="mb-8">
               {/* Bookmark Action Button */}
               <TouchableOpacity
-                className={`rounded-2xl py-3.5 px-4 items-center justify-center mb-3 flex-row border ${
-                  bookmarked
+                className={`rounded-2xl py-3.5 px-4 items-center justify-center mb-3 flex-row border ${bookmarked
                     ? 'bg-amber-50 border-amber-300'
                     : 'bg-gray-100 border-gray-200'
-                }`}
+                  }`}
                 activeOpacity={0.8}
                 onPress={handleToggleBookmark}
               >
@@ -933,9 +878,8 @@ export default function Individual() {
                   strokeWidth={2}
                 />
                 <Text
-                  className={`text-sm font-bold ml-2 ${
-                    bookmarked ? 'text-amber-800' : 'text-gray-700'
-                  }`}
+                  className={`text-sm font-bold ml-2 ${bookmarked ? 'text-amber-800' : 'text-gray-700'
+                    }`}
                 >
                   {bookmarked ? t('bookmarked') : t('bookmark')}
                 </Text>
