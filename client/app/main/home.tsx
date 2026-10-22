@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
-import { Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award, ArrowRight, Globe } from 'lucide-react-native';
+import { Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award, ArrowRight, Globe, Bookmark } from 'lucide-react-native';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav from './bottom';
@@ -8,6 +8,7 @@ import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 import { resetToAuth } from '../../utils/navigation';
+import { getHomeScreenStats } from '../../utils/bookmarkService';
 
 function getCompletionPercentage(data: Record<string, any>): number {
   const checks = [
@@ -37,6 +38,12 @@ export default function Home() {
   const [userName, setUserName] = useState('Guest');
   const [completionPercentage, setCompletionPercentage] = useState<number>(50);
   const [langModalVisible, setLangModalVisible] = useState(false);
+  const [stats, setStats] = useState({
+    recommended: 5,
+    opportunity: 400,
+    applied: 0,
+    bookmarks: 0,
+  });
 
   // Load user data and set back listener on home screen
   useFocusEffect(
@@ -61,6 +68,16 @@ export default function Home() {
               setUserName(parsed.fullName || parsed.email || t('guest'));
               setCompletionPercentage(getCompletionPercentage(parsed));
             }
+          }
+
+          // Fetch dynamic stats for Recommended, Opportunity, Applied & Bookmarks
+          try {
+            const loadedStats = await getHomeScreenStats(userId);
+            if (isMounted && loadedStats) {
+              setStats(loadedStats);
+            }
+          } catch (statErr) {
+            console.log('Error loading home stats:', statErr);
           }
 
           if (!userId) return;
@@ -112,13 +129,32 @@ export default function Home() {
             <Text className="text-blue-100 text-sm">{t('ready_find_next')}</Text>
           </View>
 
-          <TouchableOpacity
-            className="w-12 h-12 rounded-2xl bg-white/10 items-center justify-center border border-white/20"
-            activeOpacity={0.8}
-            onPress={() => setLangModalVisible(true)}
-          >
-            <Globe color="#ffffff" size={24} />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-2">
+            {/* Bookmarks Icon Button */}
+            <TouchableOpacity
+              className="w-12 h-12 rounded-2xl bg-white/10 items-center justify-center border border-white/20 relative"
+              activeOpacity={0.8}
+              onPress={() => router.push('/main/bookmarks' as any)}
+            >
+              <Bookmark color="#ffffff" size={22} strokeWidth={2} />
+              {stats.bookmarks > 0 && (
+                <View className="absolute -top-1.5 -right-1.5 bg-amber-400 rounded-full min-w-[20px] h-5 px-1 items-center justify-center border-2 border-blue-900">
+                  <Text className="text-blue-950 text-[10px] font-bold">
+                    {stats.bookmarks}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Language Selector */}
+            <TouchableOpacity
+              className="w-12 h-12 rounded-2xl bg-white/10 items-center justify-center border border-white/20"
+              activeOpacity={0.8}
+              onPress={() => setLangModalVisible(true)}
+            >
+              <Globe color="#ffffff" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Status Card */}
@@ -159,20 +195,34 @@ export default function Home() {
           </View>
         )}
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Interactive & Dynamic */}
         <View className="flex-row justify-between px-6 mb-6">
-          <View className="flex-1 bg-blue-100 rounded-2xl p-4 mr-2 items-center">
-            <Text className="text-blue-900 text-3xl font-bold">5</Text>
+          <TouchableOpacity 
+            className="flex-1 bg-blue-100 rounded-2xl p-4 mr-2 items-center active:opacity-75"
+            activeOpacity={0.7}
+            onPress={() => router.push('/main/recommendation')}
+          >
+            <Text className="text-blue-900 text-3xl font-bold">{stats.recommended}</Text>
             <Text className="text-blue-900 text-xs font-semibold text-center">{t('stats_recommended')}</Text>
-          </View>
-          <View className="flex-1 bg-purple-100 rounded-2xl p-4 mx-2 items-center">
-            <Text className="text-purple-900 text-3xl font-bold">12</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            className="flex-1 bg-purple-100 rounded-2xl p-4 mx-2 items-center active:opacity-75"
+            activeOpacity={0.7}
+            onPress={() => router.push('/main/browse?category=all')}
+          >
+            <Text className="text-purple-900 text-3xl font-bold">{stats.opportunity}</Text>
             <Text className="text-purple-900 text-xs font-semibold text-center">{t('stats_opportunity')}</Text>
-          </View>
-          <View className="flex-1 bg-teal-100 rounded-2xl p-4 ml-2 items-center">
-            <Text className="text-teal-900 text-3xl font-bold">8</Text>
-            <Text className="text-teal-900 text-xs font-semibold text-center">{t('stats_applied')}</Text>
-          </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            className="flex-1 bg-amber-100 rounded-2xl p-4 ml-2 items-center active:opacity-75"
+            activeOpacity={0.7}
+            onPress={() => router.push('/main/bookmarks' as any)}
+          >
+            <Text className="text-amber-900 text-3xl font-bold">{stats.bookmarks}</Text>
+            <Text className="text-amber-900 text-xs font-semibold text-center">{t('bookmarks')}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Find your Opportunity */}

@@ -1,11 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler, Linking, Alert } from 'react-native';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut, Bookmark } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDataDetailsEndpoint } from '../../../config/api.config';
 import { useTranslation, translateValue } from '../../../utils/i18n';
 import { goBackWithinApp } from '../../../utils/navigation';
 import TranslatedText from '../../../components/TranslatedText';
+import {
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
+  isDeadlineExceeded,
+} from '../../../utils/bookmarkService';
 
 // In-memory cache for fast instant detail loads
 const detailsCache = new Map<string, any>();
@@ -20,6 +27,7 @@ export default function Individual() {
   const [translating, setTranslating] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [imageZoom, setImageZoom] = useState(1);
+  const [bookmarked, setBookmarked] = useState(false);
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -103,6 +111,55 @@ export default function Individual() {
     return () => backHandler.remove();
   }, [router]);
 
+  // Check bookmark state
+  useEffect(() => {
+    let isMounted = true;
+    const checkState = async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      const idString = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+      const category = (Array.isArray(params?.category) ? params?.category[0] : params?.category) || 'internships';
+      if (!idString) return;
+      const bm = await isBookmarked(userId, idString, category);
+      if (isMounted) {
+        setBookmarked(bm);
+      }
+    };
+    checkState();
+    return () => {
+      isMounted = false;
+    };
+  }, [params?.id, params?.category]);
+
+  const handleToggleBookmark = async () => {
+    const idString = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+    if (!idString || !data) return;
+    const userId = await AsyncStorage.getItem('userId');
+    const category = (Array.isArray(params?.category) ? params?.category[0] : params?.category) || 'internships';
+
+    if (bookmarked) {
+      setBookmarked(false);
+      await removeBookmark(userId, idString, category);
+      Alert.alert(t('remove_bookmark') || 'Removed', 'Removed from your bookmarks.');
+    } else {
+      const endDate = data.applicationDetails?.endDate;
+      if (isDeadlineExceeded(endDate)) {
+        Alert.alert(
+          t('deadline_exceeded') || 'Deadline Exceeded',
+          'Cannot bookmark: The application deadline for this opportunity has already passed.'
+        );
+        return;
+      }
+      setBookmarked(true);
+      const res = await addBookmark(userId, { ...data, _id: idString, category });
+      if (!res.success) {
+        setBookmarked(false);
+        Alert.alert('Notice', res.message || 'Could not bookmark opportunity');
+      } else {
+        Alert.alert(t('bookmark') || 'Bookmarked', 'Opportunity added to your bookmarks!');
+      }
+    }
+  };
+
   const handleOfficialPortal = async () => {
     const url = data?.basicInfo?.applicationLink?.trim();
 
@@ -147,14 +204,34 @@ export default function Individual() {
                 <ArrowLeft color="#ffffff" size={24} strokeWidth={2} />
               </TouchableOpacity>
 
-              {translating && (
-                <View className="bg-blue-800/80 rounded-full px-3 py-1 flex-row items-center">
-                  <ActivityIndicator size="small" color="#ffffff" />
-                  <Text className="text-white text-xs ml-1.5 font-medium">
-                    ✨ {t('translating_details')}
-                  </Text>
-                </View>
-              )}
+              <View className="flex-row items-center gap-2">
+                {translating && (
+                  <View className="bg-blue-800/80 rounded-full px-3 py-1 flex-row items-center mr-1">
+                    <ActivityIndicator size="small" color="#ffffff" />
+                    <Text className="text-white text-xs ml-1.5 font-medium">
+                      ✨ {t('translating_details')}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Bookmark Toggle in Header */}
+                <TouchableOpacity
+                  className={`w-10 h-10 rounded-full items-center justify-center border ${
+                    bookmarked
+                      ? 'bg-amber-400 border-amber-300'
+                      : 'bg-white/10 border-white/20'
+                  }`}
+                  activeOpacity={0.8}
+                  onPress={handleToggleBookmark}
+                >
+                  <Bookmark
+                    color={bookmarked ? '#1e3a8a' : '#ffffff'}
+                    size={20}
+                    fill={bookmarked ? '#1e3a8a' : 'none'}
+                    strokeWidth={2.2}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View className="flex-row items-start justify-between mb-4">
@@ -838,17 +915,45 @@ export default function Individual() {
             )}
 
             {/* Action Buttons */}
-            {data.basicInfo?.applicationLink && (
+            <View className="mb-8">
+              {/* Bookmark Action Button */}
               <TouchableOpacity
-                className="bg-white border-2 border-blue-900 rounded-2xl py-4 items-center mb-8"
+                className={`rounded-2xl py-3.5 px-4 items-center justify-center mb-3 flex-row border ${
+                  bookmarked
+                    ? 'bg-amber-50 border-amber-300'
+                    : 'bg-gray-100 border-gray-200'
+                }`}
                 activeOpacity={0.8}
-                onPress={handleOfficialPortal}
+                onPress={handleToggleBookmark}
               >
-                <Text className="text-blue-900 text-lg font-semibold">
-                  {t('official_portal')}
+                <Bookmark
+                  color={bookmarked ? '#d97706' : '#374151'}
+                  size={18}
+                  fill={bookmarked ? '#d97706' : 'none'}
+                  strokeWidth={2}
+                />
+                <Text
+                  className={`text-sm font-bold ml-2 ${
+                    bookmarked ? 'text-amber-800' : 'text-gray-700'
+                  }`}
+                >
+                  {bookmarked ? t('bookmarked') : t('bookmark')}
                 </Text>
               </TouchableOpacity>
-            )}
+
+              {/* Official Portal Button */}
+              {data.basicInfo?.applicationLink && (
+                <TouchableOpacity
+                  className="bg-blue-900 rounded-2xl py-4 items-center shadow-sm"
+                  activeOpacity={0.8}
+                  onPress={handleOfficialPortal}
+                >
+                  <Text className="text-white text-lg font-bold">
+                    {t('official_portal')} →
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </ScrollView>
       )}

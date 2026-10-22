@@ -42,7 +42,31 @@ const userSchema = new mongoose.Schema({
   notifyOpportunities: Boolean,
 
   // Profile completion
-  profileCompletePercentage: { type: Number, default: 20 }
+  profileCompletePercentage: { type: Number, default: 20 },
+
+  // Bookmarked Opportunities
+  bookmarks: [{
+    internshipId: Number,
+    opportunityId: String,
+    category: { type: String, default: 'internships' },
+    title: String,
+    providerName: String,
+    location: [String],
+    stipend: String,
+    duration: String,
+    endDate: Date,
+    bookmarkedAt: { type: Date, default: Date.now }
+  }],
+
+  // Applied Opportunities
+  applied: [{
+    opportunityId: String,
+    category: String,
+    title: String,
+    providerName: String,
+    location: String,
+    appliedAt: { type: Date, default: Date.now }
+  }]
 
 }, { timestamps: true });
 

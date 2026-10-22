@@ -2,12 +2,18 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, BackHandler, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
-import { ArrowLeft, MapPin, RefreshCw } from 'lucide-react-native';
+import { ArrowLeft, MapPin, RefreshCw, Bookmark } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_ENDPOINTS, logApiConfig, safeFetchJson } from '../../config/api.config';
 import BottomNav from './bottom';
 import { goBackWithinApp } from '../../utils/navigation';
+import {
+  addBookmark,
+  removeBookmark,
+  getBookmarks,
+  cleanOpportunityId,
+} from '../../utils/bookmarkService';
 
 import { useTranslation } from '../../utils/i18n';
 import TranslatedText from '../../components/TranslatedText';
@@ -29,6 +35,65 @@ export default function Recommendation() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookmarkedKeys, setBookmarkedKeys] = useState<Set<string>>(new Set());
+
+  const refreshBookmarks = useCallback(async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const list = await getBookmarks(userId);
+      const keys = new Set<string>(
+        list.map((b) => {
+          const cat = b.category || 'internships';
+          const id = cleanOpportunityId(b.opportunityId || b.internshipId || b._id || b.id);
+          return `${cat}_${id}`;
+        })
+      );
+      setBookmarkedKeys(keys);
+    } catch {}
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshBookmarks();
+    }, [refreshBookmarks])
+  );
+
+  const handleBookmarkToggle = async (item: any) => {
+    const rawId = item.id || item._id;
+    const cleanId = cleanOpportunityId(rawId);
+    const cat = item.category || 'internships';
+    const key = `${cat}_${cleanId}`;
+    const userId = await AsyncStorage.getItem('userId');
+
+    if (bookmarkedKeys.has(key)) {
+      setBookmarkedKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+      await removeBookmark(userId, cleanId, cat);
+    } else {
+      setBookmarkedKeys((prev) => new Set(prev).add(key));
+      const res = await addBookmark(userId, {
+        _id: cleanId,
+        id: cleanId,
+        category: cat,
+        basicInfo: {
+          title: item.title,
+          providerName: item.organization,
+        },
+        location: item.location ? [item.location] : ['India'],
+        endDate: item.endDate || item.applicationDetails?.endDate,
+      });
+      if (!res.success) {
+        setBookmarkedKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -222,9 +287,38 @@ export default function Recommendation() {
             >
               <View className="flex-row justify-between items-start mb-1">
                 <TranslatedText text={item.title} className="font-bold text-lg flex-1 mr-2" />
-                <Text className={`font-bold text-base ${getMatchColor(item.match)}`}>
-                  {item.match}% {t('match_score')}
-                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className={`font-bold text-base ${getMatchColor(item.match)}`}>
+                    {item.match}% {t('match_score')}
+                  </Text>
+                  <TouchableOpacity
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    onPress={(e: any) => {
+                      e?.stopPropagation?.();
+                      handleBookmarkToggle(item);
+                    }}
+                    className={`w-8 h-8 rounded-full items-center justify-center border ${
+                      bookmarkedKeys.has(`${item.category || 'internships'}_${cleanOpportunityId(item.id || item._id)}`)
+                        ? 'bg-amber-100 border-amber-300'
+                        : 'bg-gray-100 border-gray-200'
+                    }`}
+                  >
+                    <Bookmark
+                      size={15}
+                      color={
+                        bookmarkedKeys.has(`${item.category || 'internships'}_${cleanOpportunityId(item.id || item._id)}`)
+                          ? '#d97706'
+                          : '#6b7280'
+                      }
+                      fill={
+                        bookmarkedKeys.has(`${item.category || 'internships'}_${cleanOpportunityId(item.id || item._id)}`)
+                          ? '#d97706'
+                          : 'none'
+                      }
+                      strokeWidth={2.2}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <TranslatedText text={item.organization} className="text-gray-500 text-sm mb-2" />

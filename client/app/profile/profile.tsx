@@ -17,6 +17,8 @@ import {
   Edit3,
   Globe,
   User as UserIcon,
+  Bookmark,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,6 +29,7 @@ import { useTranslation, LANGUAGES } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
 import { goBackWithinApp, resetToAuth } from '../../utils/navigation';
 import TranslatedText from '../../components/TranslatedText';
+import { getHomeScreenStats } from '../../utils/bookmarkService';
 
 function getCompletionPercentage(data: Record<string, any>): number {
   const checks = [
@@ -59,6 +62,7 @@ export default function Profile() {
   const [user, setUser] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [langModalVisible, setLangModalVisible] = useState(false);
+  const [activityCounts, setActivityCounts] = useState({ bookmarks: 0 });
 
   const currentLangObj =
     LANGUAGES.find((l) => l.code === language) || LANGUAGES[0];
@@ -90,6 +94,14 @@ export default function Profile() {
         setUser(data);
         await AsyncStorage.setItem('userData', JSON.stringify(data));
       }
+
+      // Fetch dynamic bookmark count
+      try {
+        const stats = await getHomeScreenStats(userId);
+        if (stats) {
+          setActivityCounts({ bookmarks: stats.bookmarks });
+        }
+      } catch {}
     } catch (e) {
       console.error(e);
     } finally {
@@ -348,6 +360,45 @@ export default function Profile() {
             </View>
           );
         })()}
+
+        {/* Bookmarks Section */}
+        <View className="px-6 mb-6">
+          <Text className="text-black text-xl font-bold mb-4">
+            {t('bookmarks')}
+          </Text>
+
+          {/* Bookmarks Card */}
+          <TouchableOpacity
+            className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between border border-gray-200 shadow-sm"
+            activeOpacity={0.7}
+            onPress={() => router.push('/main/bookmarks' as any)}
+          >
+            <View className="flex-row items-center flex-1 mr-3">
+              <View className="w-10 h-10 bg-amber-50 border border-amber-200 rounded-full items-center justify-center mr-3">
+                <Bookmark color="#d97706" size={20} fill="#d97706" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-black text-base font-semibold">
+                  {t('bookmarks')}
+                </Text>
+                <Text className="text-gray-500 text-xs">
+                  {activityCounts.bookmarks} {activityCounts.bookmarks === 1 ? 'saved opportunity' : 'saved opportunities'}
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex-row items-center">
+              {activityCounts.bookmarks > 0 && (
+                <View className="bg-amber-100 rounded-full px-2.5 py-0.5 mr-2 border border-amber-300">
+                  <Text className="text-amber-800 text-xs font-bold">
+                    {activityCounts.bookmarks}
+                  </Text>
+                </View>
+              )}
+              <ChevronRight color="#9ca3af" size={20} />
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* Settings */}
         <View className="px-6 mb-6">

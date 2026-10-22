@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
   SCHOLARSHIPS: `${API_BASE_URL}/api/data/scholarships`,
   SCHEMES: `${API_BASE_URL}/api/data/schemes`,
   TRAINING: `${API_BASE_URL}/api/data/training`,
+  STATS: `${API_BASE_URL}/api/data/stats`,
 
   // Recommendation endpoint (userId will be appended)
   RECOMMEND: `${API_BASE_URL}/api/recommend`,
@@ -72,6 +73,21 @@ export const getDataCategoryEndpoint = (category: string, lang?: string) => {
 // Helper function to get user endpoint
 export const getUserEndpoint = (userId: string) => {
   return `${API_BASE_URL}/api/user/${userId}`;
+};
+
+// Helper function to get user stats endpoint
+export const getUserStatsEndpoint = (userId: string) => {
+  return `${API_BASE_URL}/api/user/${userId}/stats`;
+};
+
+// Helper function to get user bookmarks endpoint
+export const getUserBookmarksEndpoint = (userId: string) => {
+  return `${API_BASE_URL}/api/user/${userId}/bookmarks`;
+};
+
+// Helper function to get user applied opportunities endpoint
+export const getUserAppliedEndpoint = (userId: string) => {
+  return `${API_BASE_URL}/api/user/${userId}/applied`;
 };
 
 // Helper function to get data details endpoint

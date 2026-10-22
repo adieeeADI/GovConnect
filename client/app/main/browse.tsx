@@ -11,6 +11,7 @@ import {
   Platform,
   Dimensions,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -26,13 +27,23 @@ import {
   GraduationCap,
   ChevronDown,
   RotateCcw,
+  Bookmark,
 } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDataCategoryEndpoint } from '../../config/api.config';
 import BottomNav from './bottom';
 import { useTranslation } from '../../utils/i18n';
 import { goBackWithinApp } from '../../utils/navigation';
 import TranslatedText from '../../components/TranslatedText';
+import {
+  addBookmark,
+  removeBookmark,
+  getBookmarks,
+  isDeadlineExceeded,
+  cleanOpportunityId,
+  cleanInternshipId,
+} from '../../utils/bookmarkService';
 
 type Category = 'all' | 'internships' | 'scholarships' | 'schemes' | 'training';
 
@@ -174,6 +185,66 @@ export default function Browse() {
       setActiveCategory(params.category as Category);
     }
   }, [params.category]);
+
+  // Bookmarking state for instant UI updates on opportunity cards
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+
+  const refreshBookmarks = useCallback(async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const list = await getBookmarks(userId);
+      const keys = new Set<string>(
+        list.map((b) => {
+          const cat = b.category || 'internships';
+          const id = cleanOpportunityId(b.opportunityId || b.internshipId || b._id || b.id);
+          return `${cat}_${id}`;
+        })
+      );
+      setBookmarkedIds(keys);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    refreshBookmarks();
+  }, [refreshBookmarks]);
+
+  const handleCardBookmarkToggle = async (item: any, explicitCategory?: string) => {
+    const rawId = item._id || item.id;
+    const cleanId = cleanOpportunityId(rawId);
+    const cat = explicitCategory || item.category || (activeCategory !== 'all' ? activeCategory : (item.type || 'internships'));
+    const bookmarkKey = `${cat}_${cleanId}`;
+    const userId = await AsyncStorage.getItem('userId');
+
+    const itemWithCategory = { ...item, category: cat };
+
+    if (bookmarkedIds.has(bookmarkKey)) {
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(bookmarkKey);
+        return next;
+      });
+      await removeBookmark(userId, cleanId, cat);
+    } else {
+      const endDate = item.applicationDetails?.endDate || item.endDate;
+      if (isDeadlineExceeded(endDate)) {
+        Alert.alert(
+          t('deadline_exceeded') || 'Deadline Exceeded',
+          'Cannot bookmark: The application deadline for this opportunity has already passed.'
+        );
+        return;
+      }
+      setBookmarkedIds((prev) => new Set(prev).add(bookmarkKey));
+      const res = await addBookmark(userId, itemWithCategory);
+      if (!res.success) {
+        setBookmarkedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(bookmarkKey);
+          return next;
+        });
+        Alert.alert('Notice', res.message || 'Could not bookmark opportunity');
+      }
+    }
+  };
 
   const getCategoryTitle = (cat: Category) => {
     switch (cat) {
@@ -985,15 +1056,53 @@ export default function Browse() {
                         </Text>
                       </View>
                     )}
+
+                    {targetCategory === 'internships' && isDeadlineExceeded(item.applicationDetails?.endDate || item.endDate) && (
+                      <View className="flex-row items-center bg-red-50 border border-red-200 rounded-md px-2 py-0.5 mr-2 mb-1">
+                        <Clock color="#dc2626" size={11} strokeWidth={2} />
+                        <Text className="text-red-700 text-[11px] font-bold ml-1">
+                          Deadline Passed
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
-                  {/* Title & Arrow */}
+                  {/* Title & Actions */}
                   <View className="flex-row items-start justify-between mb-1.5">
                     <TranslatedText
                       text={item.basicInfo?.title || t('opportunity')}
                       className="text-gray-900 text-base font-bold flex-1 mr-2 leading-snug"
                     />
-                    <ArrowRight color="#1e3a8a" size={20} strokeWidth={2.2} />
+                    <View className="flex-row items-center gap-2">
+                      <TouchableOpacity
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        onPress={(e: any) => {
+                          e?.stopPropagation?.();
+                          handleCardBookmarkToggle(item, targetCategory);
+                        }}
+                        className={`w-8 h-8 rounded-full items-center justify-center border ${
+                          bookmarkedIds.has(`${targetCategory}_${cleanOpportunityId(item._id || item.id)}`)
+                            ? 'bg-amber-100 border-amber-300'
+                            : 'bg-gray-100 border-gray-200'
+                        }`}
+                      >
+                        <Bookmark
+                          size={15}
+                          color={
+                            bookmarkedIds.has(`${targetCategory}_${cleanOpportunityId(item._id || item.id)}`)
+                              ? '#d97706'
+                              : '#6b7280'
+                          }
+                          fill={
+                            bookmarkedIds.has(`${targetCategory}_${cleanOpportunityId(item._id || item.id)}`)
+                              ? '#d97706'
+                              : 'none'
+                          }
+                          strokeWidth={2.2}
+                        />
+                      </TouchableOpacity>
+                      <ArrowRight color="#1e3a8a" size={20} strokeWidth={2.2} />
+                    </View>
                   </View>
 
                   {/* Provider */}

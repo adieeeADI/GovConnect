@@ -305,4 +305,26 @@ router.get("/training/:id", async (req, res) => {
   }
 });
 
+// GET counts and summary stats of opportunities
+router.get("/stats", async (req, res) => {
+  try {
+    const [internships, scholarships, schemes, training] = await Promise.all([
+      Internship.countDocuments(),
+      Scholarship.countDocuments(),
+      Scheme.countDocuments(),
+      Training.countDocuments()
+    ]);
+    const total = internships + scholarships + schemes + training;
+    res.json({
+      total,
+      internships,
+      scholarships,
+      schemes,
+      training
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
