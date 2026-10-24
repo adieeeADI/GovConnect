@@ -1,12 +1,7 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React, { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+  View, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import {
@@ -57,7 +52,7 @@ export default function Profile() {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { t, language } = useTranslation();
+  const { t, language, fontSize, setFontSize } = useTranslation();
 
   const [user, setUser] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
@@ -427,6 +422,51 @@ export default function Profile() {
               <Globe color="#2563eb" size={20} strokeWidth={2} />
             </View>
           </TouchableOpacity>
+
+          <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-200">
+            <Text className="text-black text-base font-semibold mb-3">
+              <TranslatedText text="Font Size" />
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {(
+                [
+                  ['small', 'Small'],
+                  ['original', 'Original'],
+                  ['large', 'Large'],
+                  ['extraLarge', 'Extra Large'],
+                ] as const
+              ).map(([size, label]) => (
+                <TouchableOpacity
+                  key={size}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: fontSize === size }}
+                  accessibilityLabel={label}
+                  onPress={() => setFontSize(size)}
+                  className={`rounded-full px-4 py-2 border ${
+                    fontSize === size
+                      ? 'bg-blue-900 border-blue-900'
+                      : 'bg-white border-gray-300'
+                  }`}
+                >
+                  <Text
+                    className={`font-semibold ${
+                      size === 'small'
+                        ? 'text-xs'
+                        : size === 'original'
+                          ? 'text-sm'
+                          : size === 'large'
+                            ? 'text-base'
+                            : 'text-lg'
+                    } ${
+                      fontSize === size ? 'text-white' : 'text-gray-700'
+                    }`}
+                  >
+                    <TranslatedText text={label} />
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {/* Logout */}
           <TouchableOpacity

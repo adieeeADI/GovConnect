@@ -1,5 +1,6 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { AlertCircle, ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '../../utils/i18n';

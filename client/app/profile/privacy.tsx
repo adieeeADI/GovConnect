@@ -1,5 +1,6 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
+import { View, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';

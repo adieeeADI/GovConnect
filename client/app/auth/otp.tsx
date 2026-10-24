@@ -1,6 +1,7 @@
+import { AppText as Text, AppTextInput as TextInput } from '../../components/ScaledText';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, TextInput as NativeTextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import Svg, { Rect, Circle, Path } from 'react-native-svg';
@@ -20,7 +21,7 @@ const OTPVerification = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
-  const inputRefs = useRef<(TextInput | null)[]>([]);
+  const inputRefs = useRef<(NativeTextInput | null)[]>([]);
 
   useEffect(() => {
     if (inputRefs.current[0]) {

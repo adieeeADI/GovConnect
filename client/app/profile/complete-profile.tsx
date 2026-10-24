@@ -1,8 +1,7 @@
+import { AppText as Text, AppTextInput as TextInput } from '../../components/ScaledText';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  ScrollView, Alert, Platform, BackHandler, ActivityIndicator
-} from 'react-native';
+  View, TouchableOpacity, ScrollView, Alert, Platform, BackHandler, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Upload, Calendar } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';

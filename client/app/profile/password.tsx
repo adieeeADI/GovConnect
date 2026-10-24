@@ -1,7 +1,8 @@
+import { AppText as Text, AppTextInput as TextInput } from '../../components/ScaledText';
 import { ArrowLeft } from 'lucide-react-native';
 import { goBackWithinApp } from '../../utils/navigation';
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
+import { View, TouchableOpacity, ScrollView, Alert, BackHandler } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 const ChangePassword = () => {

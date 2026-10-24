@@ -1,18 +1,7 @@
+import { AppText as Text, AppTextInput as TextInput } from '../../components/ScaledText';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  BackHandler,
-  Modal,
-  Platform,
-  Dimensions,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+  View, TouchableOpacity, ScrollView, FlatList, ActivityIndicator, BackHandler, Modal, Platform, Dimensions, StyleSheet, Alert } from 'react-native';
 import {
   ArrowLeft,
   MapPin,
@@ -42,7 +31,6 @@ import {
   getBookmarks,
   isDeadlineExceeded,
   cleanOpportunityId,
-  cleanInternshipId,
 } from '../../utils/bookmarkService';
 
 type Category = 'all' | 'internships' | 'scholarships' | 'schemes' | 'training';
@@ -138,6 +126,8 @@ const STATE_CITY_MAP: Record<string, string[]> = {
 };
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const ALL_PAGE_SIZE = 8;
+const CATEGORY_PAGE_SIZE = 20;
 
 type ModalTab = 'all' | 'education' | 'state' | 'mode';
 
@@ -159,8 +149,13 @@ export default function Browse() {
     (params.category as Category) || 'all'
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [data, setData] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Filter States
   const [filters, setFilters] = useState<FilterState>({
@@ -189,6 +184,11 @@ export default function Browse() {
   // Bookmarking state for instant UI updates on opportunity cards
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearchQuery(searchQuery.trim()), 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
   const refreshBookmarks = useCallback(async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -205,7 +205,10 @@ export default function Browse() {
   }, []);
 
   useEffect(() => {
-    refreshBookmarks();
+    const timeout = setTimeout(() => {
+      void refreshBookmarks();
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [refreshBookmarks]);
 
   const handleCardBookmarkToggle = async (item: any, explicitCategory?: string) => {
@@ -257,66 +260,117 @@ export default function Browse() {
     }
   };
 
-  // Fetch opportunities whenever category or language changes
+  const getPageUrl = useCallback((category: Category, pageNumber: number) => {
+    const limit = activeCategory === 'all' ? ALL_PAGE_SIZE : CATEGORY_PAGE_SIZE;
+    const url = new URL(getDataCategoryEndpoint(category, language));
+    url.searchParams.set('page', String(pageNumber));
+    url.searchParams.set('limit', String(limit));
+    url.searchParams.set('mode', filters.mode);
+    url.searchParams.set('education', filters.education);
+    url.searchParams.set('state', filters.state);
+    url.searchParams.set('stipendOnly', String(filters.stipendOnly));
+    if (debouncedSearchQuery) url.searchParams.set('search', debouncedSearchQuery);
+    return url.toString();
+  }, [
+    activeCategory,
+    debouncedSearchQuery,
+    filters.education,
+    filters.mode,
+    filters.state,
+    filters.stipendOnly,
+    language,
+  ]);
+
+  const requestCategoryPage = useCallback(async (category: Category, pageNumber: number) => {
+    const response = await fetch(getPageUrl(category, pageNumber));
+    if (!response.ok) throw new Error(`Unable to load ${category} (${response.status})`);
+    const result = await response.json();
+    if (!Array.isArray(result?.items)) {
+      if (Array.isArray(result)) {
+        throw new Error(
+          'The API server is returning the old browse format. Restart the backend server so it loads the pagination update, then try again.'
+        );
+      }
+      throw new Error(
+        result?.error || result?.message || 'The API returned an invalid browse response.'
+      );
+    }
+    return result;
+  }, [getPageUrl]);
+
+  // Fetch a small page of opportunities whenever category or browse filters change.
   useEffect(() => {
     let isMounted = true;
+    const resetTimer = setTimeout(() => {
+      if (isMounted) {
+        setLoading(true);
+        setLoadingMore(false);
+        setHasMore(false);
+        setPage(1);
+        setData([]);
+        setTotalCount(0);
+      }
+    }, 0);
 
-    if (activeCategory === 'all') {
-      Promise.all([
-        fetch(getDataCategoryEndpoint('internships', language)).then((r) => r.json()).catch(() => []),
-        fetch(getDataCategoryEndpoint('scholarships', language)).then((r) => r.json()).catch(() => []),
-        fetch(getDataCategoryEndpoint('schemes', language)).then((r) => r.json()).catch(() => []),
-        fetch(getDataCategoryEndpoint('training', language)).then((r) => r.json()).catch(() => []),
-      ])
-        .then(([ints, schs, scs, trs]) => {
-          if (isMounted) {
-            const taggedInts = Array.isArray(ints)
-              ? ints.map((i) => ({ ...i, itemCategory: 'internships' }))
-              : [];
-            const taggedSchs = Array.isArray(schs)
-              ? schs.map((s) => ({ ...s, itemCategory: 'scholarships' }))
-              : [];
-            const taggedScs = Array.isArray(scs)
-              ? scs.map((s) => ({ ...s, itemCategory: 'schemes' }))
-              : [];
-            const taggedTrs = Array.isArray(trs)
-              ? trs.map((t) => ({ ...t, itemCategory: 'training' }))
-              : [];
+    const fetchFirstPage = async () => {
+      try {
+        const categories: Category[] = activeCategory === 'all'
+          ? ['internships', 'scholarships', 'schemes', 'training']
+          : [activeCategory];
+        const results = await Promise.all(
+          categories.map((category) => requestCategoryPage(category, 1))
+        );
+        if (!isMounted) return;
 
-            setData([...taggedInts, ...taggedSchs, ...taggedScs, ...taggedTrs]);
-            setLoading(false);
-          }
-        })
-        .catch(() => {
-          if (isMounted) {
-            setData([]);
-            setLoading(false);
-          }
-        });
-    } else {
-      fetch(getDataCategoryEndpoint(activeCategory, language))
-        .then((res) => res.json())
-        .then((json) => {
-          if (isMounted) {
-            const list = Array.isArray(json)
-              ? json.map((item) => ({ ...item, itemCategory: activeCategory }))
-              : [];
-            setData(list);
-            setLoading(false);
-          }
-        })
-        .catch(() => {
-          if (isMounted) {
-            setData([]);
-            setLoading(false);
-          }
-        });
-    }
+        const firstPageItems = results.flatMap((result, index) =>
+          result.items.map((item: any) => ({ ...item, itemCategory: categories[index] }))
+        );
+        setData(firstPageItems);
+        setTotalCount(results.reduce((count, result) => count + result.total, 0));
+        setHasMore(results.some((result) => result.hasMore));
+      } catch (error) {
+        if (isMounted) {
+          setData([]);
+          setTotalCount(0);
+          setHasMore(false);
+          Alert.alert(t('notice'), error instanceof Error ? error.message : 'Unable to load opportunities.');
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    void fetchFirstPage();
 
     return () => {
       isMounted = false;
+      clearTimeout(resetTimer);
     };
-  }, [activeCategory, language]);
+  }, [activeCategory, requestCategoryPage, t]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || loading || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const categories: Category[] = activeCategory === 'all'
+      ? ['internships', 'scholarships', 'schemes', 'training']
+      : [activeCategory];
+
+    try {
+      const results = await Promise.all(
+        categories.map((category) => requestCategoryPage(category, nextPage))
+      );
+      const nextItems = results.flatMap((result, index) =>
+        result.items.map((item: any) => ({ ...item, itemCategory: categories[index] }))
+      );
+      setData((current) => [...current, ...nextItems]);
+      setHasMore(results.some((result) => result.hasMore));
+      setPage(nextPage);
+    } catch (error) {
+      Alert.alert(t('notice'), error instanceof Error ? error.message : 'Unable to load more opportunities.');
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [activeCategory, hasMore, loading, loadingMore, page, requestCategoryPage, t]);
 
   // Standard BackHandler effect - completely avoids useFocusEffect navigation context crashes
   useEffect(() => {
@@ -553,11 +607,6 @@ export default function Browse() {
     return applyFiltersToItems(data, filters, searchQuery);
   }, [data, filters, searchQuery, applyFiltersToItems]);
 
-  // Dynamic preview count inside the modal
-  const modalPreviewCount = useMemo(() => {
-    return applyFiltersToItems(data, tempFilters, searchQuery).length;
-  }, [data, tempFilters, searchQuery, applyFiltersToItems]);
-
   // Active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -646,7 +695,16 @@ export default function Browse() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <FlatList
+        data={loading ? [] : displayData}
+        keyExtractor={(item, index) => {
+          const category = item.itemCategory || (activeCategory === 'all' ? 'internships' : activeCategory);
+          return `${category}_${item._id ? item._id.toString() : `temp_${index}`}`;
+        }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 96 }}
+        ListHeaderComponent={
+        <>
         {/* Header */}
         <View className="bg-blue-900 rounded-b-3xl px-6 pt-12 pb-7 mb-4">
           <TouchableOpacity
@@ -895,7 +953,7 @@ export default function Browse() {
           <View className="px-5 mb-4">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-gray-500 text-xs font-semibold">
-                {t('showing')} {displayData.length} {t('opportunities_found')}
+                {t('showing')} {totalCount} {t('opportunities_found')}
               </Text>
               <TouchableOpacity
                 className="flex-row items-center"
@@ -961,17 +1019,11 @@ export default function Browse() {
           </View>
         )}
 
-        {/* Opportunity Cards List */}
-        <View className="px-5 mb-20">
-          {loading ? (
-            <View className="items-center py-16">
-              <ActivityIndicator size="large" color="#1e3a8a" />
-            </View>
-          ) : displayData.length > 0 ? (
-            displayData.map((item, index) => {
+        </>
+        }
+        renderItem={({ item, index }) => {
               const targetCategory = item.itemCategory || (activeCategory === 'all' ? 'internships' : activeCategory);
               const rawId = item._id ? item._id.toString() : `temp_${index}`;
-              const uniqueKey = `${targetCategory}_${rawId}`;
               const isOnline = isOnlineItem(item);
               const isOffline = isOfflineItem(item);
               const categoryBadge = activeCategory === 'all' ? getCategoryBadge(item.itemCategory) : null;
@@ -1009,14 +1061,13 @@ export default function Browse() {
 
               return (
                 <TouchableOpacity
-                  key={uniqueKey}
-                  className="bg-white rounded-2xl p-4 mb-3.5 border border-gray-200"
+                  className="bg-white rounded-2xl p-4 mb-3.5 border border-gray-200 mx-5"
                   style={{ elevation: 1 }}
                   activeOpacity={0.8}
                   onPress={() => {
                     router.push({
                       pathname: '/main/details/[id]',
-                      params: { id: uniqueKey, category: targetCategory },
+                      params: { id: `${targetCategory}_${rawId}`, category: targetCategory },
                     });
                   }}
                 >
@@ -1135,8 +1186,12 @@ export default function Browse() {
                   </View>
                 </TouchableOpacity>
               );
-            })
-          ) : (
+        }}
+        ListEmptyComponent={loading ? (
+          <View className="items-center py-16">
+            <ActivityIndicator size="large" color="#1e3a8a" />
+          </View>
+        ) : (
             <View className="items-center justify-center py-16 px-6 bg-white rounded-3xl border border-gray-200">
               <View className="w-16 h-16 rounded-full bg-blue-50 items-center justify-center mb-3 border border-blue-100">
                 <SlidersHorizontal color="#1e3a8a" size={28} strokeWidth={2} />
@@ -1157,12 +1212,28 @@ export default function Browse() {
                 </Text>
               </TouchableOpacity>
             </View>
+        )}
+        ListFooterComponent={
+          <>
+          {!loading && hasMore && (
+            <TouchableOpacity
+              className="items-center justify-center bg-white border border-blue-200 rounded-2xl py-4 mb-4 mx-5"
+              onPress={loadMore}
+              disabled={loadingMore}
+              activeOpacity={0.75}
+            >
+              {loadingMore ? (
+                <ActivityIndicator color="#1e3a8a" />
+              ) : (
+                <Text className="text-blue-900 font-semibold">
+                  Load more opportunities
+                </Text>
+              )}
+            </TouchableOpacity>
           )}
-        </View>
-
-        {/* Bottom Nav Spacer */}
-        <View className="h-20" />
-      </ScrollView>
+          </>
+        }
+      />
 
       {/* Slide-Up Bottom Sheet Filter Modal - Clean flex layout with zero overlapping */}
       <Modal
@@ -1850,7 +1921,7 @@ export default function Browse() {
                 activeOpacity={0.8}
               >
                 <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 14 }}>
-                  {t('apply_filters')} ({modalPreviewCount})
+                  {t('apply_filters')}
                 </Text>
               </TouchableOpacity>
             </View>

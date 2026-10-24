@@ -1,5 +1,6 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Home, Search, Star, User } from 'lucide-react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';

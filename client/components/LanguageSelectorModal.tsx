@@ -1,5 +1,6 @@
+import { AppText as Text } from './ScaledText';
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { View, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { X, Check } from 'lucide-react-native';
 import { useTranslation, LANGUAGES, LanguageCode } from '../utils/i18n';
 

@@ -1,5 +1,6 @@
+import { AppText as Text } from './ScaledText';
 import React, { useEffect, useState } from 'react';
-import { Text, TextProps } from 'react-native';
+import { TextProps } from 'react-native';
 import { useTranslation, translateValue } from '../utils/i18n';
 import {
   getCachedTranslation,

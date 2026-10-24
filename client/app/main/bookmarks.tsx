@@ -1,14 +1,7 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  BackHandler,
-  Alert,
-} from 'react-native';
+  View, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, BackHandler, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ArrowLeft,

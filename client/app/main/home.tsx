@@ -1,5 +1,6 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
+import { View, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
 import { Sparkles, FolderOpen, Building2, GraduationCap, FileText, Award, ArrowRight, Globe, Bookmark } from 'lucide-react-native';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';

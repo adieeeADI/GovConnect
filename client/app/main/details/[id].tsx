@@ -1,5 +1,6 @@
+import { AppText as Text } from '../../../components/ScaledText';
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler, Linking, Alert } from 'react-native';
+import { View, TouchableOpacity, ScrollView, ActivityIndicator, Image, Modal, Dimensions, BackHandler, Linking, Alert } from 'react-native';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Gift, X, ZoomIn, ZoomOut, Bookmark } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';

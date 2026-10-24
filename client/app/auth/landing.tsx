@@ -1,5 +1,6 @@
+import { AppText as Text } from '../../components/ScaledText';
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
+import { View, TouchableOpacity, ScrollView, BackHandler, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { Briefcase, Globe } from 'lucide-react-native';

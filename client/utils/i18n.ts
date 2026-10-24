@@ -1947,27 +1947,50 @@ import { initTranslationCache, getCachedTranslation, translateDynamic } from './
 interface LanguageContextType {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => Promise<void>;
+  fontSize: FontSizeOption;
+  setFontSize: (size: FontSizeOption) => Promise<void>;
   t: (key: string) => string;
 }
+
+export type FontSizeOption = 'small' | 'original' | 'large' | 'extraLarge';
+
+export const FONT_SIZE_SCALES: Record<FontSizeOption, number> = {
+  small: 0.85,
+  original: 1,
+  large: 1.15,
+  extraLarge: 1.3,
+};
 
 const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: async () => {},
+  fontSize: 'original',
+  setFontSize: async () => {},
   t: (key: string) => key,
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<LanguageCode>('en');
+  const [fontSize, setFontSizeState] = useState<FontSizeOption>('original');
 
   useEffect(() => {
     const loadLang = async () => {
       try {
-        const saved = await AsyncStorage.getItem('appLanguage');
+        const [saved, savedFontSize] = await Promise.all([
+          AsyncStorage.getItem('appLanguage'),
+          AsyncStorage.getItem('appFontSize'),
+        ]);
         const active = saved && saved in translations ? (saved as LanguageCode) : 'en';
+        const activeFontSize =
+          savedFontSize &&
+          Object.prototype.hasOwnProperty.call(FONT_SIZE_SCALES, savedFontSize)
+            ? (savedFontSize as FontSizeOption)
+            : 'original';
         setLanguageState(active);
+        setFontSizeState(activeFontSize);
         initTranslationCache(active);
       } catch (e) {
-        console.log('Error loading saved language:', e);
+        console.log('Error loading saved preferences:', e);
       }
     };
     loadLang();
@@ -1983,6 +2006,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const setFontSize = async (size: FontSizeOption) => {
+    try {
+      setFontSizeState(size);
+      await AsyncStorage.setItem('appFontSize', size);
+    } catch (e) {
+      console.log('Error saving font size preference:', e);
+    }
+  };
+
   const t = (key: string): string => {
     const langDict = translations[language] || translations.en;
     return langDict[key] || translations.en[key] || key;
@@ -1990,7 +2022,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return React.createElement(
     LanguageContext.Provider,
-    { value: { language, setLanguage, t } },
+    { value: { language, setLanguage, fontSize, setFontSize, t } },
     children
   );
 };
@@ -2106,4 +2138,3 @@ export const translateValue = (val: any, t: (key: string) => string): string => 
 
   return result;
 };
-

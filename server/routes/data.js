@@ -158,12 +158,212 @@ function filterDataItems(items, query) {
     });
   }
 
+  if (query.stipendOnly === 'true') {
+    result = result.filter(item => {
+      const stipend = String(
+        item.internshipDetails?.stipend ||
+        item.benefits?.scholarshipAmount ||
+        item.schemeDetails?.financialDetails?.amount ||
+        ''
+      ).toLowerCase();
+      return stipend && !stipend.includes('₹0') && !stipend.includes('unpaid') && stipend !== '0';
+    });
+  }
+
+  if (query.search) {
+    const search = query.search.trim().toLowerCase();
+    result = result.filter(item => {
+      const title = String(item.basicInfo?.title || '').toLowerCase();
+      const provider = String(item.basicInfo?.providerName || '').toLowerCase();
+      const department = String(item.basicInfo?.department || '').toLowerCase();
+      const locations = [
+        ...(item.internshipDetails?.location || []),
+        ...(item.trainingDetails?.location || [])
+      ].join(' ').toLowerCase();
+      return title.includes(search) ||
+        provider.includes(search) ||
+        department.includes(search) ||
+        locations.includes(search);
+    });
+  }
+
   return result;
+}
+
+const LIST_FIELDS = [
+  '_id',
+  'basicInfo.title',
+  'basicInfo.department',
+  'basicInfo.providerName',
+  'internshipDetails.mode',
+  'internshipDetails.location',
+  'internshipDetails.duration',
+  'internshipDetails.stipend',
+  'eligibility.educationLevels',
+  'eligibility.minimumEducation',
+  'eligibility.streamsAllowed',
+  'eligibility.statesEligible',
+  'applicationDetails.endDate',
+  'applicationDetails.applicationMode',
+  'trainingDetails.mode',
+  'trainingDetails.location',
+  'trainingDetails.duration',
+  'benefits.scholarshipAmount',
+  'schemeDetails.mode',
+  'schemeDetails.financialDetails.amount',
+  'programDetails.mode',
+  'programDetails.duration',
+  'programDetails.fees',
+  'applicationProcess.applicationMode',
+].join(' ');
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildListQuery(query) {
+  const clauses = [];
+  const addOr = (conditions) => {
+    if (conditions.length) clauses.push({ $or: conditions });
+  };
+
+  if (query.search) {
+    const search = new RegExp(escapeRegex(query.search.trim()), 'i');
+    addOr([
+      { 'basicInfo.title': search },
+      { 'basicInfo.providerName': search },
+      { 'basicInfo.department': search },
+      { 'internshipDetails.location': search },
+      { 'trainingDetails.location': search },
+    ]);
+  }
+
+  const modeFields = [
+    'internshipDetails.mode',
+    'programDetails.mode',
+    'schemeDetails.mode',
+    'trainingDetails.mode',
+    'applicationDetails.applicationMode',
+    'applicationProcess.applicationMode',
+  ];
+  const locationFields = ['internshipDetails.location', 'trainingDetails.location'];
+  if (query.mode?.toLowerCase() === 'online') {
+    addOr([
+      ...modeFields.map((field) => ({ [field]: /online|virtual|remote|form-only/i })),
+      ...locationFields.map((field) => ({ [field]: /pan india|remote/i })),
+    ]);
+  } else if (query.mode?.toLowerCase() === 'offline') {
+    addOr([
+      ...modeFields.map((field) => ({ [field]: /offline|in-office|classroom|full time/i })),
+      ...locationFields.map((field) => ({
+        [field]: { $exists: true, $ne: [], $not: /remote|pan india|virtual/i },
+      })),
+    ]);
+  }
+
+  if (query.education && query.education.toLowerCase() !== 'all') {
+    const patterns = {
+      '10th': /class\s*(9|10|1-12|9-12|9 to 12)|10th|matric|secondary|school/i,
+      '12th': /class\s*(11|12|11-12|1-12)|12th|intermediate|senior\s*secondary|higher\s*secondary/i,
+      diploma: /diploma|polytechnic|iti/i,
+      ug: /\bug\b|undergrad|bachelor|b\.tech|graduate|degree|medical|engineering/i,
+      pg: /\bpg\b|postgrad|post-grad|master|ph\.?d/i,
+    };
+    const pattern = patterns[query.education.toLowerCase()];
+    if (pattern) {
+      addOr([
+        { 'eligibility.educationLevels': pattern },
+        { 'eligibility.minimumEducation': pattern },
+        { 'eligibility.streamsAllowed': pattern },
+        {
+          'eligibility.educationLevels': { $exists: false },
+          'eligibility.minimumEducation': { $exists: false },
+          'eligibility.streamsAllowed': { $exists: false },
+        },
+      ]);
+    }
+  }
+
+  if (query.state && query.state.toLowerCase() !== 'all') {
+    const target = query.state.trim();
+    const states = [{ 'eligibility.statesEligible': new RegExp(escapeRegex(target), 'i') }];
+    if (target.toLowerCase() === 'all india') {
+      states.push(
+        { 'eligibility.statesEligible': /^(all india|all)$/i },
+        { 'internshipDetails.location': /^(pan india|remote)$/i },
+        { 'trainingDetails.location': /^(pan india|remote)$/i },
+        { 'eligibility.statesEligible': { $exists: false } },
+        { 'eligibility.statesEligible': { $size: 0 } },
+      );
+    } else {
+      const stateKey = target.toLowerCase();
+      const cities = STATE_CITY_MAP[stateKey] || [];
+      states.push(
+        { 'basicInfo.providerName': new RegExp(escapeRegex(target), 'i') },
+        { 'basicInfo.department': new RegExp(escapeRegex(target), 'i') },
+        { 'basicInfo.title': new RegExp(escapeRegex(target), 'i') },
+        { 'internshipDetails.location': new RegExp(escapeRegex(target), 'i') },
+        { 'trainingDetails.location': new RegExp(escapeRegex(target), 'i') },
+        { 'eligibility.statesEligible': /^(all india|all)$/i },
+        { 'internshipDetails.location': /pan india/i },
+        { 'trainingDetails.location': /pan india/i },
+      );
+      if (cities.length) {
+        const cityPattern = new RegExp(cities.map(escapeRegex).join('|'), 'i');
+        states.push(
+          { 'internshipDetails.location': cityPattern },
+          { 'trainingDetails.location': cityPattern },
+        );
+      }
+    }
+    addOr(states);
+  }
+
+  if (query.stipendOnly === 'true') {
+    addOr([
+      { 'internshipDetails.stipend': { $exists: true, $nin: ['', 0, '0'], $not: /₹0|unpaid/i } },
+      { 'benefits.scholarshipAmount': { $exists: true, $nin: ['', 0, '0'], $not: /₹0|unpaid/i } },
+      { 'schemeDetails.financialDetails.amount': { $exists: true, $nin: ['', 0, '0'], $not: /₹0|unpaid/i } },
+    ]);
+  }
+
+  return clauses.length ? { $and: clauses } : {};
+}
+
+async function getPaginatedList(Model, req) {
+  const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
+  const listQuery = buildListQuery(req.query);
+  const [items, total] = await Promise.all([
+    Model.find(listQuery)
+      .select(LIST_FIELDS)
+      .sort({ _id: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Model.countDocuments(listQuery),
+  ]);
+  let translatedItems = items;
+
+  if (req.query.lang && req.query.lang !== 'en') {
+    translatedItems = await translateListItems(items, req.query.lang);
+  }
+
+  return {
+    items: translatedItems,
+    total,
+    page,
+    limit,
+    hasMore: page * limit < total,
+  };
 }
 
 // GET all internships
 router.get("/internships", async (req, res) => {
   try {
+    if (req.query.page !== undefined || req.query.limit !== undefined) {
+      return res.json(await getPaginatedList(Internship, req));
+    }
     let data = await Internship.find().lean();
     data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
@@ -200,6 +400,9 @@ router.get("/internships/:id", async (req, res) => {
 // GET all scholarships
 router.get("/scholarships", async (req, res) => {
   try {
+    if (req.query.page !== undefined || req.query.limit !== undefined) {
+      return res.json(await getPaginatedList(Scholarship, req));
+    }
     let data = await Scholarship.find().lean();
     data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
@@ -236,6 +439,9 @@ router.get("/scholarships/:id", async (req, res) => {
 // GET all schemes
 router.get("/schemes", async (req, res) => {
   try {
+    if (req.query.page !== undefined || req.query.limit !== undefined) {
+      return res.json(await getPaginatedList(Scheme, req));
+    }
     let data = await Scheme.find().lean();
     data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {
@@ -272,6 +478,9 @@ router.get("/schemes/:id", async (req, res) => {
 // GET all training
 router.get("/training", async (req, res) => {
   try {
+    if (req.query.page !== undefined || req.query.limit !== undefined) {
+      return res.json(await getPaginatedList(Training, req));
+    }
     let data = await Training.find().lean();
     data = filterDataItems(data, req.query);
     if (req.query.lang && req.query.lang !== "en") {

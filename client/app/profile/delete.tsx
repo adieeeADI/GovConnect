@@ -1,5 +1,6 @@
+import { AppText as Text, AppTextInput as TextInput } from '../../components/ScaledText';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useTranslation } from '../../utils/i18n';
 import TranslatedText from '../../components/TranslatedText';
