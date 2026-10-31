@@ -22,6 +22,7 @@ import ProfileCompleteBanner from './ProfileCompleteBanner';
 import { getUserEndpoint, safeFetchJson } from '../../config/api.config';
 import { useTranslation, LANGUAGES } from '../../utils/i18n';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import TermsAndConditionsModal from '../../components/TermsAndConditionsModal';
 import { goBackWithinApp, resetToAuth } from '../../utils/navigation';
 import TranslatedText from '../../components/TranslatedText';
 import { getHomeScreenStats } from '../../utils/bookmarkService';
@@ -57,6 +58,7 @@ export default function Profile() {
   const [user, setUser] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [langModalVisible, setLangModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [activityCounts, setActivityCounts] = useState({ bookmarks: 0 });
 
   const currentLangObj =
@@ -478,6 +480,16 @@ export default function Profile() {
               {t('logout')}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            className="mt-4 py-3 items-center"
+            activeOpacity={0.7}
+            onPress={() => setTermsModalVisible(true)}
+          >
+            <Text className="text-gray-500 text-sm underline">
+              Terms & Conditions
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -485,6 +497,10 @@ export default function Profile() {
       <LanguageSelectorModal
         visible={langModalVisible}
         onClose={() => setLangModalVisible(false)}
+      />
+      <TermsAndConditionsModal
+        visible={termsModalVisible}
+        onClose={() => setTermsModalVisible(false)}
       />
 
       {/* Fixed bottom navigation */}

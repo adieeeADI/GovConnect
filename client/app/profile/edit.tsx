@@ -1,7 +1,7 @@
 import { AppText as Text, AppTextInput as TextInput } from '../../components/ScaledText';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, TouchableOpacity, ScrollView, Alert, Platform, BackHandler } from 'react-native';
+  View, TouchableOpacity, ScrollView, Alert, Platform, BackHandler, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, X, Plus, Calendar } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -136,6 +136,10 @@ export default function EditProfile() {
   const [category, setCategory] = useState('');
 
   const [saving, setSaving] = useState(false);
+  const [locationFieldWidth, setLocationFieldWidth] = useState(0);
+  const [catPosition] = useState(() => new Animated.Value(-44));
+  const [catBob] = useState(() => new Animated.Value(0));
+  const [catOpacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     let isMounted = true;
@@ -230,6 +234,57 @@ export default function EditProfile() {
     : 'Select date';
 
   const selectedIncomeLabel = INCOME_RANGES.find(r => r.value === familyIncome)?.label || 'Not set';
+  const hasGoldenLocation = /\b(bhandup|dombivili|mulund)\b/i.test(location);
+  const hasBhandupLocation = /\bbhandup\b/i.test(location);
+
+  useEffect(() => {
+    if (!hasBhandupLocation || locationFieldWidth === 0) return;
+
+    catPosition.setValue(-44);
+    catBob.setValue(0);
+    catOpacity.setValue(1);
+
+    const bobAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(catBob, {
+          toValue: 1,
+          duration: 130,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(catBob, {
+          toValue: 0,
+          duration: 130,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    bobAnimation.start();
+
+    Animated.timing(catPosition, {
+      toValue: locationFieldWidth + 12,
+      duration: 2400,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      bobAnimation.stop();
+      if (finished) {
+        Animated.timing(catOpacity, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }).start();
+      }
+    });
+
+    return () => {
+      bobAnimation.stop();
+      catPosition.stopAnimation();
+      catBob.stopAnimation();
+      catOpacity.stopAnimation();
+    };
+  }, [catBob, catOpacity, catPosition, hasBhandupLocation, locationFieldWidth]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
@@ -263,7 +318,61 @@ export default function EditProfile() {
         </Field>
 
         <Field label={t('location')}>
-          <StyledInput value={location} onChangeText={setLocation} placeholder={t('location')} />
+          <View
+            className="relative overflow-hidden rounded-xl"
+            onLayout={(event) => setLocationFieldWidth(event.nativeEvent.layout.width)}
+          >
+            <StyledInput
+              value={location}
+              onChangeText={setLocation}
+              placeholder={t('location')}
+              className={`rounded-xl px-4 py-3 text-sm ${
+                hasGoldenLocation
+                  ? 'bg-amber-100 border-2 border-amber-400 text-amber-950'
+                  : 'bg-gray-100 text-black'
+              }`}
+              style={
+                hasGoldenLocation
+                  ? {
+                      shadowColor: '#f59e0b',
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.45,
+                      shadowRadius: 8,
+                      elevation: 6,
+                    }
+                  : undefined
+              }
+            />
+            <Animated.View
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 6,
+                opacity: catOpacity,
+                zIndex: 2,
+                transform: [
+                  { translateX: catPosition },
+                  {
+                    translateY: catBob.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -3],
+                    }),
+                  },
+                  {
+                    rotate: catBob.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['-8deg', '8deg'],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <Text style={{ fontSize: 27 }}>🐈</Text>
+            </Animated.View>
+          </View>
         </Field>
 
         <Field label={t('education')}>

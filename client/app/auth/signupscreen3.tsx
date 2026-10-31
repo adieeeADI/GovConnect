@@ -1,6 +1,14 @@
 import { AppText as Text } from '../../components/ScaledText';
 import React, { useState, useCallback } from 'react';
-import { View, TouchableOpacity, ScrollView, Alert, BackHandler, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  BackHandler,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomStatusBar from '../components/CustomStatusBar';
 import { ArrowLeft, Upload, CheckCircle2, Globe } from 'lucide-react-native';
@@ -12,6 +20,7 @@ import { API_ENDPOINTS, safeFetchJson } from '../../config/api.config';
 import { useTranslation } from '../../utils/i18n';
 import TranslatedText from '../../components/TranslatedText';
 import LanguageSelectorModal from '../../components/LanguageSelectorModal';
+import TermsAndConditionsModal from '../../components/TermsAndConditionsModal';
 import { resetToHome } from '../../utils/navigation';
 
 export default function SignUpScreen3() {
@@ -28,6 +37,7 @@ export default function SignUpScreen3() {
   const [parsedData, setParsedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   const handleBackConfirm = () => {
     Alert.alert(
@@ -385,23 +395,29 @@ export default function SignUpScreen3() {
         )}
 
         {/* Checkboxes */}
-        <TouchableOpacity
-          className="flex-row items-center mb-4"
-          onPress={() => setAgreedToTerms(!agreedToTerms)}
-        >
-          <View className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${agreedToTerms ? 'bg-blue-700' : 'bg-white'
-            }`}>
-            {agreedToTerms && (
-              <Text className="text-white text-sm font-bold">✓</Text>
-            )}
-          </View>
+        <View className="flex-row items-center mb-4">
+          <TouchableOpacity
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: agreedToTerms }}
+            accessibilityLabel={t('agree_terms')}
+            className={`w-6 h-6 border-2 border-gray-800 rounded mr-3 items-center justify-center ${agreedToTerms ? 'bg-blue-700' : 'bg-white'
+              }`}
+            onPress={() => setAgreedToTerms(!agreedToTerms)}
+          >
+            {agreedToTerms && <Text className="text-white text-sm font-bold">✓</Text>}
+          </TouchableOpacity>
           <View className="flex-1 flex-row flex-wrap items-center">
             <Text className="text-red-600 text-sm font-bold mr-1">*</Text>
-            <Text className="text-black text-base flex-shrink">
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => setTermsModalVisible(true)}
+            >
+              <Text className="text-blue-700 text-base underline">
               {t('agree_terms')}
-            </Text>
+              </Text>
+            </Pressable>
           </View>
-        </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           className="flex-row items-center mb-8"
@@ -472,6 +488,11 @@ export default function SignUpScreen3() {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <TermsAndConditionsModal
+        visible={termsModalVisible}
+        onClose={() => setTermsModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
