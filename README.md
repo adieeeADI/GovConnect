@@ -224,17 +224,7 @@ Follow the Expo instructions to run the application on your device or emulator.
 - Enhance accessibility and user experience.
 - Extend support for additional languages.
 
-## Contributors
 
-Developed as part of the Master of Computer Applications program at VESIT.
-
-| Contributor | Role |
-|---|---|
-| Vedant Raut | Development |
-| Team Member 2 | Development |
-| Team Member 3 | Development |
-
----
 
 <p align="center">
   <b>GovConnect</b><br>
