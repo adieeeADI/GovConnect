@@ -109,8 +109,7 @@ GovConnect brings scholarships, internships, government schemes, and skill-devel
 <p align="center">
   <img src="/assets/Internships.jpeg" width="190" alt="Internships">
   <img src="/assets/Scholarships.jpeg" width="190" alt="Scholarships">
-  <img src="/assets/Scheme.jpeg
-" width="190" alt="Government Schemes">
+  <img src="/assets/Scheme.jpeg" width="190" alt="Government Schemes">
   <img src="/assets/Skills_Training.jpeg" width="190" alt="Skill Training">
 </p>
 
